@@ -63,6 +63,7 @@ export default function ImportarPage() {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
+      newline: '', // Auto-detect newlines
       complete: (results) => {
         setIsLoading(false);
         setHeaders(results.meta.fields || []);
@@ -70,8 +71,8 @@ export default function ImportarPage() {
 
         if (results.errors.length > 0) {
           toast({
-            variant: 'destructive',
-            title: 'Se encontraron errores en el CSV',
+            variant: "destructive",
+            title: "Se encontraron errores en el CSV",
             description: `Se procesaron ${results.data.length} filas, pero se encontraron ${results.errors.length} errores que fueron omitidos.`,
           });
         } else {
