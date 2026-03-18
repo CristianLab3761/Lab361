@@ -1,0 +1,86 @@
+import Link from 'next/link';
+import { Home, FileText, Package, PanelLeft, UploadCloud } from 'lucide-react';
+
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { UserNav } from '@/components/app/user-nav';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+
+type HeaderProps = {
+  breadcrumbs: { label: string; href?: string }[];
+};
+
+export function Header({ breadcrumbs }: HeaderProps) {
+  return (
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button size="icon" variant="outline" className="sm:hidden">
+            <PanelLeft className="h-5 w-5" />
+            <span className="sr-only">Toggle Menu</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="sm:max-w-xs">
+          <nav className="grid gap-6 text-lg font-medium">
+            <Link
+              href="/dashboard"
+              className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-5 w-5 transition-all group-hover:scale-110"
+              >
+                <path d="M5.5 22v-6.5H2V6.021a2 2 0 0 1 1.28-1.852L12 1l8.72 3.169A2 2 0 0 1 22 6.021V15.5h-3.5V22h-4v-6.5h-5V22h-4Z" />
+              </svg>
+              <span className="sr-only">OrdenaPro</span>
+            </Link>
+            <Link href="/dashboard" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+              <Home className="h-5 w-5" />
+              Dashboard
+            </Link>
+            <Link href="/dashboard/solicitudes" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+              <FileText className="h-5 w-5" />
+              Solicitudes
+            </Link>
+            <Link href="/dashboard/ordenes" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+              <Package className="h-5 w-5" />
+              Órdenes de Compra
+            </Link>
+            <Link href="/dashboard/importar" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+              <UploadCloud className="h-5 w-5" />
+              Importar
+            </Link>
+          </nav>
+        </SheetContent>
+      </Sheet>
+      <Breadcrumb className="hidden md:flex">
+        <BreadcrumbList>
+          {breadcrumbs.map((crumb, index) => (
+            <React.Fragment key={crumb.label}>
+              <BreadcrumbItem>
+                {crumb.href ? (
+                  <BreadcrumbLink asChild>
+                    <Link href={crumb.href}>{crumb.label}</Link>
+                  </BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                )}
+              </BreadcrumbItem>
+              {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+            </React.Fragment>
+          ))}
+        </BreadcrumbList>
+      </Breadcrumb>
+      <div className="relative ml-auto flex-1 md:grow-0">
+        {/* Can add search here if needed */}
+      </div>
+      <UserNav />
+    </header>
+  );
+}
