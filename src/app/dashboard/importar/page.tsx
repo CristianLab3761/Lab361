@@ -52,9 +52,9 @@ export default function ImportarPage() {
   const handleParse = () => {
     if (!file) {
       toast({
-        variant: "destructive",
-        title: "No se ha seleccionado ningún archivo",
-        description: "Por favor, selecciona un archivo CSV para continuar.",
+        variant: 'destructive',
+        title: 'No se ha seleccionado ningún archivo',
+        description: 'Por favor, selecciona un archivo CSV para continuar.',
       });
       return;
     }
@@ -64,27 +64,28 @@ export default function ImportarPage() {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
-        if (results.errors.length > 0) {
-            console.error("Errors parsing CSV:", results.errors);
-            toast({
-                variant: "destructive",
-                title: "Error al leer el archivo CSV",
-                description: "Algunas filas no pudieron ser procesadas. Revisa la consola para más detalles.",
-            });
-        }
+        setIsLoading(false);
         setHeaders(results.meta.fields || []);
         setParsedData(results.data);
-        setIsLoading(false);
-        toast({
-          title: "Archivo procesado",
-          description: `Se han extraído ${results.data.length} filas del archivo.`,
-        });
+
+        if (results.errors.length > 0) {
+          toast({
+            variant: 'destructive',
+            title: 'Se encontraron errores en el CSV',
+            description: `Se procesaron ${results.data.length} filas, pero se encontraron ${results.errors.length} errores que fueron omitidos.`,
+          });
+        } else {
+          toast({
+            title: 'Archivo procesado con éxito',
+            description: `Se han extraído ${results.data.length} filas del archivo.`,
+          });
+        }
       },
       error: (error: any) => {
         setIsLoading(false);
         toast({
-          variant: "destructive",
-          title: "Error al procesar el archivo",
+          variant: 'destructive',
+          title: 'Error fatal al procesar el archivo',
           description: error.message,
         });
       },
