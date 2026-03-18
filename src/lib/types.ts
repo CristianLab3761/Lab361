@@ -46,3 +46,31 @@ export type OrdenCompra = {
   }[];
   totalCost: number;
 };
+
+export type Proveedor = {
+  id: string;
+  name: string;
+};
+
+export type Cuenta = {
+  id: string;
+  name: string;
+  code: string;
+};
+
+export type Presupuesto = {
+  id: string;
+  name: string;
+  monto: number;
+};
+
+export type CentroNegocios = {
+  id: string;
+  name: string;
+};
+
+export type CentroCostos = {
+  id: string;
+  name: string;
+  code: string;
+};

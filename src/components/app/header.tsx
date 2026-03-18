@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { Home, FileText, Package, PanelLeft, UploadCloud } from 'lucide-react';
-
+import { Home, FileText, Package, PanelLeft, UploadCloud, Settings } from 'lucide-react';
+import React from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { UserNav } from '@/components/app/user-nav';
@@ -55,6 +55,10 @@ export function Header({ breadcrumbs }: HeaderProps) {
             <Link href="/dashboard/importar" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
               <UploadCloud className="h-5 w-5" />
               Importar
+            </Link>
+            <Link href="/dashboard/administracion" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+              <Settings className="h-5 w-5" />
+              Administración
             </Link>
           </nav>
         </SheetContent>

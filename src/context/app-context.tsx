@@ -1,9 +1,20 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
-import { User, Solicitud, OrdenCompra, Item } from '@/lib/types';
-import { users, solicitudes as initialSolicitudes, ordenesCompra as initialOrdenes } from '@/lib/data';
+import { User, Solicitud, OrdenCompra, Item, Proveedor, Cuenta, Presupuesto, CentroNegocios, CentroCostos } from '@/lib/types';
+import {
+  users,
+  solicitudes as initialSolicitudes,
+  ordenesCompra as initialOrdenes,
+  proveedores as initialProveedores,
+  cuentas as initialCuentas,
+  presupuestos as initialPresupuestos,
+  centrosNegocios as initialCentrosNegocios,
+  centrosCostos as initialCentrosCostos,
+} from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
+
+export type AdminItemType = 'proveedores' | 'cuentas' | 'presupuestos' | 'centrosNegocios' | 'centrosCostos';
 
 interface AppContextType {
   currentUser: User;
@@ -15,6 +26,15 @@ interface AppContextType {
   ordenesCompra: OrdenCompra[];
   addOrdenCompra: (newOrden: Omit<OrdenCompra, 'id' | 'createdAt'>, solicitudId: string) => void;
   getHistoricalDataForItems: (items: Item[]) => { name: string; averageCost: number }[];
+
+  // Admin data
+  proveedores: Proveedor[];
+  cuentas: Cuenta[];
+  presupuestos: Presupuesto[];
+  centrosNegocios: CentroNegocios[];
+  centrosCostos: CentroCostos[];
+  addAdminItem: <T extends { id: string }>(itemType: AdminItemType, newItem: Omit<T, 'id'>) => void;
+  removeAdminItem: (itemType: AdminItemType, itemId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -24,6 +44,49 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>(initialSolicitudes);
   const [ordenesCompra, setOrdenesCompra] = useState<OrdenCompra[]>(initialOrdenes);
   const { toast } = useToast();
+
+  // Admin state
+  const [proveedores, setProveedores] = useState<Proveedor[]>(initialProveedores);
+  const [cuentas, setCuentas] = useState<Cuenta[]>(initialCuentas);
+  const [presupuestos, setPresupuestos] = useState<Presupuesto[]>(initialPresupuestos);
+  const [centrosNegocios, setCentrosNegocios] = useState<CentroNegocios[]>(initialCentrosNegocios);
+  const [centrosCostos, setCentrosCostos] = useState<CentroCostos[]>(initialCentrosCostos);
+  
+  const adminStateSetters = useMemo(() => ({
+    proveedores: setProveedores,
+    cuentas: setCuentas,
+    presupuestos: setPresupuestos,
+    centrosNegocios: setCentrosNegocios,
+    centrosCostos: setCentrosCostos,
+  }), []);
+
+  const addAdminItem = useCallback(<T extends { id: string }>(itemType: AdminItemType, newItemData: Omit<T, 'id'>) => {
+    const setter = adminStateSetters[itemType] as React.Dispatch<React.SetStateAction<T[]>>;
+    const prefix = itemType.slice(0, 4);
+    
+    setter((prev: T[]) => {
+      const newItem = {
+        ...newItemData,
+        id: `${prefix}-${prev.length + 1 + Math.random()}`,
+      } as T;
+      return [newItem, ...prev];
+    });
+
+    toast({
+      title: "Elemento Agregado",
+      description: `El nuevo elemento ha sido agregado.`,
+    });
+  }, [adminStateSetters, toast]);
+
+  const removeAdminItem = useCallback((itemType: AdminItemType, itemId: string) => {
+    const setter = adminStateSetters[itemType];
+    setter((prev: { id: string }[]) => prev.filter(item => item.id !== itemId));
+    toast({
+      title: "Elemento Eliminado",
+      description: `El elemento ha sido eliminado.`,
+    });
+  }, [adminStateSetters, toast]);
+
 
   const updateSolicitud = useCallback((id: string, updates: Partial<Solicitud>) => {
     setSolicitudes(prev =>
@@ -100,7 +163,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ordenesCompra,
     addOrdenCompra,
     getHistoricalDataForItems,
-  }), [currentUser, users, solicitudes, updateSolicitud, addSolicitud, ordenesCompra, addOrdenCompra, getHistoricalDataForItems]);
+    proveedores,
+    cuentas,
+    presupuestos,
+    centrosNegocios,
+    centrosCostos,
+    addAdminItem,
+    removeAdminItem,
+  }), [currentUser, users, solicitudes, updateSolicitud, addSolicitud, ordenesCompra, addOrdenCompra, getHistoricalDataForItems, proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, addAdminItem, removeAdminItem]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
