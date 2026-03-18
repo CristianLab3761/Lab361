@@ -128,6 +128,18 @@ service cloud.firestore {
     }
 
     /**
+     * @description Generic rule for master data collections.
+     * @path /{collection}/{docId} where collection is one of [proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos]
+     * @allow (get, list) Any authenticated user can read this master data (e.g., for dropdowns).
+     * @allow (write) Only 'Compras' members can manage master data.
+     * @principle Centralized management of non-sensitive, shared data.
+     */
+    match /{collection}/{docId} where collection in ['proveedores', 'cuentas', 'presupuestos', 'centrosNegocios', 'centrosCostos'] {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isCompras();
+    }
+    
+    /**
      * @description Manages purchase requests created by 'Solicitante' users.
      * @path /purchaseRequests/{purchaseRequestId}
      * @allow (create) A signed-in user can create a request, correctly identifying themselves as the requester.

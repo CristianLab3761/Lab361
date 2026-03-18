@@ -8,7 +8,7 @@ import {
   ordenesCompra as initialOrdenes,
 } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -47,24 +47,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const firestore = useFirestore();
 
   // Admin state from Firestore
-  const { data: proveedores } = useCollection(firestore ? collection(firestore, 'proveedores') : null);
-  const { data: cuentas } = useCollection(firestore ? collection(firestore, 'cuentas') : null);
-  const { data: presupuestos } = useCollection(firestore ? collection(firestore, 'presupuestos') : null);
-  const { data: centrosNegocios } = useCollection(firestore ? collection(firestore, 'centrosNegocios') : null);
-  const { data: centrosCostos } = useCollection(firestore ? collection(firestore, 'centrosCostos') : null);
+  const proveedoresRef = useMemoFirebase(() => firestore ? collection(firestore, 'proveedores') : null, [firestore]);
+  const cuentasRef = useMemoFirebase(() => firestore ? collection(firestore, 'cuentas') : null, [firestore]);
+  const presupuestosRef = useMemoFirebase(() => firestore ? collection(firestore, 'presupuestos') : null, [firestore]);
+  const centrosNegociosRef = useMemoFirebase(() => firestore ? collection(firestore, 'centrosNegocios') : null, [firestore]);
+  const centrosCostosRef = useMemoFirebase(() => firestore ? collection(firestore, 'centrosCostos') : null, [firestore]);
+
+  const { data: proveedores } = useCollection(proveedoresRef);
+  const { data: cuentas } = useCollection(cuentasRef);
+  const { data: presupuestos } = useCollection(presupuestosRef);
+  const { data: centrosNegocios } = useCollection(centrosNegociosRef);
+  const { data: centrosCostos } = useCollection(centrosCostosRef);
 
   const addAdminItem = useCallback(async <T extends {}>(itemType: AdminItemType, newItemData: T) => {
     if (!firestore) return;
-    const docRef = doc(collection(firestore, itemType));
+    const collectionRef = collection(firestore, itemType);
     
-    addDoc(collection(firestore, itemType), newItemData).catch((serverError: any) => {
+    addDoc(collectionRef, newItemData).catch((serverError: any) => {
         const permissionError = new FirestorePermissionError({
-            path: docRef.path,
+            path: collectionRef.path,
             operation: 'create',
             requestResourceData: newItemData,
         });
         errorEmitter.emit('permission-error', permissionError);
-        console.error("Add doc failed", serverError);
     });
 
   }, [firestore]);
@@ -87,12 +92,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         });
     }).catch((serverError: any) => {
         const permissionError = new FirestorePermissionError({
-            path: `/${itemType} (batch operation)`,
-            operation: 'create',
-            requestResourceData: `${newItemsData.length} documents`,
+            path: `/${itemType}`,
+            operation: 'write',
+            requestResourceData: { itemCount: newItemsData.length },
         });
         errorEmitter.emit('permission-error', permissionError);
-        console.error("Batch write failed", serverError);
     });
 }, [firestore, toast]);
 
@@ -106,7 +110,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             operation: 'delete',
         });
         errorEmitter.emit('permission-error', permissionError);
-        console.error("Delete doc failed", serverError);
     });
   }, [firestore]);
 
