@@ -17,11 +17,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAppContext } from '@/context/app-context';
-import { Users } from 'lucide-react';
-import { Check } from 'lucide-react';
+import { Users, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export function UserNav() {
   const { currentUser, setCurrentUser, users } = useAppContext();
+  const router = useRouter();
 
   const handleRoleChange = (userId: string) => {
     const selectedUser = users.find((user) => user.id === userId);
@@ -29,6 +30,15 @@ export function UserNav() {
       setCurrentUser(selectedUser);
     }
   };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    router.push('/login');
+  };
+
+  if (!currentUser) {
+    return null;
+  }
 
   return (
     <DropdownMenu>
@@ -70,8 +80,9 @@ export function UserNav() {
           </DropdownMenuPortal>
         </DropdownMenuSub>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          Cerrar Sesión
+        <DropdownMenuItem onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Cerrar Sesión</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

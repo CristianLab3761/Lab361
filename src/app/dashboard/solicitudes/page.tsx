@@ -1,17 +1,20 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Header } from '@/components/app/header';
 import { RequestsTable } from '@/components/app/requests-table';
 import { useAppContext } from '@/context/app-context';
 import { NewRequestDialog } from '@/components/app/new-request-dialog';
-import type { Solicitud } from '@/lib/types';
 import { PageHeader } from '@/components/app/page-header';
 
 export default function SolicitudesPage() {
   const { currentUser } = useAppContext();
+  
+  if (!currentUser) {
+    return null; // Or a loading skeleton
+  }
 
   if (currentUser.role === 'solicitante') {
     return (

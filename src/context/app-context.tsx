@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
 import { User, Solicitud, OrdenCompra, Item, Proveedor, Cuenta, Presupuesto, CentroNegocios, CentroCostos } from '@/lib/types';
 import {
   users,
@@ -16,8 +16,9 @@ import { FirestorePermissionError } from '@/firebase/errors';
 export type AdminItemType = 'proveedores' | 'cuentas' | 'presupuestos' | 'centrosNegocios' | 'centrosCostos';
 
 interface AppContextType {
-  currentUser: User;
-  setCurrentUser: (user: User) => void;
+  currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
+  isLoading: boolean;
   users: User[];
   solicitudes: Solicitud[];
   updateSolicitud: (id: string, updates: Partial<Solicitud>) => void;
@@ -40,11 +41,29 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User>(users[1]); // Default to 'compras' user
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>(initialSolicitudes);
   const [ordenesCompra, setOrdenesCompra] = useState<OrdenCompra[]>(initialOrdenes);
   const { toast } = useToast();
   const firestore = useFirestore();
+
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem('currentUser');
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+    }
+    setIsLoading(false);
+  }, []);
+
+  const handleSetCurrentUser = (user: User | null) => {
+    setCurrentUser(user);
+    if (user) {
+      sessionStorage.setItem('currentUser', JSON.stringify(user));
+    } else {
+      sessionStorage.removeItem('currentUser');
+    }
+  };
 
   // Admin state from Firestore
   const proveedoresRef = useMemoFirebase(() => firestore ? collection(firestore, 'proveedores') : null, [firestore]);
@@ -120,6 +139,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addSolicitud = useCallback((newSolicitudData: Omit<Solicitud, 'id' | 'createdAt' | 'solicitanteId' | 'solicitanteName'>) => {
+    if (!currentUser) {
+      toast({
+        variant: 'destructive',
+        title: "No autenticado",
+        description: "Debes iniciar sesión para crear una solicitud.",
+      });
+      return;
+    }
     const newSolicitud: Solicitud = {
       ...newSolicitudData,
       id: `req-${String(solicitudes.length + 1).padStart(3, '0')}`,
@@ -180,7 +207,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo(() => ({
     currentUser,
-    setCurrentUser,
+    setCurrentUser: handleSetCurrentUser,
+    isLoading,
     users,
     solicitudes,
     updateSolicitud,
@@ -196,7 +224,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addAdminItem,
     removeAdminItem,
     addMultipleAdminItems,
-  }), [currentUser, users, solicitudes, updateSolicitud, addSolicitud, ordenesCompra, addOrdenCompra, getHistoricalDataForItems, proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, addAdminItem, removeAdminItem, addMultipleAdminItems]);
+  }), [currentUser, isLoading, users, solicitudes, updateSolicitud, addSolicitud, ordenesCompra, addOrdenCompra, getHistoricalDataForItems, proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, addAdminItem, removeAdminItem, addMultipleAdminItems]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

@@ -91,12 +91,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   
     // Effect to handle automatic anonymous sign-in
     useEffect(() => {
-      // If auth is available, initial loading is done, and there's still no user,
-      // then we initiate anonymous sign-in.
       if (auth && !userAuthState.isUserLoading && !userAuthState.user) {
         signInAnonymously(auth).catch((error) => {
           console.error("FirebaseProvider: Anonymous sign-in failed.", error);
-          // Optionally update state to reflect the sign-in error
           setUserAuthState(prevState => ({ ...prevState, userError: error }));
         });
       }

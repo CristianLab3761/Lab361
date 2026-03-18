@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Header } from '@/components/app/header';
 import { OrdersTable } from '@/components/app/orders-table';
 import { PageHeader } from '@/components/app/page-header';
@@ -9,7 +9,7 @@ import { useAppContext } from '@/context/app-context';
 export default function OrdenesPage() {
     const { currentUser } = useAppContext();
 
-    if (currentUser.role === 'solicitante') {
+    if (!currentUser || currentUser.role === 'solicitante') {
         return (
           <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
             <Header breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Órdenes' }]} />

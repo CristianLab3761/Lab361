@@ -25,6 +25,10 @@ export function SidebarNav() {
     { href: '/dashboard/importar', label: 'Importar', icon: UploadCloud, role: 'compras' },
     { href: '/dashboard/administracion', label: 'Administración', icon: Settings, role: 'compras' },
   ];
+  
+  if (!currentUser) {
+    return null; // Or a loading skeleton for nav
+  }
 
   return (
     <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">

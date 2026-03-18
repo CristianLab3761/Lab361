@@ -1,16 +1,18 @@
 'use client';
 
-import { FilePlus2 } from 'lucide-react';
-
 import { useAppContext } from '@/context/app-context';
 import { Header } from '@/components/app/header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RequestsTable } from '@/components/app/requests-table';
 import { NewRequestDialog } from '@/components/app/new-request-dialog';
-import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
   const { currentUser, solicitudes } = useAppContext();
+
+  // currentUser might be null on initial load, handle this case
+  if (!currentUser) {
+    return null; // Or a loading indicator
+  }
 
   const userSolicitudes = solicitudes.filter(s => s.solicitanteId === currentUser.id);
   const pendingSolicitudes = solicitudes.filter(s => s.status === 'pendiente');

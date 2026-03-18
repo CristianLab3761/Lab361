@@ -101,7 +101,7 @@ function AdminSection<T extends { id: string; name: string; [key: string]: any }
 export default function AdministracionPage() {
   const { currentUser, proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos } = useAppContext();
 
-  if (currentUser.role !== 'compras') {
+  if (!currentUser || currentUser.role !== 'compras') {
     return (
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
             <Header breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Administración' }]} />
