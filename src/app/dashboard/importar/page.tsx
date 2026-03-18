@@ -66,21 +66,40 @@ export default function ImportarPage() {
       newline: '', // Auto-detect newlines
       complete: (results) => {
         setIsLoading(false);
-        setHeaders(results.meta.fields || []);
-        setParsedData(results.data);
 
-        if (results.errors.length > 0) {
+        // If data is parsed, we consider it a success, even with minor errors.
+        if (results.data.length > 0) {
+            setHeaders(results.meta.fields || []);
+            setParsedData(results.data);
+            
+            const description = results.errors.length > 0
+                ? `Se han extraído ${results.data.length} filas. Se encontraron ${results.errors.length} error(es) no críticos.`
+                : `Se han extraído ${results.data.length} filas del archivo.`;
+
+            toast({
+                title: 'Archivo procesado con éxito',
+                description: description,
+            });
+        } else if (results.errors.length > 0) {
+          // No data was parsed, so the errors are critical.
           const firstError = results.errors[0];
+          const errorMessage = firstError.row !== undefined && firstError.row !== null
+            ? `Error en fila ${firstError.row + 1}: ${firstError.message}`
+            : firstError.message;
+
           toast({
             variant: "destructive",
-            title: `Se encontraron ${results.errors.length} error(es) en el CSV`,
-            description: `Error en fila ${firstError.row + 1}: ${firstError.message}.`,
+            title: "Error al procesar el archivo CSV",
+            description: errorMessage,
           });
         } else {
-          toast({
-            title: 'Archivo procesado con éxito',
-            description: `Se han extraído ${results.data.length} filas del archivo.`,
-          });
+            // No data and no errors means an empty file.
+            setHeaders([]);
+            setParsedData([]);
+            toast({
+                title: 'Archivo vacío',
+                description: 'El archivo seleccionado no contiene datos.',
+            });
         }
       },
       error: (error: any) => {
