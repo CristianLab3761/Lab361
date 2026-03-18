@@ -1,0 +1,158 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents a user of the application.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["solicitante", "compras"] },
+        "avatar": { "type": "string", "format": "uri" }
+      },
+      "required": ["name", "email", "role"]
+    },
+    "Solicitud": {
+      "title": "Solicitud",
+      "description": "Purchase request.",
+      "type": "object",
+      "properties": {
+        "solicitanteId": { "type": "string" },
+        "solicitanteName": { "type": "string" },
+        "department": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pendiente", "aprobada", "rechazada", "procesada"] },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/entities/Item" }
+        },
+        "totalEstimatedCost": { "type": "number" },
+        "comments": { "type": "string" }
+      },
+      "required": ["solicitanteId", "solicitanteName", "department", "createdAt", "status", "items", "totalEstimatedCost"]
+    },
+    "Item": {
+        "title": "Item",
+        "description": "An item within a purchase request or order.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string" },
+            "quantity": { "type": "number" },
+            "estimatedCost": { "type": "number" }
+        },
+        "required": ["name", "quantity", "estimatedCost"]
+    },
+    "OrdenCompra": {
+        "title": "Orden de Compra",
+        "description": "Purchase order.",
+        "type": "object",
+        "properties": {
+            "solicitudId": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "supplierName": { "type": "string" },
+            "paymentTerms": { "type": "string" },
+            "deliveryInstructions": { "type": "string" },
+            "poDescription": { "type": "string" },
+            "items": {
+                "type": "array",
+                 "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": { "type": "string" },
+                        "quantity": { "type": "number" },
+                        "unitCost": { "type": "number" }
+                    },
+                    "required": ["name", "quantity", "unitCost"]
+                }
+            },
+            "totalCost": { "type": "number" }
+        },
+        "required": ["solicitudId", "createdAt", "supplierName", "totalCost"]
+    },
+    "Proveedor": {
+        "title": "Proveedor",
+        "description": "A supplier/vendor.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string", "description": "Name of the supplier." }
+        },
+        "required": ["name"]
+    },
+    "Cuenta": {
+        "title": "Cuenta",
+        "description": "Accounting account.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string", "description": "Name of the account." },
+            "code": { "type": "string", "description": "Code of the account." }
+        },
+        "required": ["name", "code"]
+    },
+    "Presupuesto": {
+        "title": "Presupuesto",
+        "description": "Budget information.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string", "description": "Name of the budget." },
+            "monto": { "type": "number", "description": "Amount of the budget." }
+        },
+        "required": ["name", "monto"]
+    },
+    "CentroNegocios": {
+        "title": "Centro de Negocios",
+        "description": "Business center or branch.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string", "description": "Name of the business center." }
+        },
+        "required": ["name"]
+    },
+    "CentroCostos": {
+        "title": "Centro de Costos",
+        "description": "Cost center or department.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string", "description": "Name of the cost center." },
+            "code": { "type": "string", "description": "Code of the cost center." }
+        },
+        "required": ["name", "code"]
+    }
+  },
+  "auth": {
+    "providers": ["anonymous"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user profile information."
+    },
+    "/solicitudes/{solicitudId}": {
+      "schema": { "$ref": "#/entities/Solicitud" },
+      "description": "Stores purchase requests."
+    },
+    "/ordenes_compra/{ordenCompraId}": {
+        "schema": { "$ref": "#/entities/OrdenCompra" },
+        "description": "Stores generated purchase orders."
+    },
+    "/proveedores/{proveedorId}": {
+        "schema": { "$ref": "#/entities/Proveedor" },
+        "description": "Stores supplier information."
+    },
+    "/cuentas/{cuentaId}": {
+        "schema": { "$ref": "#/entities/Cuenta" },
+        "description": "Stores accounting accounts."
+    },
+    "/presupuestos/{presupuestoId}": {
+        "schema": { "$ref": "#/entities/Presupuesto" },
+        "description": "Stores budget data."
+    },
+    "/centrosNegocios/{centroNegociosId}": {
+        "schema": { "$ref": "#/entities/CentroNegocios" },
+        "description": "Stores business centers."
+    },
+    "/centrosCostos/{centroCostosId}": {
+        "schema": { "$ref": "#/entities/CentroCostos" },
+        "description": "Stores cost centers."
+    }
+  }
+}

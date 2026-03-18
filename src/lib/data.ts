@@ -99,31 +99,9 @@ export const ordenesCompra: OrdenCompra[] = [
   },
 ];
 
-export const proveedores: Proveedor[] = [
-    { id: 'prov-1', name: 'Tech Supplies Inc.' },
-    { id: 'prov-2', name: 'Office Depot' },
-    { id: 'prov-3', name: 'Global Electronics' },
-];
-
-export const cuentas: Cuenta[] = [
-    { id: 'cta-1', name: 'Suministros de Oficina', code: '601' },
-    { id: 'cta-2', name: 'Hardware y Equipo', code: '602' },
-    { id: 'cta-3', name: 'Software y Licencias', code: '603' },
-];
-
-export const presupuestos: Presupuesto[] = [
-    { id: 'pres-1', name: 'Presupuesto Marketing Q3', monto: 50000 },
-    { id: 'pres-2', name: 'Presupuesto IT H2', monto: 150000 },
-    { id: 'pres-3', name: 'Presupuesto General Oficina', monto: 25000 },
-];
-
-export const centrosNegocios: CentroNegocios[] = [
-    { id: 'cn-1', name: 'Oficina Central' },
-    { id: 'cn-2', name: 'Sucursal Norte' },
-];
-
-export const centrosCostos: CentroCostos[] = [
-    { id: 'cc-1', name: 'Departamento de Marketing', code: 'MKT' },
-    { id: 'cc-2', name: 'Departamento de IT', code: 'IT' },
-    { id: 'cc-3', name: 'Administración General', code: 'ADMIN' },
-];
+// Admin data is now managed in Firestore, so we can clear these initial mock arrays.
+export const proveedores: Proveedor[] = [];
+export const cuentas: Cuenta[] = [];
+export const presupuestos: Presupuesto[] = [];
+export const centrosNegocios: CentroNegocios[] = [];
+export const centrosCostos: CentroCostos[] = [];

@@ -117,7 +117,7 @@ export default function ImportarPage() {
     });
   };
 
-  const handleImportData = () => {
+  const handleImportData = async () => {
     if (!importType) {
         toast({
             variant: "destructive",
@@ -165,7 +165,7 @@ export default function ImportarPage() {
             return row;
         });
 
-        addMultipleAdminItems(importType, dataToImport);
+        await addMultipleAdminItems(importType, dataToImport);
         handleRemoveFile(); // Reset UI after successful import
     } catch (error: any) {
         toast({

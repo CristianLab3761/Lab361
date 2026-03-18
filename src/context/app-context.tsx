@@ -6,13 +6,10 @@ import {
   users,
   solicitudes as initialSolicitudes,
   ordenesCompra as initialOrdenes,
-  proveedores as initialProveedores,
-  cuentas as initialCuentas,
-  presupuestos as initialPresupuestos,
-  centrosNegocios as initialCentrosNegocios,
-  centrosCostos as initialCentrosCostos,
 } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, doc, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 
 export type AdminItemType = 'proveedores' | 'cuentas' | 'presupuestos' | 'centrosNegocios' | 'centrosCostos';
 
@@ -28,14 +25,14 @@ interface AppContextType {
   getHistoricalDataForItems: (items: Item[]) => { name: string; averageCost: number }[];
 
   // Admin data
-  proveedores: Proveedor[];
-  cuentas: Cuenta[];
-  presupuestos: Presupuesto[];
-  centrosNegocios: CentroNegocios[];
-  centrosCostos: CentroCostos[];
-  addAdminItem: <T extends { id: string }>(itemType: AdminItemType, newItem: Omit<T, 'id'>) => void;
-  addMultipleAdminItems: <T extends { id: string }>(itemType: AdminItemType, newItems: Omit<T, 'id'>[]) => void;
-  removeAdminItem: (itemType: AdminItemType, itemId: string) => void;
+  proveedores: (Proveedor & { id: string })[];
+  cuentas: (Cuenta & { id: string })[];
+  presupuestos: (Presupuesto & { id: string })[];
+  centrosNegocios: (CentroNegocios & { id: string })[];
+  centrosCostos: (CentroCostos & { id: string })[];
+  addAdminItem: <T extends {}>(itemType: AdminItemType, newItem: T) => Promise<void>;
+  addMultipleAdminItems: <T extends {}>(itemType: AdminItemType, newItems: T[]) => Promise<void>;
+  removeAdminItem: (itemType: AdminItemType, itemId: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -45,68 +42,72 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>(initialSolicitudes);
   const [ordenesCompra, setOrdenesCompra] = useState<OrdenCompra[]>(initialOrdenes);
   const { toast } = useToast();
+  const firestore = useFirestore();
 
-  // Admin state
-  const [proveedores, setProveedores] = useState<Proveedor[]>(initialProveedores);
-  const [cuentas, setCuentas] = useState<Cuenta[]>(initialCuentas);
-  const [presupuestos, setPresupuestos] = useState<Presupuesto[]>(initialPresupuestos);
-  const [centrosNegocios, setCentrosNegocios] = useState<CentroNegocios[]>(initialCentrosNegocios);
-  const [centrosCostos, setCentrosCostos] = useState<CentroCostos[]>(initialCentrosCostos);
-  
-  const adminStateSetters = useMemo(() => ({
-    proveedores: setProveedores,
-    cuentas: setCuentas,
-    presupuestos: setPresupuestos,
-    centrosNegocios: setCentrosNegocios,
-    centrosCostos: setCentrosCostos,
-  }), []);
+  // Admin state from Firestore
+  const { data: proveedores } = useCollection(firestore ? collection(firestore, 'proveedores') : null);
+  const { data: cuentas } = useCollection(firestore ? collection(firestore, 'cuentas') : null);
+  const { data: presupuestos } = useCollection(firestore ? collection(firestore, 'presupuestos') : null);
+  const { data: centrosNegocios } = useCollection(firestore ? collection(firestore, 'centrosNegocios') : null);
+  const { data: centrosCostos } = useCollection(firestore ? collection(firestore, 'centrosCostos') : null);
 
-  const addAdminItem = useCallback(<T extends { id: string }>(itemType: AdminItemType, newItemData: Omit<T, 'id'>) => {
-    const setter = adminStateSetters[itemType] as React.Dispatch<React.SetStateAction<T[]>>;
-    const prefix = itemType.slice(0, 4);
-    
-    setter((prev: T[]) => {
-      const newItem = {
-        ...newItemData,
-        id: `${prefix}-${prev.length + 1 + Math.random()}`,
-      } as T;
-      return [newItem, ...prev];
-    });
+  const addAdminItem = useCallback(async <T extends {}>(itemType: AdminItemType, newItemData: T) => {
+    if (!firestore) return;
+    try {
+      const collectionRef = collection(firestore, itemType);
+      await addDoc(collectionRef, newItemData);
+      toast({
+        title: "Elemento Agregado",
+        description: `El nuevo elemento ha sido agregado a ${itemType}.`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error al agregar",
+        description: error.message || "No se pudo agregar el elemento.",
+      });
+    }
+  }, [firestore, toast]);
 
-    toast({
-      title: "Elemento Agregado",
-      description: `El nuevo elemento ha sido agregado.`,
-    });
-  }, [adminStateSetters, toast]);
-
-  const addMultipleAdminItems = useCallback(<T extends { id: string }>(itemType: AdminItemType, newItemsData: Omit<T, 'id'>[]) => {
-    const setter = adminStateSetters[itemType] as React.Dispatch<React.SetStateAction<T[]>>;
-    const prefix = itemType.slice(0, 4);
-
-    setter((prev: T[]) => {
-        const newItems = newItemsData.map((itemData, index) => ({
-            ...itemData,
-            id: `${prefix}-${prev.length + index + 1 + Math.random()}`,
-        } as T));
-        return [...newItems, ...prev];
-    });
-
-    toast({
+  const addMultipleAdminItems = useCallback(async <T extends {}>(itemType: AdminItemType, newItemsData: T[]) => {
+    if (!firestore) return;
+    try {
+      const collectionRef = collection(firestore, itemType);
+      const batch = writeBatch(firestore);
+      newItemsData.forEach((itemData) => {
+        const docRef = doc(collectionRef); // new doc with random ID
+        batch.set(docRef, itemData);
+      });
+      await batch.commit();
+      toast({
         title: "Importación Exitosa",
-        description: `${newItemsData.length} elemento(s) ha(n) sido agregado(s).`,
-    });
-  }, [adminStateSetters, toast]);
+        description: `${newItemsData.length} elemento(s) ha(n) sido agregado(s) a ${itemType}.`,
+      });
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Error durante la importación",
+            description: error.message || "Ocurrió un problema al guardar los datos.",
+        });
+    }
+  }, [firestore, toast]);
 
-
-  const removeAdminItem = useCallback((itemType: AdminItemType, itemId: string) => {
-    const setter = adminStateSetters[itemType];
-    setter((prev: { id: string }[]) => prev.filter(item => item.id !== itemId));
-    toast({
-      title: "Elemento Eliminado",
-      description: `El elemento ha sido eliminado.`,
-    });
-  }, [adminStateSetters, toast]);
-
+  const removeAdminItem = useCallback(async (itemType: AdminItemType, itemId: string) => {
+    if (!firestore) return;
+    try {
+      await deleteDoc(doc(firestore, itemType, itemId));
+      toast({
+        title: "Elemento Eliminado",
+        description: `El elemento ha sido eliminado de ${itemType}.`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error al eliminar",
+        description: error.message || "No se pudo eliminar el elemento.",
+      });
+    }
+  }, [firestore, toast]);
 
   const updateSolicitud = useCallback((id: string, updates: Partial<Solicitud>) => {
     setSolicitudes(prev =>
@@ -183,11 +184,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ordenesCompra,
     addOrdenCompra,
     getHistoricalDataForItems,
-    proveedores,
-    cuentas,
-    presupuestos,
-    centrosNegocios,
-    centrosCostos,
+    proveedores: proveedores || [],
+    cuentas: cuentas || [],
+    presupuestos: presupuestos || [],
+    centrosNegocios: centrosNegocios || [],
+    centrosCostos: centrosCostos || [],
     addAdminItem,
     removeAdminItem,
     addMultipleAdminItems,

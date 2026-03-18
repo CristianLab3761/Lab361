@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { useAppContext, AdminItemType } from '@/context/app-context';
 import { Header } from '@/components/app/header';
 import { PageHeader } from '@/components/app/page-header';
@@ -23,6 +23,7 @@ interface AdminSectionProps<T extends { id: string; name: string; [key: string]:
 function AdminSection<T extends { id: string; name: string; [key: string]: any }>({ title, description, itemType, items, columns, formFields }: AdminSectionProps<T>) {
   const { addAdminItem, removeAdminItem } = useAppContext();
   const [newItem, setNewItem] = useState<Partial<T>>({});
+  const [isAdding, setIsAdding] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -32,13 +33,15 @@ function AdminSection<T extends { id: string; name: string; [key: string]: any }
     });
   };
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (formFields.some(field => !newItem[field.key])) {
       alert('Por favor, complete todos los campos.');
       return;
     }
-    addAdminItem(itemType, newItem as Omit<T, 'id'>);
+    setIsAdding(true);
+    await addAdminItem(itemType, newItem as Omit<T, 'id'>);
     setNewItem({});
+    setIsAdding(false);
   };
 
   return (
@@ -61,8 +64,8 @@ function AdminSection<T extends { id: string; name: string; [key: string]: any }
                     className="flex-1 min-w-[150px]"
                 />
             ))}
-            <Button onClick={handleAddItem} size="icon" className="shrink-0">
-              <Plus className="h-4 w-4" />
+            <Button onClick={handleAddItem} size="icon" className="shrink-0" disabled={isAdding}>
+              {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
             </Button>
           </div>
 
@@ -124,7 +127,7 @@ export default function AdministracionPage() {
           title="Proveedores"
           description="Gestiona la lista de proveedores autorizados."
           itemType="proveedores"
-          items={proveedores}
+          items={proveedores || []}
           columns={[{ key: 'name', header: 'Nombre' }]}
           formFields={[{ key: 'name', placeholder: 'Nuevo Proveedor' }]}
         />
@@ -132,7 +135,7 @@ export default function AdministracionPage() {
           title="Cuentas Contables"
           description="Gestiona las cuentas para la categorización de gastos."
           itemType="cuentas"
-          items={cuentas}
+          items={cuentas || []}
           columns={[{ key: 'code', header: 'Código' }, { key: 'name', header: 'Nombre' }]}
           formFields={[{ key: 'name', placeholder: 'Nombre Cuenta' }, { key: 'code', placeholder: 'Código' }]}
         />
@@ -140,7 +143,7 @@ export default function AdministracionPage() {
           title="Presupuestos"
           description="Gestiona los presupuestos disponibles."
           itemType="presupuestos"
-          items={presupuestos}
+          items={presupuestos || []}
           columns={[{ key: 'name', header: 'Nombre' }, { key: 'monto', header: 'Monto' }]}
           formFields={[{ key: 'name', placeholder: 'Nombre Presupuesto' }, { key: 'monto', placeholder: 'Monto', type: 'number' }]}
         />
@@ -148,7 +151,7 @@ export default function AdministracionPage() {
           title="Centros de Negocios"
           description="Gestiona los centros de negocio o sucursales."
           itemType="centrosNegocios"
-          items={centrosNegocios}
+          items={centrosNegocios || []}
           columns={[{ key: 'name', header: 'Nombre' }]}
           formFields={[{ key: 'name', placeholder: 'Nuevo Centro de Negocio' }]}
         />
@@ -156,7 +159,7 @@ export default function AdministracionPage() {
           title="Centros de Costos"
           description="Gestiona los centros de costos o departamentos."
           itemType="centrosCostos"
-          items={centrosCostos}
+          items={centrosCostos || []}
           columns={[{ key: 'code', header: 'Código' }, { key: 'name', header: 'Nombre' }]}
           formFields={[{ key: 'name', placeholder: 'Nombre Centro' }, { key: 'code', placeholder: 'Código' }]}
         />
