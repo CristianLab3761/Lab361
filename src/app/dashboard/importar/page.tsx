@@ -70,10 +70,11 @@ export default function ImportarPage() {
         setParsedData(results.data);
 
         if (results.errors.length > 0) {
+          const firstError = results.errors[0];
           toast({
             variant: "destructive",
-            title: "Se encontraron errores en el CSV",
-            description: `Se procesaron ${results.data.length} filas, pero se encontraron ${results.errors.length} errores que fueron omitidos.`,
+            title: `Se encontraron ${results.errors.length} error(es) en el CSV`,
+            description: `Error en fila ${firstError.row + 1}: ${firstError.message}.`,
           });
         } else {
           toast({
