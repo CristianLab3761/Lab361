@@ -10,6 +10,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, doc, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export type AdminItemType = 'proveedores' | 'cuentas' | 'presupuestos' | 'centrosNegocios' | 'centrosCostos';
 
@@ -53,61 +55,60 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addAdminItem = useCallback(async <T extends {}>(itemType: AdminItemType, newItemData: T) => {
     if (!firestore) return;
-    try {
-      const collectionRef = collection(firestore, itemType);
-      await addDoc(collectionRef, newItemData);
-      toast({
-        title: "Elemento Agregado",
-        description: `El nuevo elemento ha sido agregado a ${itemType}.`,
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error al agregar",
-        description: error.message || "No se pudo agregar el elemento.",
-      });
-    }
-  }, [firestore, toast]);
+    const docRef = doc(collection(firestore, itemType));
+    
+    addDoc(collection(firestore, itemType), newItemData).catch((serverError: any) => {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'create',
+            requestResourceData: newItemData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        console.error("Add doc failed", serverError);
+    });
+
+  }, [firestore]);
+
 
   const addMultipleAdminItems = useCallback(async <T extends {}>(itemType: AdminItemType, newItemsData: T[]) => {
     if (!firestore) return;
-    try {
-      const collectionRef = collection(firestore, itemType);
-      const batch = writeBatch(firestore);
-      newItemsData.forEach((itemData) => {
+
+    const collectionRef = collection(firestore, itemType);
+    const batch = writeBatch(firestore);
+    newItemsData.forEach((itemData) => {
         const docRef = doc(collectionRef); // new doc with random ID
         batch.set(docRef, itemData);
-      });
-      await batch.commit();
-      toast({
-        title: "Importación Exitosa",
-        description: `${newItemsData.length} elemento(s) ha(n) sido agregado(s) a ${itemType}.`,
-      });
-    } catch (error: any) {
+    });
+
+    batch.commit().then(() => {
         toast({
-            variant: "destructive",
-            title: "Error durante la importación",
-            description: error.message || "Ocurrió un problema al guardar los datos.",
+            title: "Importación Exitosa",
+            description: `${newItemsData.length} elemento(s) ha(n) sido agregado(s) a ${itemType}.`,
         });
-    }
-  }, [firestore, toast]);
+    }).catch((serverError: any) => {
+        const permissionError = new FirestorePermissionError({
+            path: `/${itemType} (batch operation)`,
+            operation: 'create',
+            requestResourceData: `${newItemsData.length} documents`,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        console.error("Batch write failed", serverError);
+    });
+}, [firestore, toast]);
+
 
   const removeAdminItem = useCallback(async (itemType: AdminItemType, itemId: string) => {
     if (!firestore) return;
-    try {
-      await deleteDoc(doc(firestore, itemType, itemId));
-      toast({
-        title: "Elemento Eliminado",
-        description: `El elemento ha sido eliminado de ${itemType}.`,
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error al eliminar",
-        description: error.message || "No se pudo eliminar el elemento.",
-      });
-    }
-  }, [firestore, toast]);
+    const docRef = doc(firestore, itemType, itemId);
+    deleteDoc(docRef).catch((serverError: any) => {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        console.error("Delete doc failed", serverError);
+    });
+  }, [firestore]);
 
   const updateSolicitud = useCallback((id: string, updates: Partial<Solicitud>) => {
     setSolicitudes(prev =>

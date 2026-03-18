@@ -3,6 +3,7 @@
 import {useEffect, useState} from 'react';
 import type {FirebaseApp} from 'firebase/app';
 import type {Auth} from 'firebase/auth';
+import { signInAnonymously } from 'firebase/auth';
 import type {Firestore} from 'firebase/firestore';
 
 import {initializeFirebase, FirebaseProvider} from '@/firebase';
@@ -21,7 +22,16 @@ export function FirebaseClientProvider({
 
   useEffect(() => {
     const instances = initializeFirebase();
-    setFirebaseInstances(instances);
+    // Sign in anonymously to satisfy security rules
+    signInAnonymously(instances.auth)
+      .then(() => {
+        setFirebaseInstances(instances);
+      })
+      .catch((error) => {
+        console.error("Anonymous sign-in failed:", error);
+        // Still set instances so the app doesn't hang, but auth-required features will fail
+        setFirebaseInstances(instances);
+      });
   }, []);
 
   if (!firebaseInstances) {
