@@ -1,158 +1,482 @@
 {
   "entities": {
-    "User": {
-      "title": "User",
-      "description": "Represents a user of the application.",
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
       "type": "object",
+      "description": "Stores information about users of the OrdenaPro system, including their roles, department, and basic profile details. This entity assumes an external authentication system manages sensitive credentials.",
       "properties": {
-        "name": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "role": { "type": "string", "enum": ["solicitante", "compras"] },
-        "avatar": { "type": "string", "format": "uri" }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user, used for communication and identification.",
+          "format": "email"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The full name or display name of the user."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user within the system (e.g., 'Solicitante', 'Compras'), dictating their permissions."
+        },
+        "department": {
+          "type": "string",
+          "description": "The department the user belongs to within the organization."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user profile was initially created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user profile was last updated.",
+          "format": "date-time"
+        }
       },
-      "required": ["name", "email", "role"]
+      "required": [
+        "id",
+        "email",
+        "displayName",
+        "role",
+        "createdAt"
+      ]
     },
-    "Solicitud": {
-      "title": "Solicitud",
-      "description": "Purchase request.",
+    "PurchaseRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PurchaseRequest",
       "type": "object",
+      "description": "Represents a request for a purchase made by a user from a specific department, awaiting review and approval by the purchasing team.",
       "properties": {
-        "solicitanteId": { "type": "string" },
-        "solicitanteName": { "type": "string" },
-        "department": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["pendiente", "aprobada", "rechazada", "procesada"] },
-        "items": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the PurchaseRequest entity."
+        },
+        "requesterId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who created this purchase request. (Relationship: UserProfile 1:N PurchaseRequest)"
+        },
+        "requesterDepartment": {
+          "type": "string",
+          "description": "The department of the user who made the request, for organizational tracking."
+        },
+        "title": {
+          "type": "string",
+          "description": "A short, descriptive title summarizing the purpose of the purchase request."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description providing context or justification for the purchase request."
+        },
+        "itemIds": {
           "type": "array",
-          "items": { "$ref": "#/entities/Item" }
+          "description": "References to PurchaseRequestItem entities that detail the individual items requested. (Relationship: PurchaseRequest 1:N PurchaseRequestItem)",
+          "items": {
+            "type": "string"
+          }
         },
-        "totalEstimatedCost": { "type": "number" },
-        "comments": { "type": "string" }
+        "totalEstimatedCost": {
+          "type": "number",
+          "description": "The sum of all estimated costs for items included in this request."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current state of the purchase request (e.g., 'pendiente', 'aprobado', 'rechazado')."
+        },
+        "commentIds": {
+          "type": "array",
+          "description": "References to PurchaseRequestComment entities providing feedback or notes on this request. (Relationship: PurchaseRequest 1:N PurchaseRequestComment)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the purchase request was initially created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the purchase request was last updated.",
+          "format": "date-time"
+        },
+        "approvedById": {
+          "type": "string",
+          "description": "Reference to the UserProfile who approved this request. Only present if the status is 'aprobado'. (Relationship: UserProfile 1:N PurchaseRequest)"
+        },
+        "approvedAt": {
+          "type": "string",
+          "description": "Timestamp when the purchase request was approved. Only present if the status is 'aprobado'.",
+          "format": "date-time"
+        }
       },
-      "required": ["solicitanteId", "solicitanteName", "department", "createdAt", "status", "items", "totalEstimatedCost"]
+      "required": [
+        "id",
+        "requesterId",
+        "title",
+        "itemIds",
+        "totalEstimatedCost",
+        "status",
+        "createdAt"
+      ]
     },
-    "Item": {
-        "title": "Item",
-        "description": "An item within a purchase request or order.",
-        "type": "object",
-        "properties": {
-            "name": { "type": "string" },
-            "quantity": { "type": "number" },
-            "estimatedCost": { "type": "number" }
+    "PurchaseRequestItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PurchaseRequestItem",
+      "type": "object",
+      "description": "Represents a single item detailed within a PurchaseRequest, including its requested quantity and estimated unit cost.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the PurchaseRequestItem entity."
         },
-        "required": ["name", "quantity", "estimatedCost"]
+        "purchaseRequestId": {
+          "type": "string",
+          "description": "Reference to the PurchaseRequest this item belongs to. (Relationship: PurchaseRequest 1:N PurchaseRequestItem)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name or a brief description of the requested item."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the item being requested."
+        },
+        "estimatedCost": {
+          "type": "number",
+          "description": "The estimated unit cost of the item in the local currency."
+        },
+        "totalItemCost": {
+          "type": "number",
+          "description": "The calculated total estimated cost for this specific item (quantity * estimatedCost)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when this item was added to the purchase request.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "purchaseRequestId",
+        "name",
+        "quantity",
+        "estimatedCost",
+        "totalItemCost",
+        "createdAt"
+      ]
     },
-    "OrdenCompra": {
-        "title": "Orden de Compra",
-        "description": "Purchase order.",
-        "type": "object",
-        "properties": {
-            "solicitudId": { "type": "string" },
-            "createdAt": { "type": "string", "format": "date-time" },
-            "supplierName": { "type": "string" },
-            "paymentTerms": { "type": "string" },
-            "deliveryInstructions": { "type": "string" },
-            "poDescription": { "type": "string" },
-            "items": {
-                "type": "array",
-                 "items": {
-                    "type": "object",
-                    "properties": {
-                        "name": { "type": "string" },
-                        "quantity": { "type": "number" },
-                        "unitCost": { "type": "number" }
-                    },
-                    "required": ["name", "quantity", "unitCost"]
-                }
-            },
-            "totalCost": { "type": "number" }
+    "PurchaseRequestComment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PurchaseRequestComment",
+      "type": "object",
+      "description": "Represents a comment or note added to a PurchaseRequest, typically by a reviewer or the requester, to provide feedback or additional information.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the PurchaseRequestComment entity."
         },
-        "required": ["solicitudId", "createdAt", "supplierName", "totalCost"]
+        "purchaseRequestId": {
+          "type": "string",
+          "description": "Reference to the PurchaseRequest this comment is associated with. (Relationship: PurchaseRequest 1:N PurchaseRequestComment)"
+        },
+        "commenterId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who made this comment. (Relationship: UserProfile 1:N PurchaseRequestComment)"
+        },
+        "text": {
+          "type": "string",
+          "description": "The actual content of the comment or note."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp indicating when the comment was made.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "purchaseRequestId",
+        "commenterId",
+        "text",
+        "timestamp"
+      ]
     },
-    "Proveedor": {
-        "title": "Proveedor",
-        "description": "A supplier/vendor.",
-        "type": "object",
-        "properties": {
-            "name": { "type": "string", "description": "Name of the supplier." }
+    "PurchaseOrder": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PurchaseOrder",
+      "type": "object",
+      "description": "Represents a formal purchase order generated automatically from an approved PurchaseRequest, detailing vendor information, final costs, and payment terms.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the PurchaseOrder entity."
         },
-        "required": ["name"]
+        "purchaseRequestId": {
+          "type": "string",
+          "description": "Reference to the PurchaseRequest from which this Purchase Order was generated. (Relationship: PurchaseRequest 1:1 PurchaseOrder)"
+        },
+        "poNumber": {
+          "type": "string",
+          "description": "A unique, human-readable purchase order number for tracking."
+        },
+        "supplierName": {
+          "type": "string",
+          "description": "The name of the supplier or vendor for this purchase order."
+        },
+        "supplierContact": {
+          "type": "string",
+          "description": "Contact information for the supplier (e.g., email address, phone number)."
+        },
+        "itemIds": {
+          "type": "array",
+          "description": "References to PurchaseOrderItem entities that specify the items included in this order. (Relationship: PurchaseOrder 1:N PurchaseOrderItem)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "totalCost": {
+          "type": "number",
+          "description": "The total final agreed cost of all items in this purchase order."
+        },
+        "currency": {
+          "type": "string",
+          "description": "The currency in which the total cost is denominated (e.g., 'USD', 'EUR', 'MXN')."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the purchase order (e.g., 'generado', 'enviado', 'recibido', 'pagado', 'cancelado')."
+        },
+        "issuedByUserId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who issued or generated this purchase order. (Relationship: UserProfile 1:N PurchaseOrder)"
+        },
+        "issuedAt": {
+          "type": "string",
+          "description": "Timestamp when the purchase order was formally issued or generated.",
+          "format": "date-time"
+        },
+        "expectedDeliveryDate": {
+          "type": "string",
+          "description": "The anticipated date by which the ordered items are expected to be delivered.",
+          "format": "date"
+        },
+        "paymentTerms": {
+          "type": "string",
+          "description": "The agreed payment terms with the supplier (e.g., 'Net 30', 'Due on Receipt', 'Advance Payment')."
+        },
+        "signedPdfUrl": {
+          "type": "string",
+          "description": "URL to the automatically generated, signed, and authorized PDF document of the purchase order.",
+          "format": "uri"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the purchase order record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "purchaseRequestId",
+        "poNumber",
+        "supplierName",
+        "itemIds",
+        "totalCost",
+        "currency",
+        "status",
+        "issuedByUserId",
+        "issuedAt"
+      ]
     },
-    "Cuenta": {
-        "title": "Cuenta",
-        "description": "Accounting account.",
-        "type": "object",
-        "properties": {
-            "name": { "type": "string", "description": "Name of the account." },
-            "code": { "type": "string", "description": "Code of the account." }
+    "PurchaseOrderItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PurchaseOrderItem",
+      "type": "object",
+      "description": "Represents a single item specified within a PurchaseOrder, including the final agreed quantity and unit cost.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the PurchaseOrderItem entity."
         },
-        "required": ["name", "code"]
-    },
-    "Presupuesto": {
-        "title": "Presupuesto",
-        "description": "Budget information.",
-        "type": "object",
-        "properties": {
-            "name": { "type": "string", "description": "Name of the budget." },
-            "monto": { "type": "number", "description": "Amount of the budget." }
+        "purchaseOrderId": {
+          "type": "string",
+          "description": "Reference to the PurchaseOrder this item belongs to. (Relationship: PurchaseOrder 1:N PurchaseOrderItem)"
         },
-        "required": ["name", "monto"]
-    },
-    "CentroNegocios": {
-        "title": "Centro de Negocios",
-        "description": "Business center or branch.",
-        "type": "object",
-        "properties": {
-            "name": { "type": "string", "description": "Name of the business center." }
+        "purchaseRequestItemId": {
+          "type": "string",
+          "description": "Optional reference to the original PurchaseRequestItem from which this order item originated, for traceability. (Relationship: PurchaseRequestItem 1:1 PurchaseOrderItem)"
         },
-        "required": ["name"]
-    },
-    "CentroCostos": {
-        "title": "Centro de Costos",
-        "description": "Cost center or department.",
-        "type": "object",
-        "properties": {
-            "name": { "type": "string", "description": "Name of the cost center." },
-            "code": { "type": "string", "description": "Code of the cost center." }
+        "name": {
+          "type": "string",
+          "description": "The name or a brief description of the item being ordered."
         },
-        "required": ["name", "code"]
+        "quantity": {
+          "type": "number",
+          "description": "The final quantity of the item ordered."
+        },
+        "unitCost": {
+          "type": "number",
+          "description": "The final agreed unit cost of the item."
+        },
+        "totalItemCost": {
+          "type": "number",
+          "description": "The calculated total cost for this specific ordered item (quantity * unitCost)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when this item was added to the purchase order.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "purchaseOrderId",
+        "name",
+        "quantity",
+        "unitCost",
+        "totalItemCost",
+        "createdAt"
+      ]
     }
   },
   "auth": {
-    "providers": ["anonymous"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": { "$ref": "#/entities/User" },
-      "description": "Stores user profile information."
-    },
-    "/solicitudes/{solicitudId}": {
-      "schema": { "$ref": "#/entities/Solicitud" },
-      "description": "Stores purchase requests."
-    },
-    "/ordenes_compra/{ordenCompraId}": {
-        "schema": { "$ref": "#/entities/OrdenCompra" },
-        "description": "Stores generated purchase orders."
-    },
-    "/proveedores/{proveedorId}": {
-        "schema": { "$ref": "#/entities/Proveedor" },
-        "description": "Stores supplier information."
-    },
-    "/cuentas/{cuentaId}": {
-        "schema": { "$ref": "#/entities/Cuenta" },
-        "description": "Stores accounting accounts."
-    },
-    "/presupuestos/{presupuestoId}": {
-        "schema": { "$ref": "#/entities/Presupuesto" },
-        "description": "Stores budget data."
-    },
-    "/centrosNegocios/{centroNegociosId}": {
-        "schema": { "$ref": "#/entities/CentroNegocios" },
-        "description": "Stores business centers."
-    },
-    "/centrosCostos/{centroCostosId}": {
-        "schema": { "$ref": "#/entities/CentroCostos" },
-        "description": "Stores cost centers."
-    }
+    "structure": [
+      {
+        "path": "/userProfiles/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information. Each user can read/write their own profile. Includes 'role' and 'department' which are denormalized into related documents for authorization independence. A Cloud Function will maintain the /roles collection based on changes here.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user, corresponding to `request.auth.uid`."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles/compras/{userId}",
+        "definition": {
+          "entityName": "RoleAssignment",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Collection for explicit 'Compras' role assignment. Presence of a document signifies the user has the 'Compras' role. Used for fast role checks in security rules to avoid 'get()' calls.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user with the 'Compras' role."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/purchaseRequests/{purchaseRequestId}",
+        "definition": {
+          "entityName": "PurchaseRequest",
+          "schema": {
+            "$ref": "#/backend/entities/PurchaseRequest"
+          },
+          "description": "Top-level collection for purchase requests. Includes denormalized 'requesterId', 'requesterDepartment', and 'requesterRole' (from UserProfile) for authorization independence. The 'status' field ('pendiente', 'aprobado', 'rechazado') is crucial for workflow and rule conditions.",
+          "params": [
+            {
+              "name": "purchaseRequestId",
+              "description": "The unique ID of the purchase request."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/purchaseRequests/{purchaseRequestId}/items/{itemId}",
+        "definition": {
+          "entityName": "PurchaseRequestItem",
+          "schema": {
+            "$ref": "#/backend/entities/PurchaseRequestItem"
+          },
+          "description": "Subcollection for items within a specific purchase request. Includes denormalized 'requesterId', 'requesterDepartment', and 'requesterRole' from the parent PurchaseRequest for authorization independence.",
+          "params": [
+            {
+              "name": "purchaseRequestId",
+              "description": "The unique ID of the parent purchase request."
+            },
+            {
+              "name": "itemId",
+              "description": "The unique ID of the purchase request item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/purchaseRequests/{purchaseRequestId}/comments/{commentId}",
+        "definition": {
+          "entityName": "PurchaseRequestComment",
+          "schema": {
+            "$ref": "#/backend/entities/PurchaseRequestComment"
+          },
+          "description": "Subcollection for comments on a specific purchase request. Includes denormalized 'requesterId', 'requesterDepartment', and 'requesterRole' from the parent PurchaseRequest for authorization independence.",
+          "params": [
+            {
+              "name": "purchaseRequestId",
+              "description": "The unique ID of the parent purchase request."
+            },
+            {
+              "name": "commentId",
+              "description": "The unique ID of the purchase request comment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/purchaseOrders/{purchaseOrderId}",
+        "definition": {
+          "entityName": "PurchaseOrder",
+          "schema": {
+            "$ref": "#/backend/entities/PurchaseOrder"
+          },
+          "description": "Top-level collection for formal purchase orders generated from approved requests. Includes denormalized 'requesterId', 'requesterDepartment' (from the original PurchaseRequest) and 'issuedByUserId', 'issuedByUserRole' (from the issuing Compras UserProfile) for authorization independence.",
+          "params": [
+            {
+              "name": "purchaseOrderId",
+              "description": "The unique ID of the purchase order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/purchaseOrders/{purchaseOrderId}/items/{poItemId}",
+        "definition": {
+          "entityName": "PurchaseOrderItem",
+          "schema": {
+            "$ref": "#/backend/entities/PurchaseOrderItem"
+          },
+          "description": "Subcollection for items within a specific purchase order. Includes denormalized 'requesterId', 'requesterDepartment' (from original PurchaseRequest), 'issuedByUserId', and 'issuedByUserRole' (from parent PurchaseOrder) for authorization independence.",
+          "params": [
+            {
+              "name": "purchaseOrderId",
+              "description": "The unique ID of the parent purchase order."
+            },
+            {
+              "name": "poItemId",
+              "description": "The unique ID of the purchase order item."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure for OrdenaPro prioritizes Authorization Independence and Structural Segregation to ensure secure, scalable, and easily debuggable security rules. The core principle applied is denormalization of authorization-relevant data directly into each document, eliminating the need for `get()` calls in security rules and enabling atomic operations.\n\n1.  **User Profiles and Roles (`/userProfiles/{userId}`, `/roles/{roleName}/{userId}`):**\n    *   `userProfiles` stores individual user data. Each user can manage their own profile. For explicit role-based authorization, a separate top-level `roles` collection is used (`/roles/compras/{userId}`, `/roles/solicitantes/{userId}`). This DBAC (Database-Based Access Control) pattern allows for efficient `exists()` checks in security rules, verifying a user's role without requiring a `get()` on their user profile. When a user's role is updated in their `UserProfile`, a Cloud Function should update the corresponding document in the `/roles` collection, ensuring synchronization and authorization independence.\n\n2.  **Purchase Requests (`/purchaseRequests/{purchaseRequestId}`):**\n    *   `PurchaseRequest` documents are stored in a top-level collection. This collection's security posture is 'mixed' – private for the `requester`, and 'shared/editable' for users with the 'Compras' role. To achieve Authorization Independence, each `PurchaseRequest` document will denormalize `requesterId` (already present), `requesterDepartment` (already present), and `requesterRole` (new denormalized field from `UserProfile`). This allows rules to verify ownership (`request.auth.uid == resource.data.requesterId`) and role-based access without reading the `UserProfile` document.\n    *   **QAPs Support:** For 'Solicitantes' to view their own requests, queries will filter by `requesterId`. For 'Compras' to view all requests, no specific filter is needed. This structure directly supports these query access patterns.\n\n3.  **Purchase Request Items & Comments (`/purchaseRequests/{purchaseRequestId}/items/{itemId}`, `/purchaseRequests/{purchaseRequestId}/comments/{commentId}`):**\n    *   These entities are nested as subcollections under their respective `PurchaseRequest`. This maintains logical hierarchy. For Authorization Independence, each `PurchaseRequestItem` and `PurchaseRequestComment` document will denormalize the `requesterId`, `requesterDepartment`, and `requesterRole` from its parent `PurchaseRequest`. This ensures that rules can determine access to items/comments based on the top-level request's ownership/roles without traversing the hierarchy via `get()`.\n\n4.  **Purchase Orders (`/purchaseOrders/{purchaseOrderId}`):**\n    *   `PurchaseOrder` documents are also in a top-level collection, reflecting their distinct lifecycle managed primarily by the 'Compras' department, but viewable by the original 'Solicitante'. Similar to `PurchaseRequest`, each `PurchaseOrder` document will denormalize `requesterId` (from the original `PurchaseRequest`), `requesterDepartment` (from the original `PurchaseRequest`), `issuedByUserId` (already present), and `issuedByUserRole` (new denormalized field from `UserProfile`). This allows rules to grant access based on either the original requester or the 'Compras' user who issued it, all within the document's own data.\n    *   **QAPs Support:** 'Solicitantes' can query for their `PurchaseOrder` by `requesterId`. 'Compras' can list all `PurchaseOrders` directly. This is supported without additional rule complexity.\n\n5.  **Purchase Order Items (`/purchaseOrders/{purchaseOrderId}/items/{poItemId}`):**\n    *   Nested as a subcollection under `PurchaseOrder`. To ensure Authorization Independence, each `PurchaseOrderItem` document will denormalize `requesterId`, `requesterDepartment`, `issuedByUserId`, and `issuedByUserRole` from its parent `PurchaseOrder`.\n\nThis design leverages structural segregation (e.g., dedicated role collections) and radical denormalization of authorization context (`requesterId`, `requesterRole`, etc.) to create a robust and easily auditable security model. The `status` field is explicitly used for state modeling, simplifying queries and rule conditions."
   }
 }
