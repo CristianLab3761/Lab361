@@ -34,6 +34,7 @@ interface AppContextType {
   centrosNegocios: CentroNegocios[];
   centrosCostos: CentroCostos[];
   addAdminItem: <T extends { id: string }>(itemType: AdminItemType, newItem: Omit<T, 'id'>) => void;
+  addMultipleAdminItems: <T extends { id: string }>(itemType: AdminItemType, newItems: Omit<T, 'id'>[]) => void;
   removeAdminItem: (itemType: AdminItemType, itemId: string) => void;
 }
 
@@ -77,6 +78,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       description: `El nuevo elemento ha sido agregado.`,
     });
   }, [adminStateSetters, toast]);
+
+  const addMultipleAdminItems = useCallback(<T extends { id: string }>(itemType: AdminItemType, newItemsData: Omit<T, 'id'>[]) => {
+    const setter = adminStateSetters[itemType] as React.Dispatch<React.SetStateAction<T[]>>;
+    const prefix = itemType.slice(0, 4);
+
+    setter((prev: T[]) => {
+        const newItems = newItemsData.map((itemData, index) => ({
+            ...itemData,
+            id: `${prefix}-${prev.length + index + 1 + Math.random()}`,
+        } as T));
+        return [...newItems, ...prev];
+    });
+
+    toast({
+        title: "Importación Exitosa",
+        description: `${newItemsData.length} elemento(s) ha(n) sido agregado(s).`,
+    });
+  }, [adminStateSetters, toast]);
+
 
   const removeAdminItem = useCallback((itemType: AdminItemType, itemId: string) => {
     const setter = adminStateSetters[itemType];
@@ -170,7 +190,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     centrosCostos,
     addAdminItem,
     removeAdminItem,
-  }), [currentUser, users, solicitudes, updateSolicitud, addSolicitud, ordenesCompra, addOrdenCompra, getHistoricalDataForItems, proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, addAdminItem, removeAdminItem]);
+    addMultipleAdminItems,
+  }), [currentUser, users, solicitudes, updateSolicitud, addSolicitud, ordenesCompra, addOrdenCompra, getHistoricalDataForItems, proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, addAdminItem, removeAdminItem, addMultipleAdminItems]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

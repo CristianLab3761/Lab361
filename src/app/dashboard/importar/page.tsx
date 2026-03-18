@@ -9,18 +9,21 @@ import { PageHeader } from '@/components/app/page-header';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useAppContext } from '@/context/app-context';
+import { useAppContext, AdminItemType } from '@/context/app-context';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ImportarPage() {
   const { toast } = useToast();
-  const { currentUser } = useAppContext();
+  const { currentUser, addMultipleAdminItems } = useAppContext();
 
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<any[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importType, setImportType] = useState<AdminItemType | ''>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,6 +47,7 @@ export default function ImportarPage() {
     setFile(null);
     setParsedData([]);
     setHeaders([]);
+    setImportType('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -111,6 +115,67 @@ export default function ImportarPage() {
         });
       },
     });
+  };
+
+  const handleImportData = () => {
+    if (!importType) {
+        toast({
+            variant: "destructive",
+            title: "Selecciona un tipo de dato",
+            description: "Debes elegir qué tipo de datos estás importando.",
+        });
+        return;
+    }
+
+    if (parsedData.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "No hay datos para importar",
+            description: "El archivo procesado no contiene filas de datos válidas.",
+        });
+        return;
+    }
+
+    const requiredHeaders: { [key in AdminItemType]: string[] } = {
+        proveedores: ['name'],
+        cuentas: ['name', 'code'],
+        presupuestos: ['name', 'monto'],
+        centrosNegocios: ['name'],
+        centrosCostos: ['name', 'code'],
+    };
+
+    const missingHeaders = requiredHeaders[importType].filter(h => !headers.includes(h));
+
+    if (missingHeaders.length > 0) {
+        toast({
+            variant: "destructive",
+            title: "Cabeceras incorrectas",
+            description: `Columnas requeridas para '${importType}': ${requiredHeaders[importType].join(', ')}. Faltan: ${missingHeaders.join(', ')}.`,
+        });
+        return;
+    }
+
+    setIsImporting(true);
+    try {
+        const dataToImport = parsedData.map(row => {
+            if (importType === 'presupuestos' && row.monto) {
+                const monto = parseFloat(String(row.monto).replace(/[^0-9.-]+/g,""));
+                return { ...row, monto: isNaN(monto) ? 0 : monto };
+            }
+            return row;
+        });
+
+        addMultipleAdminItems(importType, dataToImport);
+        handleRemoveFile(); // Reset UI after successful import
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Error durante la importación",
+            description: error.message || "Ocurrió un problema al guardar los datos.",
+        });
+    } finally {
+        setIsImporting(false);
+    }
   };
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
@@ -242,6 +307,26 @@ export default function ImportarPage() {
                 </Table>
               </ScrollArea>
             </CardContent>
+             <CardFooter className="flex-col items-stretch gap-4 border-t pt-6 md:flex-row">
+                <div className="flex-1">
+                <Select value={importType} onValueChange={(value) => setImportType(value as AdminItemType)}>
+                    <SelectTrigger>
+                    <SelectValue placeholder="Selecciona el tipo de dato a importar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="proveedores">Proveedores</SelectItem>
+                    <SelectItem value="cuentas">Cuentas Contables</SelectItem>
+                    <SelectItem value="presupuestos">Presupuestos</SelectItem>
+                    <SelectItem value="centrosNegocios">Centros de Negocios</SelectItem>
+                    <SelectItem value="centrosCostos">Centros de Costos</SelectItem>
+                    </SelectContent>
+                </Select>
+                </div>
+                <Button onClick={handleImportData} disabled={!importType || isImporting} className="w-full md:w-auto">
+                {isImporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Importar {parsedData.length} registros
+                </Button>
+            </CardFooter>
           </Card>
         )}
       </div>
