@@ -64,7 +64,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         sessionStorage.setItem('currentUser', JSON.stringify(user));
         if (auth?.currentUser && firestore) {
             const uid = auth.currentUser.uid;
-            const comprasRoleRef = doc(firestore, 'roles', 'compras', uid);
+            const comprasRoleRef = doc(firestore, 'compras', uid);
             if (user.role === 'compras') {
                 setDoc(comprasRoleRef, { assignedAt: new Date().toISOString() })
                     .catch(e => console.error("Error setting 'compras' role:", e));
@@ -77,7 +77,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         sessionStorage.removeItem('currentUser');
         if (auth?.currentUser && firestore) {
             const uid = auth.currentUser.uid;
-            const comprasRoleRef = doc(firestore, 'roles', 'compras', uid);
+            const comprasRoleRef = doc(firestore, 'compras', uid);
             deleteDoc(comprasRoleRef)
                 .catch(e => console.error("Error removing 'compras' role on logout:", e));
         }

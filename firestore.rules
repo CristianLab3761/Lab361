@@ -11,11 +11,11 @@
  * ## Data Structure
  * The structure uses top-level collections for primary data types like `userProfiles`, `purchaseRequests`, and `purchaseOrders`.
  * Items and comments are logically grouped in subcollections under their parent document.
- * A dedicated top-level `/roles/compras` collection is used as a fast, indexed lookup to verify a user's role, which is more performant and secure than checking a field on a user profile document.
+ * A dedicated top-level `/compras` collection is used as a fast, indexed lookup to verify a user's role, which is more performant and secure than checking a field on a user profile document.
  *
  * ## Key Security Decisions
  * - **Denormalization for Authorization**: To avoid slow and costly `get()` calls in rules, authorization-critical data like `requesterId` and `issuedByUserId` is denormalized (copied) onto the documents and subcollections being secured.
- * - **Role-Based Access**: A separate `/roles/compras/{userId}` collection provides a fast way to check if a user belongs to the 'Compras' team using `exists()`. This collection is intended to be managed by backend Cloud Functions, so client-side writes are disabled.
+ * - **Role-Based Access**: A separate `/compras/{userId}` collection provides a fast way to check if a user belongs to the 'Compras' team using `exists()`. This collection is intended to be managed by backend Cloud Functions, so client-side writes are disabled.
  * - **User Privacy**: Users can only access their own `/userProfiles/{userId}` document. Listing all user profiles is strictly forbidden to prevent user data enumeration.
  * - **Secure Subcollection Access**: Access to subcollection items (e.g., items, comments) is granted by checking permissions on the parent document. This ensures a consistent security model throughout the document tree.
  * - **Default Deny**: Any access not explicitly granted by these rules is denied.
@@ -55,11 +55,11 @@ service cloud.firestore {
 
     /**
      * Returns true if the user has the 'Compras' role.
-     * This is determined by the existence of a document in the /roles/compras collection.
+     * This is determined by the existence of a document in the /compras collection.
      * This is highly performant as it avoids a full document read.
      */
     function isCompras() {
-      return exists(/databases/$(database)/documents/roles/compras/$(request.auth.uid));
+      return exists(/databases/$(database)/documents/compras/$(request.auth.uid));
     }
     
     /**
@@ -115,13 +115,13 @@ service cloud.firestore {
 
     /**
      * @description Read-only collection for 'Compras' role verification.
-     * @path /roles/compras/{userId}
+     * @path /compras/{userId}
      * @allow (get, list) Any signed-in user can check who is in the 'Compras' role.
      * @allow (create, delete) A user can manage their own role document. This is for the simulated login.
      * @deny (update) Updates are not allowed.
      * @principle Segregates authorization data and protects it from client modification.
      */
-    match /roles/compras/{userId} {
+    match /compras/{userId} {
       allow get, list: if isSignedIn();
       allow create: if isOwner(userId);
       allow update: if false;
