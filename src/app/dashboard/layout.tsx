@@ -2,9 +2,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { AppProvider, useAppContext } from '@/context/app-context';
+import { useAppContext } from '@/context/app-context';
 import { SidebarNav } from '@/components/app/sidebar-nav';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Skeleton } from '@/components/ui/skeleton';
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
@@ -55,11 +54,5 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <FirebaseClientProvider>
-      <AppProvider>
-        <DashboardLayoutContent>{children}</DashboardLayoutContent>
-      </AppProvider>
-    </FirebaseClientProvider>
-  );
+  return <DashboardLayoutContent>{children}</DashboardLayoutContent>;
 }
