@@ -117,14 +117,15 @@ service cloud.firestore {
      * @description Read-only collection for 'Compras' role verification.
      * @path /roles/compras/{userId}
      * @allow (get, list) Any signed-in user can check who is in the 'Compras' role.
-     * @deny (create, update, delete) All client-side writes are blocked. This collection should only be managed by a trusted backend (e.g., Cloud Function).
+     * @allow (create, delete) A user can manage their own role document. This is for the simulated login.
+     * @deny (update) Updates are not allowed.
      * @principle Segregates authorization data and protects it from client modification.
      */
     match /roles/compras/{userId} {
       allow get, list: if isSignedIn();
-      allow create: if false;
+      allow create: if isOwner(userId);
       allow update: if false;
-      allow delete: if false;
+      allow delete: if isOwner(userId);
     }
 
     /**

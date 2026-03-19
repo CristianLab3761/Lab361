@@ -8,8 +8,8 @@ import {
   ordenesCompra as initialOrdenes,
 } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useAuth } from '@/firebase';
+import { collection, doc, addDoc, deleteDoc, writeBatch, setDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -47,6 +47,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [ordenesCompra, setOrdenesCompra] = useState<OrdenCompra[]>(initialOrdenes);
   const { toast } = useToast();
   const firestore = useFirestore();
+  const auth = useAuth();
+
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem('currentUser');
@@ -56,14 +58,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const handleSetCurrentUser = (user: User | null) => {
+  const handleSetCurrentUser = useCallback((user: User | null) => {
     setCurrentUser(user);
     if (user) {
-      sessionStorage.setItem('currentUser', JSON.stringify(user));
+        sessionStorage.setItem('currentUser', JSON.stringify(user));
+        if (auth?.currentUser && firestore) {
+            const uid = auth.currentUser.uid;
+            const comprasRoleRef = doc(firestore, 'roles', 'compras', uid);
+            if (user.role === 'compras') {
+                setDoc(comprasRoleRef, { assignedAt: new Date().toISOString() })
+                    .catch(e => console.error("Error setting 'compras' role:", e));
+            } else {
+                deleteDoc(comprasRoleRef)
+                    .catch(e => console.error("Error removing 'compras' role:", e));
+            }
+        }
     } else {
-      sessionStorage.removeItem('currentUser');
+        sessionStorage.removeItem('currentUser');
+        if (auth?.currentUser && firestore) {
+            const uid = auth.currentUser.uid;
+            const comprasRoleRef = doc(firestore, 'roles', 'compras', uid);
+            deleteDoc(comprasRoleRef)
+                .catch(e => console.error("Error removing 'compras' role on logout:", e));
+        }
     }
-  };
+  }, [auth, firestore]);
 
   // Admin state from Firestore
   const proveedoresRef = useMemoFirebase(() => firestore ? collection(firestore, 'proveedores') : null, [firestore]);
@@ -111,7 +130,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         });
     }).catch((serverError: any) => {
         const permissionError = new FirestorePermissionError({
-            path: `/${itemType}`,
+            path: itemType,
             operation: 'write',
             requestResourceData: { itemCount: newItemsData.length },
         });
@@ -224,7 +243,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addAdminItem,
     removeAdminItem,
     addMultipleAdminItems,
-  }), [currentUser, isLoading, users, solicitudes, updateSolicitud, addSolicitud, ordenesCompra, addOrdenCompra, getHistoricalDataForItems, proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, addAdminItem, removeAdminItem, addMultipleAdminItems]);
+  }), [currentUser, isLoading, users, solicitudes, updateSolicitud, addSolicitud, ordenesCompra, addOrdenCompra, getHistoricalDataForItems, proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, addAdminItem, removeAdminItem, addMultipleAdminItems, handleSetCurrentUser]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
