@@ -199,5 +199,29 @@ service cloud.firestore {
       allow create: if canWritePurchaseOrder() && request.resource.data.purchaseOrderId == purchaseOrderId; // Updated call
       allow update, delete: if canWritePurchaseOrder() && resource != null; // Updated call
     }
+
+    // ----------------------------------------------------------------
+    // Admin Master Data Rules
+    // ----------------------------------------------------------------
+    match /proveedores/{docId} {
+        allow get, list: if isSignedIn();
+        allow create, update, delete: if isCompras();
+    }
+    match /cuentas/{docId} {
+        allow get, list: if isSignedIn();
+        allow create, update, delete: if isCompras();
+    }
+    match /presupuestos/{docId} {
+        allow get, list: if isSignedIn();
+        allow create, update, delete: if isCompras();
+    }
+    match /centrosNegocios/{docId} {
+        allow get, list: if isSignedIn();
+        allow create, update, delete: if isCompras();
+    }
+    match /centrosCostos/{docId} {
+        allow get, list: if isSignedIn();
+        allow create, update, delete: if isCompras();
+    }
   }
 }
