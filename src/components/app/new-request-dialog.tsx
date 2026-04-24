@@ -44,14 +44,18 @@ const itemSchema = z.object({
   cuentaPresupuesto: z.string().optional(),
 });
 
-const formSchema = z.object({
+const createFormSchema = (proveedores: any[]) => z.object({
   id: z.string().optional(),
   fecha: z.string().optional(),
   hora: z.string().optional(),
   solicitanteName: z.string().optional(),
   cargo: z.string().min(1, 'El cargo es requerido'),
   department: z.string().optional(), 
-  proveedor: z.string().optional(),
+  proveedor: z.string()
+    .min(1, 'El proveedor es requerido')
+    .refine((val) => {
+      return proveedores.some(p => (p["RAZON SOCIAL"] || p.razonSocial || p.name) === val);
+    }, { message: 'Debe seleccionar un proveedor de la lista' }),
   autorizadoPor: z.string().optional(),
   fechaEntrega: z.string().optional(),
   status: z.string().optional(),
@@ -63,12 +67,14 @@ const formSchema = z.object({
   moneda: z.enum(['CLP', 'USD', 'UF']).default('CLP'),
 });
 
-type NewRequestFormValues = z.infer<typeof formSchema>;
+type NewRequestFormValues = z.infer<ReturnType<typeof createFormSchema>>;
 
 export function NewRequestDialog() {
   const [open, setOpen] = useState(false);
   const { addSolicitud, currentUser, proveedores, materiales } = useAppContext();
   const { toast } = useToast();
+
+  const formSchema = createFormSchema(proveedores);
 
   const form = useForm<NewRequestFormValues>({
     resolver: zodResolver(formSchema),
@@ -104,7 +110,7 @@ export function NewRequestDialog() {
 
   useEffect(() => {
     if (watchedProveedor) {
-      const selectedProv = proveedores.find(p => (p["RAZON SOCIAL"] || p.name) === watchedProveedor);
+      const selectedProv = proveedores.find(p => (p["RAZON SOCIAL"] || p.razonSocial || p.name) === watchedProveedor);
       if (selectedProv) {
         const leadTimeStr = String(selectedProv["lead-time"] || '');
         const match = leadTimeStr.match(/\d+/);
@@ -279,6 +285,11 @@ export function NewRequestDialog() {
                           onChange={(val) => form.setValue('proveedor', val, { shouldValidate: true })}
                           suppliers={proveedores}
                         />
+                        {form.formState.errors.proveedor && (
+                          <p className="text-[10px] text-destructive font-bold mt-0.5 ml-1">
+                            {form.formState.errors.proveedor.message}
+                          </p>
+                        )}
                       </div>
                       <div className="w-16">
                         <div className="h-7 bg-slate-50/50 border border-slate-200 rounded-sm flex items-center justify-center text-[9px] font-mono text-slate-400" title="Lead Time">
@@ -287,10 +298,10 @@ export function NewRequestDialog() {
                       </div>
                     </div>
 
-                    {form.watch('proveedor') && proveedores.find(p => (p["RAZON SOCIAL"] || p.name) === form.watch('proveedor')) && (
+                    {form.watch('proveedor') && proveedores.find(p => (p["RAZON SOCIAL"] || p.razonSocial || p.name) === form.watch('proveedor')) && (
                       <div className="mt-1 text-[9px] text-slate-500 bg-slate-50/50 p-1.5 rounded border border-slate-100 grid grid-cols-2 gap-x-2">
                         {(() => {
-                          const s = proveedores.find(p => (p["RAZON SOCIAL"] || p.name) === form.watch('proveedor'));
+                          const s = proveedores.find(p => (p["RAZON SOCIAL"] || p.razonSocial || p.name) === form.watch('proveedor'));
                           if (!s) return null;
                           return (
                             <>
