@@ -71,7 +71,7 @@ type NewRequestFormValues = z.infer<ReturnType<typeof createFormSchema>>;
 
 export function NewRequestDialog() {
   const [open, setOpen] = useState(false);
-  const { addSolicitud, currentUser, proveedores, materiales } = useAppContext();
+  const { addSolicitud, currentUser, proveedores, materiales, solicitudes } = useAppContext();
   const { toast } = useToast();
 
   const formSchema = createFormSchema(proveedores);
@@ -103,8 +103,12 @@ export function NewRequestDialog() {
       form.setValue('solicitanteName', currentUser.name);
       if (currentUser.cargo) form.setValue('cargo', currentUser.cargo);
       if (currentUser.department) form.setValue('department', currentUser.department);
+      
+      // Auto-generate next ID
+      const nextId = `REQ-${String(solicitudes.length + 1).padStart(4, '0')}`;
+      form.setValue('id', nextId);
     }
-  }, [open, currentUser, form]);
+  }, [open, currentUser, form, solicitudes.length]);
 
   const watchedProveedor = form.watch('proveedor');
 
@@ -246,7 +250,7 @@ export function NewRequestDialog() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:col-span-4 border p-3 rounded-md bg-slate-50/30 border-slate-200">
                   <div className="space-y-1">
                     <Label htmlFor="id" className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">N° Requisición</Label>
-                    <Input id="id" {...form.register('id')} placeholder="Auto" className="h-7 text-[11px] rounded-sm border-slate-200" />
+                    <Input id="id" {...form.register('id')} readOnly className="h-7 text-[11px] rounded-sm border-slate-200 bg-slate-50 font-bold text-primary" />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="fecha" className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Fecha</Label>

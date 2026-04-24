@@ -291,7 +291,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    const reqId = newSolicitudData.id || `req-${String(solicitudes.length + 1).padStart(3, '0')}`;
+    const reqId = newSolicitudData.id || `REQ-${String(solicitudes.length + 1).padStart(4, '0')}`;
     
     // Preparar ítems para formato JSONB de V05
     const isAfecto = newSolicitudData.isAfectoIVA !== false; // Default true if undefined
