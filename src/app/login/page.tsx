@@ -60,8 +60,8 @@ export default function LoginPage() {
       {/* Left Side - Visual/Branding (Hidden on mobile) */}
       <div className="hidden lg:flex flex-col relative w-1/2 p-20 text-white overflow-hidden bg-black border-r border-white/5 shadow-[20px_0_60px_rgba(0,0,0,0.8)]">
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,#ff4d00_0%,transparent_60%)] opacity-30" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,#ccff00_0%,transparent_60%)] opacity-20" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,#2563eb_0%,transparent_60%)] opacity-30" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,#22c55e_0%,transparent_60%)] opacity-20" />
           <div className="absolute top-0 left-0 right-0 h-full w-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 mix-blend-screen" />
           
           <div className="absolute top-1/3 left-1/4 h-[600px] w-[600px] bg-primary/20 rounded-full mix-blend-overlay filter blur-[180px] animate-pulse" />
@@ -160,7 +160,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-16 text-xs font-bold uppercase tracking-widest shadow-mango hover:shadow-premium-hover transition-all hover:-translate-y-1 rounded-2xl mt-6 bg-primary text-white border-none" disabled={loading}>
+            <Button type="submit" className="w-full h-16 text-xs font-bold uppercase tracking-widest shadow-brand hover:shadow-premium-hover transition-all hover:-translate-y-1 rounded-2xl mt-6 bg-primary text-white border-none" disabled={loading}>
               {loading ? (
                 <span className="flex items-center gap-4">
                   <Loader2 className="h-6 w-6 animate-spin" />
@@ -194,7 +194,7 @@ export default function LoginPage() {
         </div>
 
         {/* Brand visual aid for light mode */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-orange-400 to-primary" />
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent/40 to-primary" />
       </div>
     </div>
   );

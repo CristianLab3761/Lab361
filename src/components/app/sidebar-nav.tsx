@@ -38,7 +38,7 @@ export function SidebarNav() {
         <TooltipTrigger asChild>
           <Link
             href="/dashboard"
-            className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-mango transition-all hover:scale-105 active:scale-95"
+            className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-brand transition-all hover:scale-105 active:scale-95"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -77,7 +77,7 @@ export function SidebarNav() {
                   )}
                 >
                   {isActive && (
-                    <div className="absolute -left-4 w-1.5 h-8 bg-primary rounded-r-full transition-all shadow-mango" />
+                    <div className="absolute -left-4 w-1.5 h-8 bg-primary rounded-r-full transition-all shadow-brand" />
                   )}
                   <item.icon className={cn("h-6 w-6 transition-all duration-300", isActive && "stroke-[2.5px]")} />
                   <span className="sr-only">{item.label}</span>

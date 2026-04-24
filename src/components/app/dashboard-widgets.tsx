@@ -70,7 +70,7 @@ export function CurrencyMonitor() {
   }, []);
 
   return (
-    <Card className="border-none shadow-mango bg-gradient-to-br from-primary via-primary to-accent text-white relative overflow-hidden group">
+    <Card className="border-none shadow-brand bg-gradient-to-br from-primary via-primary to-accent text-white relative overflow-hidden group">
       <div className="absolute top-0 right-0 h-48 w-48 bg-white/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none transition-all duration-1000" />
       <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0 relative z-10">
         <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-white/90">Mercado Financiero</CardTitle>

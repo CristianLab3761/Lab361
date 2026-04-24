@@ -68,10 +68,10 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        'premium': '0 10px 40px -10px rgba(255, 77, 0, 0.15), 0 4px 6px -2px rgba(132, 204, 22, 0.05)',
-        'premium-hover': '0 20px 50px -15px rgba(255, 77, 0, 0.25), 0 8px 12px -4px rgba(132, 204, 22, 0.1)',
+        'premium': '0 10px 40px -10px rgba(37, 99, 235, 0.15), 0 4px 6px -2px rgba(34, 197, 94, 0.05)',
+        'premium-hover': '0 20px 50px -15px rgba(37, 99, 235, 0.25), 0 8px 12px -4px rgba(34, 197, 94, 0.1)',
         'glass': '0 8px 32px 0 rgba(15, 23, 42, 0.05)',
-        'mango': '0 10px 30px -5px rgba(255, 77, 0, 0.2)',
+        'brand': '0 10px 30px -5px rgba(37, 99, 235, 0.2)',
       },
       keyframes: {
         "accordion-down": {

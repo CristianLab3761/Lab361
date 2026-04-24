@@ -440,7 +440,7 @@ export function RequestsTable({ filterStatus: propStatus, solicitanteId }: { fil
         )}
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-mango">
+      <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-brand">
         <Table>
           <TableHeader className="bg-slate-50/10">
             <TableRow className="border-slate-100">

@@ -23,7 +23,7 @@ export function Header({ breadcrumbs }: HeaderProps) {
         <SheetContent side="left" className="sm:max-w-xs bg-white border-r border-slate-200 text-slate-900 p-8 flex flex-col gap-10">
           <Link
             href="/dashboard"
-            className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white shadow-mango transition-all hover:scale-110 active:scale-95 self-center"
+            className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white shadow-brand transition-all hover:scale-110 active:scale-95 self-center"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -78,7 +78,7 @@ export function Header({ breadcrumbs }: HeaderProps) {
       <div className="flex items-center gap-4 px-8 border-l border-slate-100">
         <div className="flex flex-col items-end">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sync: Active</span>
-          <span className="text-[9px] font-bold text-primary uppercase tracking-widest">Mango Intelligence</span>
+          <span className="text-[9px] font-bold text-primary uppercase tracking-widest">Botanical Intelligence</span>
         </div>
         <UserNav />
       </div>

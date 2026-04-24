@@ -37,7 +37,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <TooltipProvider>
       <div className="flex min-h-screen w-full flex-col font-body bg-background text-foreground relative selection:bg-primary/30">
-        <aside className="fixed inset-y-0 left-0 z-20 hidden w-24 flex-col border-r border-slate-200 bg-white sm:flex shadow-mango overflow-hidden transition-all duration-500">
+        <aside className="fixed inset-y-0 left-0 z-20 hidden w-24 flex-col border-r border-slate-200 bg-white sm:flex shadow-brand overflow-hidden transition-all duration-500">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-accent/5 pointer-events-none" />
           <SidebarNav />
         </aside>

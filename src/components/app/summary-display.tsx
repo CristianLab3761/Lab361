@@ -14,12 +14,12 @@ export function SummaryDisplay({ summary }: SummaryDisplayProps) {
   if (!summary) return null;
   
   return (
-    <Card className="mt-8 border-slate-200 shadow-mango bg-white overflow-hidden relative group">
+    <Card className="mt-8 border-slate-200 shadow-brand bg-white overflow-hidden relative group">
       <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-all duration-1000">
         <Bot className="h-32 w-32 text-slate-400 rotate-12" />
       </div>
       <CardHeader className="flex-row items-center gap-6 space-y-0 pb-5 relative z-10 border-b border-slate-50">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-mango">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-brand">
           <Bot className="h-7 w-7 animate-pulse" />
         </div>
         <div>
