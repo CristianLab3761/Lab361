@@ -1,4 +1,4 @@
-# **App Name**: OrdenaPro
+# **App Name**: Botanical
 
 ## Core Features:
 

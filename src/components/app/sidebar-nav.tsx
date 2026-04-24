@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, FileText, Package, UploadCloud, Settings, type LucideIcon } from 'lucide-react';
+import { Home, FileText, Package, UploadCloud, Settings, Users, type LucideIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '@/context/app-context';
@@ -20,64 +20,74 @@ export function SidebarNav() {
 
   const navItems: NavItem[] = [
     { href: '/dashboard', label: 'Dashboard', icon: Home },
-    { href: '/dashboard/solicitudes', label: 'Solicitudes', icon: FileText },
+    { href: '/dashboard/solicitudes', label: 'Requisiciones', icon: FileText },
     { href: '/dashboard/ordenes', label: 'Órdenes de Compra', icon: Package, role: 'compras' },
     { href: '/dashboard/importar', label: 'Importar', icon: UploadCloud, role: 'compras' },
+    { href: '/dashboard/administracion/proveedores', label: 'Proveedores', icon: Users, role: 'compras' },
     { href: '/dashboard/administracion', label: 'Administración', icon: Settings, role: 'compras' },
+    { href: '/dashboard/v04', label: 'Historial V04', icon: FileText, role: 'compras' },
   ];
-  
+
   if (!currentUser) {
     return null; // Or a loading skeleton for nav
   }
 
   return (
-    <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
+    <nav className="flex flex-col items-center gap-10 py-10 relative z-10 h-full">
       <Tooltip>
         <TooltipTrigger asChild>
           <Link
             href="/dashboard"
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors md:h-8 md:w-8"
+            className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-mango transition-all hover:scale-105 active:scale-95"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="h-5 w-5"
+              className="h-7 w-7"
             >
-              <path d="M5.5 22v-6.5H2V6.021a2 2 0 0 1 1.28-1.852L12 1l8.72 3.169A2 2 0 0 1 22 6.021V15.5h-3.5V22h-4v-6.5h-5V22h-4Z" />
+              <path d="M12 2L3 9v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
-            <span className="sr-only">OrdenaPro</span>
+            <span className="sr-only">Botanical</span>
           </Link>
         </TooltipTrigger>
-        <TooltipContent side="right">OrdenaPro</TooltipContent>
+        <TooltipContent side="right">Botanical</TooltipContent>
       </Tooltip>
-      {navItems.map((item) => {
-        if (item.role && item.role !== currentUser.role) {
-          return null;
-        }
-        const isActive = pathname === item.href;
-        return (
-          <Tooltip key={item.href}>
-            <TooltipTrigger asChild>
-              <Link
-                href={item.href}
-                className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
-                  isActive && 'bg-primary/10 text-primary'
-                )}
-              >
-                <item.icon className="h-5 w-5" />
-                <span className="sr-only">{item.label}</span>
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">{item.label}</TooltipContent>
-          </Tooltip>
-        );
-      })}
+      <div className="flex flex-col gap-6 w-full px-4">
+        {navItems.map((item) => {
+          if (item.role && item.role !== currentUser.role) {
+            return null;
+          }
+          const isActive = pathname === item.href;
+          return (
+            <Tooltip key={item.href}>
+              <TooltipTrigger asChild>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    'group flex h-14 w-14 mx-auto items-center justify-center rounded-2xl transition-all relative',
+                    isActive 
+                      ? 'bg-primary/10 text-primary shadow-sm' 
+                      : 'text-slate-400 hover:bg-slate-50 hover:text-slate-900'
+                  )}
+                >
+                  {isActive && (
+                    <div className="absolute -left-4 w-1.5 h-8 bg-primary rounded-r-full transition-all shadow-mango" />
+                  )}
+                  <item.icon className={cn("h-6 w-6 transition-all duration-300", isActive && "stroke-[2.5px]")} />
+                  <span className="sr-only">{item.label}</span>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="font-bold uppercase tracking-wider text-[10px]">{item.label}</TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </div>
     </nav>
   );
 }

@@ -12,79 +12,76 @@ type HeaderProps = {
 
 export function Header({ breadcrumbs }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+    <header className="sticky top-0 z-30 flex h-20 items-center gap-4 border-b border-slate-200 bg-white/80 px-6 backdrop-blur-xl sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-8 sm:mt-6 transition-all duration-300">
       <Sheet>
         <SheetTrigger asChild>
-          <Button size="icon" variant="outline" className="sm:hidden">
-            <PanelLeft className="h-5 w-5" />
-            <span className="sr-only">Toggle Menu</span>
+          <Button size="icon" variant="outline" className="sm:hidden border-slate-200 bg-white hover:bg-slate-50 rounded-xl shadow-sm transition-transform active:scale-95">
+            <PanelLeft className="h-5 w-5 text-slate-500" />
+            <span className="sr-only">Menú</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="sm:max-w-xs">
-          <nav className="grid gap-6 text-lg font-medium">
-            <Link
-              href="/dashboard"
-              className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
+        <SheetContent side="left" className="sm:max-w-xs bg-white border-r border-slate-200 text-slate-900 p-8 flex flex-col gap-10">
+          <Link
+            href="/dashboard"
+            className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white shadow-mango transition-all hover:scale-110 active:scale-95 self-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-8 w-8"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-5 w-5 transition-all group-hover:scale-110"
-              >
-                <path d="M5.5 22v-6.5H2V6.021a2 2 0 0 1 1.28-1.852L12 1l8.72 3.169A2 2 0 0 1 22 6.021V15.5h-3.5V22h-4v-6.5h-5V22h-4Z" />
-              </svg>
-              <span className="sr-only">OrdenaPro</span>
-            </Link>
-            <Link href="/dashboard" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <Home className="h-5 w-5" />
-              Dashboard
-            </Link>
-            <Link href="/dashboard/solicitudes" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <FileText className="h-5 w-5" />
-              Solicitudes
-            </Link>
-            <Link href="/dashboard/ordenes" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <Package className="h-5 w-5" />
-              Órdenes de Compra
-            </Link>
-            <Link href="/dashboard/importar" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <UploadCloud className="h-5 w-5" />
-              Importar
-            </Link>
-            <Link href="/dashboard/administracion" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
-              <Settings className="h-5 w-5" />
-              Administración
-            </Link>
+              <path d="M12 2L3 9v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+          </Link>
+          <nav className="flex flex-col gap-8 text-lg font-bold uppercase tracking-wider text-slate-900">
+            <Link href="/dashboard" className="transition-all hover:text-primary">Dashboard</Link>
+            <Link href="/dashboard/solicitudes" className="transition-all hover:text-primary">Solicitudes</Link>
+            <Link href="/dashboard/catalogos" className="transition-all hover:text-primary">Catálogos</Link>
+            <Link href="/dashboard/proveedores" className="transition-all hover:text-primary">Proveedores</Link>
+            <Link href="/dashboard/importar" className="transition-all hover:text-primary">Importar</Link>
           </nav>
         </SheetContent>
       </Sheet>
-      <Breadcrumb className="hidden md:flex">
-        <BreadcrumbList>
-          {breadcrumbs.map((crumb, index) => (
-            <React.Fragment key={crumb.label}>
-              <BreadcrumbItem>
-                {crumb.href ? (
-                  <BreadcrumbLink asChild>
-                    <Link href={crumb.href}>{crumb.label}</Link>
-                  </BreadcrumbLink>
-                ) : (
-                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                )}
-              </BreadcrumbItem>
-              {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
-            </React.Fragment>
-          ))}
-        </BreadcrumbList>
-      </Breadcrumb>
-      <div className="relative ml-auto flex-1 md:grow-0">
-        {/* Can add search here if needed */}
+
+      <div className="flex flex-1 items-center gap-6 px-4">
+        <Breadcrumb className="hidden md:flex">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-primary transition-colors">
+                Botanical
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            {breadcrumbs.map((crumb, index) => (
+              <React.Fragment key={`${index}-${crumb.label}`}>
+                <BreadcrumbSeparator className="text-slate-200" />
+                <BreadcrumbItem>
+                  {index === breadcrumbs.length - 1 ? (
+                    <BreadcrumbPage className="text-[10px] font-bold uppercase tracking-wider text-slate-900 border-b-2 border-primary/40 pb-0.5">
+                      {crumb.label}
+                    </BreadcrumbPage>
+                  ) : (
+                    <Link href={crumb.href || '#'} className="text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-primary transition-colors">{crumb.label}</Link>
+                  )}
+                </BreadcrumbItem>
+              </React.Fragment>
+            ))}
+          </BreadcrumbList>
+        </Breadcrumb>
       </div>
-      <UserNav />
+
+      <div className="flex items-center gap-4 px-8 border-l border-slate-100">
+        <div className="flex flex-col items-end">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sync: Active</span>
+          <span className="text-[9px] font-bold text-primary uppercase tracking-widest">Mango Intelligence</span>
+        </div>
+        <UserNav />
+      </div>
     </header>
   );
 }

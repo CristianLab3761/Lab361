@@ -342,6 +342,30 @@
         "totalItemCost",
         "createdAt"
       ]
+    },
+    "Material": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Material",
+      "type": "object",
+      "description": "Represents a material used in the organization, stored in a master list for easy selection in purchase requests.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Material entity."
+        },
+        "codigo": {
+          "type": "string",
+          "description": "The unique code identifyng the material."
+        },
+        "descripcion": {
+          "type": "string",
+          "description": "A detailed description of the material."
+        }
+      },
+      "required": [
+        "id",
+        "codigo"
+      ]
     }
   },
   "auth": {
@@ -472,6 +496,22 @@
             {
               "name": "poItemId",
               "description": "The unique ID of the purchase order item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/ListaDeMateriales/{materialId}",
+        "definition": {
+          "entityName": "Material",
+          "schema": {
+            "$ref": "#/backend/entities/Material"
+          },
+          "description": "Master list of materials. Used by all users to select items for purchase requests.",
+          "params": [
+            {
+              "name": "materialId",
+              "description": "The unique ID of the material."
             }
           ]
         }

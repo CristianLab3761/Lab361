@@ -1,0 +1,29 @@
+﻿src/app/dashboard/solicitudes/[id]/page.tsx(76,18): error TS18048: 'solicitud.status' is possibly 'undefined'.
+src/app/dashboard/solicitudes/[id]/page.tsx(80,16): error TS18048: 'solicitud.id' is possibly 'undefined'.
+src/app/dashboard/solicitudes/[id]/page.tsx(132,71): error TS18048: 'solicitud.totalEstimatedCost' is possibly 'undefined'.
+src/app/dashboard/solicitudes/[id]/page.tsx(138,70): error TS18048: 'solicitud.totalEstimatedCost' is possibly 'undefined'.
+src/app/dashboard/solicitudes/[id]/page.tsx(138,102): error TS18048: 'solicitud.totalEstimatedCost' is possibly 'undefined'.
+src/app/dashboard/solicitudes/[id]/page.tsx(144,47): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(value: number | bigint | StringNumericLiteral): string', gave the following error.
+    Argument of type 'number | undefined' is not assignable to parameter of type 'number | bigint | StringNumericLiteral'.
+      Type 'undefined' is not assignable to type 'number | bigint | StringNumericLiteral'.
+  Overload 2 of 3, '(value: number | bigint): string', gave the following error.
+    Argument of type 'number | undefined' is not assignable to parameter of type 'number | bigint'.
+      Type 'undefined' is not assignable to type 'number | bigint'.
+  Overload 3 of 3, '(value: number): string', gave the following error.
+    Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+src/app/dashboard/solicitudes/[id]/page.tsx(218,45): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(value: number | bigint | StringNumericLiteral): string', gave the following error.
+    Argument of type 'number | undefined' is not assignable to parameter of type 'number | bigint | StringNumericLiteral'.
+      Type 'undefined' is not assignable to type 'number | bigint | StringNumericLiteral'.
+  Overload 2 of 3, '(value: number | bigint): string', gave the following error.
+    Argument of type 'number | undefined' is not assignable to parameter of type 'number | bigint'.
+      Type 'undefined' is not assignable to type 'number | bigint'.
+  Overload 3 of 3, '(value: number): string', gave the following error.
+    Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+src/components/ui/calendar.tsx(57,9): error TS2353: Object literal may only specify known properties, and 'IconLeft' does not exist in type 'Partial<CustomComponents>'.
+src/components/ui/calendar.tsx(57,22): error TS7031: Binding element 'className' implicitly has an 'any' type.
+src/components/ui/calendar.tsx(60,23): error TS7031: Binding element 'className' implicitly has an 'any' type.
+src/lib/data.ts(74,5): error TS2561: Object literal may only specify known properties, but 'refOC' does not exist in type 'Solicitud'. Did you mean to write 'Ref OC'?
