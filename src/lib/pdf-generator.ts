@@ -141,43 +141,43 @@ export const generateRequisitionPDF = (solicitud: any, proveedor?: any) => {
     body: [
       [
         { content: 'Nombre Solicitante', styles: { fillColor: COLOR_FONDO_CABECERA, fontStyle: 'bold' } },
-        solicitud.solicitanteName || '-'
+        solicitud.solicitanteName || solicitud.Solicitante || solicitud.solicitante_nombre || '-'
       ],
       [
         { content: 'Cargo Solicitante', styles: { fillColor: COLOR_FONDO_CABECERA, fontStyle: 'bold' } },
-        solicitud.cargo || '-'
+        solicitud.cargo || solicitud.Cargo || solicitud.cargo_solicitante || '-'
       ],
       [
         { content: 'Centro de Costos', styles: { fillColor: COLOR_FONDO_CABECERA, fontStyle: 'bold' } },
-        solicitud.centroCostos || '-'
+        solicitud.centroCostos || solicitud["Centro de Costos"] || solicitud.centro_costos || '-'
       ],
       [
         { content: 'Centro de Negocio', styles: { fillColor: COLOR_FONDO_CABECERA, fontStyle: 'bold' } },
-        solicitud.centroNegocios || '-'
+        solicitud.centroNegocios || solicitud["Centro de Negocios"] || solicitud.centro_negocio || '-'
       ],
       [
         { content: 'Proveedor', styles: { fillColor: COLOR_FONDO_CABECERA, fontStyle: 'bold' } },
-        proveedor?.["RAZON SOCIAL"] || proveedor?.razonSocial || proveedor?.name || solicitud.proveedor || '-'
+        (proveedor?.["RAZON SOCIAL"] || proveedor?.razonSocial || proveedor?.name || proveedor?.Nombre || proveedor?.["Nombre de Fantasia"] || solicitud.proveedor || solicitud.Proveedor || '-').toUpperCase()
       ],
       [
         { content: 'RUT', styles: { fillColor: COLOR_FONDO_CABECERA, fontStyle: 'bold' } },
-        proveedor?.["RUT"] || proveedor?.rut || '-'
+        proveedor?.["RUT"] || proveedor?.rut || proveedor?.Rut || '-'
       ],
       [
         { content: 'Dirección', styles: { fillColor: COLOR_FONDO_CABECERA, fontStyle: 'bold' } },
-        proveedor?.["DIRECCION"] || proveedor?.direccion || '-'
+        proveedor?.["DIRECCION"] || proveedor?.direccion || proveedor?.Direccion || '-'
       ],
       [
         { content: 'Ciudad', styles: { fillColor: COLOR_FONDO_CABECERA, fontStyle: 'bold' } },
-        proveedor?.["CIUDAD"] || proveedor?.ciudad || '-'
+        proveedor?.["CIUDAD"] || proveedor?.ciudad || proveedor?.Ciudad || '-'
       ],
       [
         { content: 'País', styles: { fillColor: COLOR_FONDO_CABECERA, fontStyle: 'bold' } },
-        proveedor?.["PAÌS"] || proveedor?.pais || '-'
+        proveedor?.["PAÌS"] || proveedor?.["PAÍS"] || proveedor?.["PAIS"] || proveedor?.pais || proveedor?.Pais || '-'
       ],
       [
         { content: 'Email / Correo', styles: { fillColor: COLOR_FONDO_CABECERA, fontStyle: 'bold' } },
-        proveedor?.["EMAIL"] || proveedor?.email || '-'
+        proveedor?.["EMAIL"] || proveedor?.email || proveedor?.Email || '-'
       ]
     ],
     theme: 'grid',

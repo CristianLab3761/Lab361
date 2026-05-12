@@ -221,7 +221,12 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
               size="sm" 
               className="h-10 rounded-xl border-slate-200 text-slate-500 hover:bg-slate-50 font-black text-[10px] px-4 shadow-sm transition-all tracking-widest uppercase"
               onClick={() => {
-                const proveedorObj = proveedores.find(p => p.name === solicitud.proveedor);
+                const proveedorObj = proveedores.find(p => 
+                  (p.name && p.name === solicitud.proveedor) || 
+                  (p["Nombre de Fantasia"] && p["Nombre de Fantasia"] === solicitud.proveedor) ||
+                  (p["RAZON SOCIAL"] && p["RAZON SOCIAL"] === solicitud.proveedor) ||
+                  (p.Nombre && p.Nombre === solicitud.proveedor)
+                );
                 import('@/lib/pdf-generator').then(({ generateRequisitionPDF }) => {
                   generateRequisitionPDF(solicitud as any, proveedorObj as any);
                 });
