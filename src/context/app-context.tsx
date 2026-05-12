@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useSupabaseAuth, useSupabaseCollection } from '@/hooks/use-supabase';
 
-export type AdminItemType = 'Proveedores' | 'CuentasPresupuestos' | 'presupuestos' | 'CentrosDeNegocios' | 'centrosCostos' | 'ListaDeMateriales' | 'Requisiciones';
+export type AdminItemType = 'Proveedores' | 'CuentasPresupuestos' | 'presupuestos' | 'CentrosDeNegocios' | 'centrosCostos' | 'ListaDeMateriales' | 'Requisiciones' | 'user_profiles' | 'Familias' | 'SubFamilias';
 
 interface AppContextType {
   currentUser: User | null;
@@ -32,12 +32,13 @@ interface AppContextType {
   cuentas: (Cuenta & { id: string })[];
   presupuestos: (Presupuesto & { id: string })[];
   centrosNegocios: (CentroNegocios & { id: string })[];
-  centrosCostos: (CentroCostos & { id: string })[];
   materiales: (Material & { id: string })[];
+  familias: any[];
+  subfamilias: any[];
   addAdminItem: <T extends {}>(itemType: AdminItemType, newItem: T) => Promise<void>;
-  addMultipleAdminItems: <T extends {}>(itemType: AdminItemType, newItems: T[]) => Promise<void>;
   updateAdminItem: (itemType: AdminItemType, itemId: string, updates: Partial<any>) => Promise<void>;
   removeAdminItem: (itemType: AdminItemType, itemId: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -101,7 +102,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Admin state from Supabase
-  const isUserAuthenticated = !!supabaseUser;
+  const isUserAuthenticated = !!supabaseUser && !authLoading;
   
   // Cleaned up: only fetch Requisiciones to avoid 404 errors on missing tables
   // Actualizado a la versión V05 (Modelo Eficiente JSONB)
@@ -113,9 +114,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const { data: dbMateriales } = useSupabaseCollection(isUserAuthenticated ? 'ListaDeMateriales' : null);
   const { data: dbProveedores } = useSupabaseCollection(isUserAuthenticated ? 'Proveedores' : null);
-  const { data: dbOrdenes } = useSupabaseCollection(isUserAuthenticated ? 'PurchaseOrdersV05' : null);
+  const { data: dbOrdenes } = useSupabaseCollection(isUserAuthenticated ? 'purchaseOrders' : null);
+  const { data: dbFamilias } = useSupabaseCollection(isUserAuthenticated ? 'Familias' : null);
+  const { data: dbSubFamilias } = useSupabaseCollection(isUserAuthenticated ? 'SubFamilias' : null);
   const { data: dbCentrosCostos } = useSupabaseCollection(isUserAuthenticated ? 'centrosCostos' : null);
   const { data: dbCentrosNegocios } = useSupabaseCollection(isUserAuthenticated ? 'CentrosDeNegocios' : null);
+  const { data: dbUsers } = useSupabaseCollection(isUserAuthenticated ? 'user_profiles' : null);
 
   const proveedores: any[] = dbProveedores || [];
   const cuentas: any[] = [];
@@ -131,12 +135,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       
       const normalizedData: Solicitud[] = dbSolicitudes.map((s: any) => {
         // En V05 los ítems están en la columna Items_JSON
-        const rowItems = s.Items_JSON || [];
-
-        // Mapeo estándar para satisfacer el tipo Solicitud
+        const rowItems = typeof s.Items_JSON === 'string' ? JSON.parse(s.Items_JSON) : (s.Items_JSON || []);
+        
         return {
-          ...s,
-          moneda: s.Moneda || 'CLP',
+          db_id: s.id, // Store the actual Supabase UUID for updates
           id: String(s["N° Requisición"] || s.id || ""),
           createdAt: s["Fecha"] || s.created_at || new Date().toISOString(),
           solicitanteName: s["Solicitante"] || "Sin nombre",
@@ -175,7 +177,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           "Estatus": s["Estatus"] || s.estatus || "vigente",
           "Fecha Estatus": s["Fecha Estatus"] || s.fecha_estatus || "",
           "Ref OC": s["Ref OC"] || s.ref_oc || "",
-          solicitanteId: s.solicitanteId || s.solicitanteid || s.requesterId || s.requesterid || ""
+          solicitanteId: s.solicitanteId || s.solicitanteid || s.requesterId || s.requesterid || "",
+          moneda: s.Moneda || 'CLP',
         } as Solicitud;
       });
 
@@ -186,7 +189,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (dbOrdenes) {
-      setOrdenesCompra(dbOrdenes as any);
+      const normalized = dbOrdenes.map((oc: any) => ({
+        ...oc,
+        status: oc.estatus || oc.status || 'generado',
+        poDescription: oc.observaciones || oc.poDescription || '',
+        totalCost: oc.totalGlobal || oc.totalCost || 0,
+      }));
+      setOrdenesCompra(normalized);
     }
   }, [dbOrdenes]);
 
@@ -259,11 +268,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     delete dbUpdates.solicitanteName;
     delete dbUpdates.totalEstimatedCost;
 
-    const { error } = await supabase.from('RequisicionesV05').update(dbUpdates).eq('N° Requisición', id);
-    if (error) {
-      console.error('Error updating solicitud:', error);
+    const targetSolicitud = solicitudes.find(s => s.id === id);
+    const dbId = targetSolicitud?.db_id;
+
+    if (!dbId) {
+      console.warn('No se encontró el UUID de la base de datos para la solicitud:', id);
     }
-  }, []);
+
+    const { error } = await supabase.from('RequisicionesV05').update(dbUpdates).eq(dbId ? 'id' : 'N° Requisición', dbId || id);
+    if (error) {
+      console.error('Error updating solicitud in Supabase:', JSON.stringify(error, null, 2));
+      toast({
+        variant: 'destructive',
+        title: "Error de sincronización",
+        description: `No se pudo actualizar el estado de la requisición en la base de datos: ${error.message}`,
+      });
+    }
+  }, [toast]);
 
   const toggleFavorite = useCallback(async (id: string, currentStatus: boolean) => {
     const { error } = await supabase
@@ -371,12 +392,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       estatus: 'completado'
     };
 
-    // Save to Supabase (using V05 naming pattern for consistency if exists, or PurchaseOrders)
-    const { error } = await supabase.from('PurchaseOrdersV05').insert([newOrden]);
+    // Save to Supabase (using standard purchaseOrders name)
+    const { error } = await supabase.from('purchaseOrders').insert([newOrden]);
     
     if (error) {
-      console.error('Error al persistir OC en Supabase:', error);
-      // Fallback to local state if table doesn't exist yet
+      console.error('Error al persistir OC en Supabase:', JSON.stringify(error, null, 2));
+      toast({
+        variant: 'destructive',
+        title: "Error de Persistencia",
+        description: `La OC se creó localmente pero no se pudo guardar en la base de datos: ${error.message}. Por favor, verifica que la tabla 'PurchaseOrdersV05' exista.`,
+      });
     }
 
     setOrdenesCompra(prev => [newOrden, ...prev]);
@@ -392,6 +417,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       description: `La OC ${ocId} ha sido creada con éxito.`,
     });
   }, [ordenesCompra.length, updateSolicitud, toast]);
+
+  const logout = useCallback(async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Error signing out:', error);
+    } finally {
+      setCurrentUser(null);
+    }
+  }, []);
 
   const getHistoricalDataForItems = useCallback((itemsToCompare: Item[]) => {
     const historicalItems: { [key: string]: { totalCost: number, count: number } } = {};
@@ -427,7 +463,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     currentUser,
     setCurrentUser: handleSetCurrentUser,
     isLoading: combinedIsLoading,
-    users: [], // Placeholder for user list if needed
+    users: dbUsers || [], // Exposing actual user profiles
     solicitudes,
     updateSolicitud,
     toggleFavorite,
@@ -441,11 +477,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     centrosNegocios: centrosNegocios || [],
     centrosCostos: centrosCostos || [],
     materiales: materiales || [],
+    familias: dbFamilias || [],
+    subfamilias: dbSubFamilias || [],
     addAdminItem,
     removeAdminItem,
     updateAdminItem,
     addMultipleAdminItems,
-  }), [currentUser, combinedIsLoading, solicitudes, updateSolicitud, addSolicitud, ordenesCompra, addOrdenCompra, getHistoricalDataForItems, proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, materiales, addAdminItem, removeAdminItem, updateAdminItem, addMultipleAdminItems, handleSetCurrentUser]);
+    logout,
+  }), [currentUser, combinedIsLoading, solicitudes, updateSolicitud, addSolicitud, ordenesCompra, addOrdenCompra, getHistoricalDataForItems, proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, materiales, addAdminItem, removeAdminItem, updateAdminItem, addMultipleAdminItems, handleSetCurrentUser, logout]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

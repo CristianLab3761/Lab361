@@ -148,7 +148,7 @@ export function NewRequestDialog() {
       if (!item?.codigoMaterial) return;
       const cleanCode = clean(item.codigoMaterial);
       let material = materiales.find((m: any) => {
-        const mCode = getVal(m, ['codigo', 'Código', 'Codigo', 'code']);
+        const mCode = getVal(m, ['codigo_nuevo', 'codigo', 'Código', 'Codigo', 'code']);
         return clean(mCode) === cleanCode;
       });
 
@@ -166,7 +166,7 @@ export function NewRequestDialog() {
       }
 
       if (material) {
-        const desc = getVal(material, ['descripcion', 'Descripcion del material', 'Descripcion', 'name', 'Name']);
+        const desc = getVal(material, ['Material', 'descripcion', 'Descripcion del material', 'Descripcion', 'name', 'Name']);
         if (desc) {
           const currentName = form.getValues(`items.${index}.name`);
           if (clean(currentName) !== clean(desc)) {
@@ -369,7 +369,7 @@ export function NewRequestDialog() {
               </div>
 
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b pb-1 mt-2">
-                Detalle de Ítems (Item, Cód Material, Unidades, Descripción, Cta Ppto, Precio Unitario)
+                Detalle de Ítems (Item, Cód Material, Unidades, Descripción, C. Costos, Precio Unitario)
               </div>
               
               <div className="space-y-4">
@@ -401,7 +401,7 @@ export function NewRequestDialog() {
                           form.setValue(`items.${index}.name`, name);
                           if (material) {
                             const m = material as any;
-                            form.setValue(`items.${index}.codigoMaterial`, m.codigo || m['Código'] || m.code || '');
+                            form.setValue(`items.${index}.codigoMaterial`, m.codigo_nuevo || m.codigo || m['Código'] || m.code || '');
                           }
                         }}
                       />
@@ -431,7 +431,7 @@ export function NewRequestDialog() {
                             if (data?.[0]) material = data[0];
                           }
                           if (material) {
-                            const desc = (material as any).descripcion || (material as any).name || (material as any)['Descripcion del material'];
+                            const desc = (material as any).Material || (material as any).descripcion || (material as any).name || (material as any)['Descripcion del material'];
                             form.setValue(`items.${index}.name`, String(desc), { shouldValidate: true });
                           }
                         }}
@@ -449,7 +449,7 @@ export function NewRequestDialog() {
                     </div>
 
                     <div className="md:col-span-4 space-y-1">
-                      <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Cuenta Presupuesto</Label>
+                      <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Centro de Costos</Label>
                       <Input {...form.register(`items.${index}.cuentaPresupuesto`)} className="h-7 text-[11px] rounded-sm border-slate-200" />
                     </div>
 

@@ -21,7 +21,7 @@ import { Users, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export function UserNav() {
-  const { currentUser, setCurrentUser, users } = useAppContext();
+  const { currentUser, logout, users, setCurrentUser } = useAppContext();
   const router = useRouter();
 
   const handleRoleChange = (userId: string) => {
@@ -31,8 +31,8 @@ export function UserNav() {
     }
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    await logout();
     router.push('/login');
   };
 

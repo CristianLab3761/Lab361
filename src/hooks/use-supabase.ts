@@ -8,14 +8,30 @@ export function useSupabaseAuth() {
 
   useEffect(() => {
     // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Auth session error:', error.message);
+        // If refresh token is invalid, sign out to clear local storage
+        if (error.message.includes('Refresh Token')) {
+          supabase.auth.signOut();
+        }
+      }
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     // Listen for changes on auth state (sign in, sign out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event);
+      
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+      } else if (session) {
+        setUser(session.user);
+      } else {
+        setUser(null);
+      }
+      
       setLoading(false);
     });
 

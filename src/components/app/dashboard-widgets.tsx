@@ -48,56 +48,7 @@ export function BudgetStatusWidget({ budgets }: { budgets: any[] }) {
   );
 }
 
-export function CurrencyMonitor() {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch('https://mindicador.cl/api')
-      .then(res => res.json())
-      .then(json => {
-        setData({
-          usd: json.dolar.valor,
-          uf: json.uf.valor,
-          euro: json.euro.valor
-        });
-        setLoading(false);
-      })
-      .catch(() => {
-        setData({ usd: 955.4, uf: 38210.5, euro: 1042.2 });
-        setLoading(false);
-      });
-  }, []);
-
-  return (
-    <Card className="border-none shadow-brand bg-gradient-to-br from-primary via-primary to-accent text-white relative overflow-hidden group">
-      <div className="absolute top-0 right-0 h-48 w-48 bg-white/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none transition-all duration-1000" />
-      <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0 relative z-10">
-        <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-white/90">Mercado Financiero</CardTitle>
-        <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
-      </CardHeader>
-      <CardContent className="pt-6 space-y-8 relative z-10">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <p className="text-[9px] font-bold text-white/60 uppercase tracking-wider">USD</p>
-            <p className="text-2xl font-bold tabular-nums tracking-tighter text-white">${data?.usd?.toLocaleString('es-CL') || '---'}</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[9px] font-bold text-white/60 uppercase tracking-wider">EURO</p>
-            <p className="text-2xl font-bold tabular-nums tracking-tighter text-white/90">${data?.euro?.toLocaleString('es-CL') || '---'}</p>
-          </div>
-          <div className="col-span-2 sm:col-span-1 space-y-1">
-            <p className="text-[9px] font-bold text-white/60 uppercase tracking-wider">UF</p>
-            <p className="text-xl font-bold tabular-nums tracking-tighter text-white/80">${data?.uf?.toLocaleString('es-CL') || '---'}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 text-[9px] font-bold text-white/40 uppercase tracking-wider">
-          <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} /> {loading ? 'Sincronizando...' : `Actualizado @ ${format(new Date(), 'HH:mm')}`}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export function UpcomingDeliveriesWidget({ solicitudes }: { solicitudes: Solicitud[] }) {
   const upcoming = solicitudes

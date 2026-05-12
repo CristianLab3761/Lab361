@@ -14,10 +14,10 @@ import { useAppContext } from '@/context/app-context';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
+import { Button } from '@/components/ui/button';
+import { FileDown } from 'lucide-react';
+import { generateOrderPDF } from '@/lib/order-pdf-generator';
+import { cn } from '@/lib/utils';
 
 export function OrdersTable() {
   const { ordenesCompra, currentUser } = useAppContext();
@@ -26,27 +26,61 @@ export function OrdersTable() {
     return [...ordenesCompra].sort((a, b) => parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime());
   }, [ordenesCompra]);
 
+  function formatCurrency(value: number, currency: string = 'CLP') {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: currency === 'UF' ? 'CLP' : (currency || 'CLP'),
+    }).format(value) + (currency === 'UF' ? ' UF' : '');
+  }
+
+  const getStatusColor = (status: string) => {
+    const s = status?.toLowerCase();
+    if (s === 'completado' || s === 'procesada') return 'bg-emerald-500/10 text-emerald-600 border-emerald-200';
+    if (s === 'generado') return 'bg-blue-500/10 text-blue-600 border-blue-200';
+    if (s === 'cancelado') return 'bg-red-500/10 text-red-600 border-red-200';
+    return 'bg-slate-500/10 text-slate-600 border-slate-200';
+  };
+
   return (
     <Table>
       <TableHeader>
-        <TableRow>
-          <TableHead>ID de OC</TableHead>
-          <TableHead>ID de Solicitud</TableHead>
-          <TableHead>Fecha</TableHead>
-          <TableHead>Proveedor</TableHead>
-          <TableHead>Descripción</TableHead>
-          <TableHead className="text-right">Costo Total</TableHead>
+        <TableRow className="bg-slate-50/50">
+          <TableHead className="font-black text-[10px] uppercase tracking-wider">ID de OC</TableHead>
+          <TableHead className="font-black text-[10px] uppercase tracking-wider">Ref. Solicitud</TableHead>
+          <TableHead className="font-black text-[10px] uppercase tracking-wider">Fecha</TableHead>
+          <TableHead className="font-black text-[10px] uppercase tracking-wider">Proveedor</TableHead>
+          <TableHead className="font-black text-[10px] uppercase tracking-wider">Estado</TableHead>
+          <TableHead className="font-black text-[10px] uppercase tracking-wider text-right">Costo Total</TableHead>
+          <TableHead className="font-black text-[10px] uppercase tracking-wider text-center">Acciones</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {sortedOrders.map((order) => (
-          <TableRow key={order.id}>
-            <TableCell className="font-medium">{order.id.toUpperCase()}</TableCell>
-            <TableCell>{order.solicitudId.toUpperCase()}</TableCell>
-            <TableCell>{format(parseISO(order.createdAt), "dd MMM yyyy", { locale: es })}</TableCell>
-            <TableCell>{order.supplierName}</TableCell>
-            <TableCell className="max-w-xs truncate">{order.poDescription}</TableCell>
-            <TableCell className="text-right">{currencyFormatter.format(order.totalCost)}</TableCell>
+          <TableRow key={order.id} className="hover:bg-slate-50/30 transition-colors">
+            <TableCell className="font-black text-slate-900">{order.id.toUpperCase()}</TableCell>
+            <TableCell className="font-medium text-slate-500">{order.solicitudId.toUpperCase()}</TableCell>
+            <TableCell className="text-slate-600 font-medium">
+              {format(parseISO(order.createdAt), "dd MMM yyyy", { locale: es })}
+            </TableCell>
+            <TableCell className="font-bold text-slate-700">{order.supplierName}</TableCell>
+            <TableCell>
+              <Badge variant="outline" className={cn("text-[9px] font-black uppercase rounded-sm px-2 py-0.5", getStatusColor(order.status || 'generado'))}>
+                {order.status || 'generado'}
+              </Badge>
+            </TableCell>
+            <TableCell className="text-right font-black text-slate-900">
+              {formatCurrency(order.totalGlobal || order.totalCost || 0, order.moneda)}
+            </TableCell>
+            <TableCell className="text-center">
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-sm"
+                    onClick={() => generateOrderPDF(order)}
+                >
+                    <FileDown className="h-4 w-4" />
+                </Button>
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>

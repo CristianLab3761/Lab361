@@ -96,7 +96,9 @@ export type OrdenCompra = {
   referencia?: string;
   tipo?: string;
   estatus: string;
+  status?: string; // Alias for compatibility
   observaciones?: string;
+  poDescription?: string; // Alias for compatibility
   
   // Financials
   moneda: 'CLP' | 'USD' | 'UF';
@@ -105,6 +107,7 @@ export type OrdenCompra = {
   totalNeto: number;
   totalIva: number;
   totalGlobal: number;
+  totalCost?: number; // Alias for compatibility
   
   // Administrative
   centroCostos?: string;
@@ -199,4 +202,6 @@ export type Material = {
   id: string;
   codigo: string;
   descripcion: string;
+  Material?: string;
+  codigo_nuevo?: string;
 };

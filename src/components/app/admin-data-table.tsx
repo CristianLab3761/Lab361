@@ -28,7 +28,8 @@ interface AdminDataTableProps<T extends { id: string; [key: string]: any }> {
   itemType: AdminItemType;
   items: T[];
   columns: { key: keyof T; header: string }[];
-  formFields: { key: keyof T, placeholder: string, type?: 'text' | 'number' | 'checkbox-group', options?: string[] }[];
+  formFields: { key: keyof T, placeholder: string, type?: 'text' | 'number' | 'checkbox-group' | 'select', options?: string[] }[];
+  onFieldChange?: (fieldName: string, value: any, currentData: Partial<T>) => Partial<T> | void;
 }
 
 export function AdminDataTable<T extends { id: string; [key: string]: any }>({
@@ -37,7 +38,8 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
   itemType,
   items,
   columns,
-  formFields
+  formFields,
+  onFieldChange
 }: AdminDataTableProps<T>) {
   const { addAdminItem, removeAdminItem, updateAdminItem } = useAppContext();
   const [newItem, setNewItem] = useState<Partial<T>>({});
@@ -78,10 +80,19 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
   // --- ADD LOGIC ---
   const handleAddChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
-    setNewItem({
+    const updated = {
       ...newItem,
       [name]: type === 'number' ? parseFloat(value) || 0 : value,
-    });
+    };
+    
+    if (onFieldChange) {
+      const result = onFieldChange(name, value, updated);
+      if (result) {
+        setNewItem(result);
+        return;
+      }
+    }
+    setNewItem(updated);
   };
 
   const handleAddCheckboxChange = (fieldKey: keyof T, option: string, checked: boolean) => {
@@ -97,7 +108,9 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
   };
 
   const handleAddItem = async () => {
-    if (formFields.some(field => !newItem[field.key])) {
+    // Basic validation (allow optional fields)
+    const requiredFields = formFields.filter(f => !['centro_costos', 'centro_negocios', 'cargo', 'department'].includes(String(f.key)));
+    if (requiredFields.some(field => !newItem[field.key])) {
       alert('Por favor, complete los campos principales.');
       return;
     }
@@ -207,6 +220,30 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
                               ))}
                             </div>
                           </div>
+                        ) : field.type === 'select' ? (
+                          <select
+                            id={`add-${String(field.key)}`}
+                            name={String(field.key)}
+                            value={(newItem[field.key] as string) || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const updated = { ...newItem, [field.key]: val as any };
+                              if (onFieldChange) {
+                                const result = onFieldChange(String(field.key), val, updated);
+                                if (result) {
+                                  setNewItem(result);
+                                  return;
+                                }
+                              }
+                              setNewItem(updated);
+                            }}
+                            className="w-full h-10 px-3 bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                          >
+                            <option value="">Seleccionar {field.placeholder}...</option>
+                            {field.options?.map(opt => (
+                              <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>
+                            ))}
+                          </select>
                         ) : (
                           <Input
                             id={`add-${String(field.key)}`}
@@ -284,6 +321,21 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
                                                   </div>
                                                 ))}
                                               </div>
+                                            );
+                                          }
+                                          if (field?.type === 'select') {
+                                            return (
+                                              <select
+                                                name={String(col.key)}
+                                                value={(editData[col.key] as string) || ''}
+                                                onChange={(e) => setEditData({...editData, [col.key]: e.target.value as any})}
+                                                className="h-8 w-full px-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/20"
+                                              >
+                                                <option value="">Seleccionar...</option>
+                                                {field.options?.map(opt => (
+                                                  <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>
+                                                ))}
+                                              </select>
                                             );
                                           }
                                           return (

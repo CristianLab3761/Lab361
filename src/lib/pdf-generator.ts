@@ -204,7 +204,7 @@ export const generateRequisitionPDF = (solicitud: any, proveedor?: any) => {
 
   autoTable(doc, {
     startY: currentY,
-    head: [['Item', 'Cód. Material', 'Descripción', 'Cuenta Presupuesto', 'Precio Unitario', 'Fecha de entrega', 'Subtotal']],
+    head: [['Item', 'Cód. Material', 'Descripción', 'Centro de Costos', 'Precio Unitario', 'Fecha de entrega', 'Subtotal']],
     body: tableData,
     theme: 'grid',
     margin: { left: 14, right: 14 },
@@ -226,7 +226,7 @@ export const generateRequisitionPDF = (solicitud: any, proveedor?: any) => {
       0: { cellWidth: 10, halign: 'center' }, // Item
       1: { cellWidth: 25, halign: 'center' }, // Cód. Material
       2: { cellWidth: 'auto' },               // Descripción
-      3: { cellWidth: 35, halign: 'center' }, // Cuenta Presupuesto
+      3: { cellWidth: 35, halign: 'center' }, // Centro de Costos
       4: { cellWidth: 'wrap', halign: 'right' }, // Precio Unitario
       5: { cellWidth: 25, halign: 'center' }, // Fecha entrega
       6: { cellWidth: 'wrap', halign: 'right' }, // Subtotal

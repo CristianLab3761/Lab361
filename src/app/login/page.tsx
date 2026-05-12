@@ -36,7 +36,14 @@ export default function LoginPage() {
         password: formData.password,
       });
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error de autenticación",
+          description: error.message || "Credenciales incorrectas o el usuario no existe.",
+        });
+        return;
+      }
 
       toast({
         title: "Sesión iniciada",
@@ -44,11 +51,10 @@ export default function LoginPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
-      console.error(error);
       toast({
         variant: "destructive",
-        title: "Error de autenticación",
-        description: error.message || "Credenciales incorrectas o el usuario no existe.",
+        title: "Error de sistema",
+        description: "Ocurrió un error inesperado al intentar iniciar sesión.",
       });
     } finally {
       setLoading(false);
@@ -56,53 +62,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full font-body bg-black text-white">
+    <div className="flex min-h-screen w-full font-body bg-white text-slate-900">
       {/* Left Side - Visual/Branding (Hidden on mobile) */}
-      <div className="hidden lg:flex flex-col relative w-1/2 p-20 text-white overflow-hidden bg-black border-r border-white/5 shadow-[20px_0_60px_rgba(0,0,0,0.8)]">
+      <div className="hidden lg:flex flex-col relative w-1/2 overflow-hidden bg-white border-r border-slate-100 shadow-[20px_0_60px_rgba(0,0,0,0.05)]">
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,#2563eb_0%,transparent_60%)] opacity-30" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,#22c55e_0%,transparent_60%)] opacity-20" />
-          <div className="absolute top-0 left-0 right-0 h-full w-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 mix-blend-screen" />
-          
-          <div className="absolute top-1/3 left-1/4 h-[600px] w-[600px] bg-primary/20 rounded-full mix-blend-overlay filter blur-[180px] animate-pulse" />
-          <div className="absolute -bottom-40 -right-40 h-[800px] w-[800px] bg-accent/10 rounded-full filter blur-[200px]" />
-        </div>
-
-        <div className="relative z-10 flex items-center gap-4 mb-auto">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-black shadow-lg transition-all hover:scale-110 active:scale-95">
-            <ShoppingCart className="h-7 w-7" />
-          </div>
-          <span className="text-3xl font-bold tracking-tight uppercase text-white">Botanical</span>
-        </div>
-
-        <div className="relative z-10 mt-auto">
-          <Badge variant="outline" className="mb-8 border-primary/40 text-primary font-bold uppercase tracking-wider px-6 py-2 backdrop-blur-md bg-primary/5 rounded-full text-[10px]">
-             Intelligence Core • v3.0
-          </Badge>
-          <h1 className="text-7xl font-bold tracking-tight mb-10 leading-[0.9] lg:max-w-2xl text-white">
-            Potencia <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-accent">
-               Absoluta.
-            </span>
-          </h1>
-          <p className="text-lg text-white/70 max-w-lg mb-14 leading-relaxed font-semibold tracking-wide">
-            Control técnico de requisiciones con la máxima eficiencia del espectro mango.
-          </p>
-          
-          <div className="flex items-center gap-10 text-[11px] font-bold uppercase tracking-wider">
-            <div className="flex items-center gap-4 group">
-              <div className="h-2.5 w-2.5 rounded-full bg-primary shadow-lg animate-pulse" />
-              <span className="text-white/60 group-hover:text-primary transition-colors">Encriptado</span>
-            </div>
-            <div className="flex items-center gap-4 group">
-              <div className="h-2.5 w-2.5 rounded-full bg-accent shadow-lg" />
-              <span className="text-white/60 group-hover:text-accent transition-colors">Sincronizado</span>
-            </div>
-            <div className="flex items-center gap-4 group">
-              <div className="h-2.5 w-2.5 rounded-full bg-white shadow-lg" />
-              <span className="text-white/60 group-hover:text-white transition-colors">Digital AI</span>
-            </div>
-          </div>
+          <img 
+            src="/assets/wallpaper-bsi-1.jpg" 
+            alt="Botanical Background" 
+            className="h-full w-full object-cover grayscale opacity-40"
+          />
+          {/* Corner Gradients */}
+          <div className="absolute top-0 left-0 h-64 w-64 bg-gradient-to-br from-white via-white/20 to-transparent" />
+          <div className="absolute top-0 right-0 h-64 w-64 bg-gradient-to-bl from-white via-white/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 h-64 w-64 bg-gradient-to-tr from-white via-white/20 to-transparent" />
+          <div className="absolute bottom-0 right-0 h-64 w-64 bg-gradient-to-tl from-white via-white/20 to-transparent" />
         </div>
       </div>
 

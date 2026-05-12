@@ -94,75 +94,21 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full font-body bg-black text-white">
+    <div className="flex min-h-screen w-full font-body bg-white text-slate-900">
       {/* Left Side - Visual/Branding (Hidden on mobile) */}
-      <div className="hidden lg:flex flex-col relative w-1/2 p-20 text-white overflow-hidden bg-black border-r border-white/5 shadow-[20px_0_60px_rgba(0,0,0,0.8)] shrink-0">
+      <div className="hidden lg:flex flex-col relative w-1/2 overflow-hidden bg-white border-r border-slate-100 shadow-[20px_0_60px_rgba(0,0,0,0.05)] shrink-0">
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,#2563eb_0%,transparent_70%)] opacity-30" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_80%,#22c55e_0%,transparent_70%)] opacity-20" />
-          <div className="absolute top-0 left-0 right-0 h-full w-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 mix-blend-screen" />
-          
-          <div className="absolute top-1/2 left-1/2 h-[700px] w-[700px] bg-primary/10 rounded-full mix-blend-overlay filter blur-[180px] animate-pulse -translate-x-1/2 -translate-y-1/2" />
+          <img 
+            src="/assets/wallpaper-bsi-1.jpg" 
+            alt="Botanical Background" 
+            className="h-full w-full object-cover grayscale opacity-40"
+          />
+          {/* Corner Gradients */}
+          <div className="absolute top-0 left-0 h-64 w-64 bg-gradient-to-br from-white via-white/20 to-transparent" />
+          <div className="absolute top-0 right-0 h-64 w-64 bg-gradient-to-bl from-white via-white/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 h-64 w-64 bg-gradient-to-tr from-white via-white/20 to-transparent" />
+          <div className="absolute bottom-0 right-0 h-64 w-64 bg-gradient-to-tl from-white via-white/20 to-transparent" />
         </div>
-
-        <div className="relative z-10 flex items-center gap-4 mb-auto">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-black shadow-neon-orange transition-all hover:scale-110 active:scale-95">
-            <ShoppingCart className="h-8 w-8" />
-          </div>
-          <span className="text-4xl font-black tracking-tighter uppercase italic drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">Botanical</span>
-        </div>
-
-        <div className="relative z-10 mt-auto">
-          <h1 className="text-8xl font-black tracking-tighter mb-10 leading-[0.8] lg:max-w-2xl drop-shadow-[0_10px_30px_rgba(0,0,0,1)]">
-            Acceso <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-accent drop-shadow-none">
-               Total.
-            </span>
-          </h1>
-          <p className="text-xl text-white/60 max-w-lg mb-14 leading-relaxed font-black italic uppercase tracking-wider">
-            Únete a la vanguardia de la gestión técnica con contraste absoluto.
-          </p>
-          
-          <div className="flex items-center gap-8 text-[11px] font-black uppercase tracking-[0.3em] opacity-40">
-            <div className="flex items-center gap-3">
-              <div className="h-3 w-3 rounded-full bg-accent shadow-neon-green" />
-              <span>Full Spectrum</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="h-3 w-3 rounded-full bg-accent shadow-neon-green" />
-              <span>Vibrant Core</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    <div className="flex min-h-screen w-full flex-col lg:flex-row font-body bg-background selection:bg-primary/20">
-      {/* Left Side - Visual/Branding */}
-      <div className="relative hidden w-1/2 flex-col bg-slate-50 p-16 lg:flex overflow-hidden border-r border-slate-100">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,#2563eb_0%,transparent_50%)] opacity-[0.05]" />
-        
-        <div className="relative z-20 flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-brand transition-transform hover:scale-105">
-            <ShoppingCart className="h-8 w-8" />
-          </div>
-          <span className="text-3xl font-black tracking-tighter uppercase italic text-slate-900">Botanical</span>
-        </div>
-
-        <div className="relative z-20 mt-auto">
-          <blockquote className="space-y-6">
-            <p className="text-5xl font-black tracking-tighter leading-none text-slate-900 uppercase italic">
-              Únete a la <br />
-              <span className="text-primary italic">Red de Eficiencia</span> <br />
-              Corporativa
-            </p>
-            <footer className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 border-l-4 border-primary pl-6">
-              Protocolo de Alta de Usuario v2.4
-            </footer>
-          </blockquote>
-        </div>
-
-        {/* Brand visual aid */}
-        <div className="absolute bottom-[-10%] right-[-10%] h-[400px] w-[400px] rounded-full border-[30px] border-primary/5 blur-sm" />
       </div>
 
       {/* Right Side - Register Form */}
@@ -214,8 +160,6 @@ export default function RegisterPage() {
                 />
               </div>
             </div>
-
-
 
             <div className="grid sm:grid-cols-2 gap-8">
               <div className="space-y-2">
@@ -312,7 +256,6 @@ export default function RegisterPage() {
         {/* Decorative branding */}
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent/40 to-primary" />
       </div>
-    </div>
     </div>
   );
 }

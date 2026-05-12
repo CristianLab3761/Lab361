@@ -88,10 +88,13 @@ const getDisplayStatus = (status: string | undefined) => {
   return s.toUpperCase();
 };
 
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
+function formatCurrency(value: number, currency: string = 'CLP') {
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: currency === 'UF' ? 'CLP' : (currency || 'CLP'),
+    minimumFractionDigits: currency === 'CLP' ? 0 : 2,
+  }).format(value) + (currency === 'UF' ? ' UF' : '');
+}
 
 
 
@@ -167,7 +170,7 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
         <TableCell className="font-bold text-slate-700 uppercase tracking-tight">{solicitud.solicitanteName || '---'}</TableCell>
         <TableCell className="max-w-[200px] truncate text-slate-400 font-semibold tracking-wide">{solicitud.proveedor || 'No especificado'}</TableCell>
         <TableCell className="font-bold text-primary text-lg tracking-tight">
-          {currencyFormatter.format(solicitud.totalEstimatedCost || 0)}
+          {formatCurrency(solicitud.totalEstimatedCost || 0, solicitud.moneda || (solicitud as any).Moneda)}
         </TableCell>
         <TableCell>
           <Badge className={cn("text-[10px] px-3 py-1 rounded-full uppercase tracking-widest border whitespace-nowrap", statusStyles[solicitud.status?.toLowerCase() || 'pendiente'])}>
@@ -212,7 +215,7 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
                 </Button>
               </>
             )}
-
+ 
             <Button 
               variant="outline" 
               size="sm" 
@@ -227,7 +230,7 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
               <Download className="mr-2 h-4 w-4" />
               PDF
             </Button>
-
+ 
             {((currentUser?.role?.toLowerCase() || '') === 'compras' || (currentUser?.role?.toLowerCase() || '') === 'comprador' || (currentUser?.role?.toLowerCase() || '') === 'admin') && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -267,7 +270,8 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
                       const safeName = typeof item.name === 'string' ? item.name : 'Producto sin nombre';
                       const safeCost = Number(item.estimatedCost) || 0;
                       const safeQty = Number(item.quantity) || 0;
-
+                      const reqCurrency = solicitud.moneda || (solicitud as any).Moneda;
+ 
                       return (
                         <li key={item.id} className="flex justify-between items-center py-1">
                           <div className="flex flex-col">
@@ -275,8 +279,8 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
                             {item.codigoMaterial && <span className="text-[10px] opacity-70">Código: {item.codigoMaterial}</span>}
                           </div>
                           <div className="text-right">
-                            <span className="block font-medium">{currencyFormatter.format(item.montoTotalIva || (safeCost * safeQty * 1.19))} <span className="text-[10px] text-slate-400">(IVA inc.)</span></span>
-                            <span className="block text-[10px] text-slate-400">Neto: {currencyFormatter.format(item.montoNeto || (safeCost * safeQty))}</span>
+                            <span className="block font-medium">{formatCurrency(item.montoTotalIva || (safeCost * safeQty * 1.19), reqCurrency)} <span className="text-[10px] text-slate-400">(IVA inc.)</span></span>
+                            <span className="block text-[10px] text-slate-400">Neto: {formatCurrency(item.montoNeto || (safeCost * safeQty), reqCurrency)}</span>
                           </div>
                         </li>
                       );

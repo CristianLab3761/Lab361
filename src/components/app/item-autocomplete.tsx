@@ -45,8 +45,8 @@ export function ItemAutocomplete({
         for (const k of keys) if (obj[k] !== undefined && obj[k] !== null) return obj[k];
         return '';
       };
-      const desc = String(getVal(m, ['descripcion', 'Descripcion del material', 'Descripcion', 'name', 'Name'])).toLowerCase();
-      const cod = String(getVal(m, ['codigo', 'Código', 'Codigo', 'code'])).toLowerCase();
+      const desc = String(getVal(m, ['Material', 'descripcion', 'Descripcion del material', 'Descripcion', 'name', 'Name'])).toLowerCase();
+      const cod = String(getVal(m, ['codigo_nuevo', 'codigo', 'Código', 'Codigo', 'code'])).toLowerCase();
       const search = searchValue.toLowerCase();
       return desc.includes(search) || cod.includes(search);
     }).slice(0, 10); // Limit to 10 suggestions for performance
@@ -89,8 +89,8 @@ export function ItemAutocomplete({
                       for (const k of keys) if (obj[k] !== undefined && obj[k] !== null) return obj[k];
                       return '';
                     };
-                    const desc = getVal(m, ['descripcion', 'Descripcion del material', 'Descripcion', 'name', 'Name']);
-                    const cod = getVal(m, ['codigo', 'Código', 'Codigo', 'code']);
+                    const desc = getVal(m, ['Material', 'descripcion', 'Descripcion del material', 'Descripcion', 'name', 'Name']);
+                    const cod = getVal(m, ['codigo_nuevo', 'codigo', 'Código', 'Codigo', 'code']);
                     
                     const newValue = displayField === 'descripcion' ? String(desc) : String(cod);
                     onChange(newValue, material);
@@ -100,12 +100,12 @@ export function ItemAutocomplete({
                 >
                   <div className="flex flex-col gap-0.5 overflow-hidden">
                     <span className="font-bold text-slate-800 truncate">
-                      {(material as any).descripcion || (material as any)['Descripcion del material'] || (material as any).name || 'Sin descripción'}
+                      {(material as any).Material || (material as any).descripcion || (material as any)['Descripcion del material'] || (material as any).name || 'Sin descripción'}
                     </span>
                   </div>
                   <div className="shrink-0">
                     <span className="bg-slate-100 px-1.5 py-0.5 rounded-sm text-[9px] font-black font-mono text-slate-500 border border-slate-200 group-hover:bg-slate-900 group-hover:text-white transition-colors">
-                      {(material as any).codigo || (material as any)['Código'] || (material as any).code || 'S/C'}
+                      {(material as any).codigo_nuevo || (material as any).codigo || (material as any)['Código'] || (material as any).code || 'S/C'}
                     </span>
                   </div>
                 </button>

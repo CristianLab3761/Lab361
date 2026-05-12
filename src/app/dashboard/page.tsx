@@ -15,7 +15,7 @@ import {
   getCycleTimeStats, getSavingsData, USD_TO_CLP, UF_TO_CLP 
 } from '@/lib/dashboard-utils';
 import { SpendByCategoryChart, MonthlySpendChart, TopSuppliersChart } from '@/components/app/dashboard-charts';
-import { BudgetStatusWidget, CurrencyMonitor, UpcomingDeliveriesWidget, StatCardMini } from '@/components/app/dashboard-widgets';
+import { BudgetStatusWidget, UpcomingDeliveriesWidget, StatCardMini } from '@/components/app/dashboard-widgets';
 import { PendingRequisitionsWidget } from '@/components/app/pending-requisitions-widget';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from 'date-fns';
@@ -190,7 +190,7 @@ export default function DashboardPage() {
               }}
             />
           )}
-          <CurrencyMonitor />
+
           
           <BudgetStatusWidget budgets={budgetStats} />
           
