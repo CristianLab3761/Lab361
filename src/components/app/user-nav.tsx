@@ -24,13 +24,6 @@ export function UserNav() {
   const { currentUser, logout, users, setCurrentUser } = useAppContext();
   const router = useRouter();
 
-  const handleRoleChange = (userId: string) => {
-    const selectedUser = users.find((user) => user.id === userId);
-    if (selectedUser) {
-      setCurrentUser(selectedUser);
-    }
-  };
-
   const handleLogout = async () => {
     await logout();
     router.push('/login');
@@ -57,28 +50,6 @@ export function UserNav() {
             <p className="text-xs leading-none text-muted-foreground">{currentUser.email}</p>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <Users className="mr-2 h-4 w-4" />
-            <span>Cambiar Usuario</span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup value={currentUser.id} onValueChange={handleRoleChange}>
-                {users.map((user) => (
-                  <DropdownMenuRadioItem key={user.id} value={user.id}>
-                    <Avatar className="mr-2 h-5 w-5">
-                      <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <span>{user.name} ({user.role})</span>
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuPortal>
-        </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
