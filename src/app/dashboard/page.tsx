@@ -83,7 +83,7 @@ export default function DashboardPage() {
            </p>
         </div>
         <div className="flex items-center gap-3">
-           <NewRequestDialog />
+           {userRole === 'solicitante' && <NewRequestDialog />}
            {isCompras && (
                 <div className="hidden sm:flex items-center gap-2 px-6 py-2 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-black/20">
                     <TrendingUp className="h-4 w-4" /> Power User Mode
