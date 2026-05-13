@@ -46,7 +46,7 @@ interface GenerateOCDialogProps {
 }
 
 export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDialogProps) {
-  const { addOrdenCompra, proveedores, materiales } = useAppContext();
+  const { addOrdenCompra, proveedores, materiales, dbOrdenesV04, dbOrdenesV05 } = useAppContext();
   
   // Basic Info
   const [poNumber, setPoNumber] = React.useState('');
@@ -76,7 +76,21 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
   // Pre-fill data when solicitud changes
   React.useEffect(() => {
     if (solicitud) {
-      setPoNumber(`OC-${solicitud.id?.split('-').pop() || Math.floor(1000 + Math.random() * 9000)}`);
+      // Calculate next correlative ID across V04 and V05
+      const idsV04 = (dbOrdenesV04 || []).map((o: any) => String(o["ORDEN DE COMPRA"] || ""));
+      const idsV05 = (dbOrdenesV05 || []).map((o: any) => String(o["N° Orden"] || ""));
+      const allIds = [...idsV04, ...idsV05];
+      
+      let maxNum = 0;
+      allIds.forEach(id => {
+        const numMatch = id.match(/\d+/);
+        if (numMatch) {
+          const val = parseInt(numMatch[0]);
+          if (val > maxNum) maxNum = val;
+        }
+      });
+
+      setPoNumber(`OC-${String(maxNum + 1).padStart(4, '0')}`);
       setSupplierName(solicitud.proveedor || '');
       setReferencia(solicitud.id || '');
       setItems(solicitud.items || []);
@@ -109,7 +123,7 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
         setPaymentTerms(paymentValue);
       }
     }
-  }, [solicitud, proveedores]);
+  }, [solicitud, proveedores, dbOrdenesV04, dbOrdenesV05]);
 
   // Helpers for items
   const updateItem = (index: number, field: string, value: any) => {

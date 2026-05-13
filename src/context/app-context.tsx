@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useSupabaseAuth, useSupabaseCollection } from '@/hooks/use-supabase';
 
-export type AdminItemType = 'Proveedores' | 'CuentasPresupuestos' | 'presupuestos' | 'CentrosDeNegocios' | 'centrosCostos' | 'ListaDeMateriales' | 'Requisiciones' | 'user_profiles' | 'Familias' | 'SubFamilias';
+export type AdminItemType = 'Proveedores' | 'CuentasPresupuestos' | 'presupuestos' | 'CentrosDeNegocios' | 'centrosCostos' | 'ListaDeMateriales' | 'Requisiciones' | 'user_profiles' | 'Familias' | 'SubFamilias' | 'OrdenesCompraV04' | 'OrdenesCompraV05';
 
 interface AppContextType {
   currentUser: User | null;
@@ -24,6 +24,11 @@ interface AppContextType {
   toggleFavorite: (id: string, currentStatus: boolean) => Promise<void>;
   addSolicitud: (newSolicitud: Omit<Solicitud, 'id' | 'createdAt' | 'solicitanteId' | 'solicitanteName'>) => void;
   ordenesCompra: OrdenCompra[];
+  ordenesCompraV04: any[];
+  ordenesCompraV05: any[];
+  dbRequisicionesV04: any[];
+  dbOrdenesV04: any[];
+  dbOrdenesV05: any[];
   addOrdenCompra: (newOrden: Omit<OrdenCompra, 'id' | 'createdAt' | 'dia' | 'mes' | 'nMes' | 'anio' | 'semana' | 'estatus'>, solicitudId: string) => void;
   getHistoricalDataForItems: (items: Item[]) => { name: string; averageCost: number }[];
 
@@ -38,6 +43,7 @@ interface AppContextType {
   addAdminItem: <T extends {}>(itemType: AdminItemType, newItem: T) => Promise<void>;
   updateAdminItem: (itemType: AdminItemType, itemId: string, updates: Partial<any>) => Promise<void>;
   removeAdminItem: (itemType: AdminItemType, itemId: string) => Promise<void>;
+  addMultipleAdminItems: <T extends {}>(itemType: AdminItemType, newItemsData: T[]) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -112,6 +118,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     console.error("Error al cargar Requisiciones de Supabase:", fetchError);
   }
 
+  const { data: dbCuentasPresupuestos } = useSupabaseCollection(isUserAuthenticated ? 'CuentasPresupuestos' : null);
   const { data: dbMateriales } = useSupabaseCollection(isUserAuthenticated ? 'ListaDeMateriales' : null);
   const { data: dbProveedores } = useSupabaseCollection(isUserAuthenticated ? 'Proveedores' : null);
   const { data: dbOrdenes } = useSupabaseCollection(isUserAuthenticated ? 'purchaseOrders' : null);
@@ -120,10 +127,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { data: dbCentrosCostos } = useSupabaseCollection(isUserAuthenticated ? 'centrosCostos' : null);
   const { data: dbCentrosNegocios } = useSupabaseCollection(isUserAuthenticated ? 'CentrosDeNegocios' : null);
   const { data: dbUsers } = useSupabaseCollection(isUserAuthenticated ? 'user_profiles' : null);
+  const { data: dbRequisicionesV04 } = useSupabaseCollection(isUserAuthenticated ? 'RequisicionesV04' : null);
+  const { data: dbOrdenesV04 } = useSupabaseCollection(isUserAuthenticated ? 'OrdenesCompraV04' : null);
+  const { data: dbOrdenesV05 } = useSupabaseCollection(isUserAuthenticated ? 'OrdenesCompraV05' : null);
 
   const proveedores: any[] = dbProveedores || [];
-  const cuentas: any[] = [];
-  const presupuestos: any[] = [];
+  const cuentas: any[] = dbCuentasPresupuestos || [];
+  const presupuestos: any[] = dbCentrosCostos || [];
   const centrosNegocios: any[] = dbCentrosNegocios || [];
   const centrosCostos: any[] = dbCentrosCostos || [];
   const materiales: any[] = dbMateriales || [];
@@ -159,6 +169,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             estimatedCost: parseFloat(String(item.precio_unitario || item.estimatedCost)) || 0,
             codigoMaterial: item.codigo_material || item.codigoMaterial || '',
             descripcion: item.descripcion || '',
+            cuentaPresupuesto: item.cuentaPresupuesto || item.cuenta_presupuesto || item["Cuentas Presupuesto"] || '',
             nroItem: item.nro_item || (idx + 1),
             montoNeto: item.monto_neto || 0,
             montoTotalIva: item.monto_total_iva || 0
@@ -257,7 +268,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateSolicitud = useCallback(async (id: string, updates: Partial<Solicitud>) => {
     // Map internal fields to Spanish columns for DB write
     const dbUpdates: any = { ...updates };
-    if (updates.status) dbUpdates["Estatus"] = updates.status;
+    if (updates.status) {
+      dbUpdates["Estatus"] = updates.status;
+      dbUpdates["Fecha Estatus"] = new Date().toISOString();
+    }
     if (updates.id) dbUpdates["N° Requisición"] = updates.id;
     if (updates.createdAt) dbUpdates["Fecha"] = updates.createdAt;
     
@@ -312,7 +326,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    const reqId = newSolicitudData.id || `REQ-${String(solicitudes.length + 1).padStart(4, '0')}`;
+    // Calculate next correlative ID across V04 and V05
+    // Buscar máximo correlativo en V04 y V05
+    const allReqs = [...(dbRequisicionesV04 || []), ...(dbSolicitudes || [])];
+    let maxNum = 100005344; // Baseline manual solicitado
+    
+    allReqs.forEach(r => {
+      const idStr = String(r["N° Requisición"] || r["REQUISICIÓN"] || r.id || "");
+      const numericPart = idStr.replace(/\D/g, "");
+      if (numericPart) {
+        const val = parseInt(numericPart);
+        if (val > maxNum) maxNum = val;
+      }
+    });
+
+    const nextNumeric = maxNum + 1;
+    // Formatear con puntos (ej: 100.005.345)
+    const formattedId = nextNumeric.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    const reqId = newSolicitudData.id || formattedId;
     
     // Preparar ítems para formato JSONB de V05
     const isAfecto = newSolicitudData.isAfectoIVA !== false; // Default true if undefined
@@ -370,7 +401,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [currentUser, solicitudes.length, toast]);
 
   const addOrdenCompra = useCallback(async (newOrdenData: Omit<OrdenCompra, 'id' | 'createdAt' | 'dia' | 'mes' | 'nMes' | 'anio' | 'semana' | 'estatus'>, solicitudId: string) => {
-    const ocId = `oc-${String(ordenesCompra.length + 1).padStart(3, '0')}`;
+    // Calculate next correlative ID across V04 and V05
+    const idsV04 = (dbOrdenesV04 || []).map((o: any) => String(o["ORDEN DE COMPRA"] || ""));
+    const idsV05 = (dbOrdenesV05 || []).map((o: any) => String(o["N° Orden"] || ""));
+    const allIds = [...idsV04, ...idsV05];
+    
+    let maxNum = 0;
+    allIds.forEach(id => {
+      const numMatch = id.match(/\d+/);
+      if (numMatch) {
+        const val = parseInt(numMatch[0]);
+        if (val > maxNum) maxNum = val;
+      }
+    });
+
+    const ocId = `OC-${String(maxNum + 1).padStart(4, '0')}`;
     const now = new Date();
     
     // Automatic date breakdown
@@ -395,12 +440,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Save to Supabase (using standard purchaseOrders name)
     const { error } = await supabase.from('purchaseOrders').insert([newOrden]);
     
-    if (error) {
-      console.error('Error al persistir OC en Supabase:', JSON.stringify(error, null, 2));
+    // Save to V05 Improved structure (JSONB)
+    const dbOrdenV05 = {
+      "N° Orden": ocId,
+      "Fecha": now.toISOString(),
+      "Proveedor": newOrdenData.supplierName,
+      "Total_Neto": newOrdenData.totalNeto,
+      "Total_IVA": newOrdenData.totalIva,
+      "Total_Global": newOrdenData.totalGlobal,
+      "Moneda": newOrdenData.moneda,
+      "Items_JSON": newOrdenData.items,
+      "Estatus": 'completado',
+      "Requisición": solicitudId,
+      "Año": year,
+      "Mes": monthName,
+      "Día": day,
+      "CECO": newOrdenData.centroCostos || '',
+      "CENE": newOrdenData.centroNegocios || '',
+      "Ref": newOrdenData.referencia || '',
+      "Observaciones": newOrdenData.observaciones || '',
+      "Forma de Pago": newOrdenData.formaPago || ''
+    };
+    
+    const { error: v05Error } = await supabase.from('OrdenesCompraV05').insert([dbOrdenV05]);
+    
+    if (error || v05Error) {
+      console.error('Error al persistir OC en Supabase:', error || v05Error);
       toast({
         variant: 'destructive',
         title: "Error de Persistencia",
-        description: `La OC se creó localmente pero no se pudo guardar en la base de datos: ${error.message}. Por favor, verifica que la tabla 'PurchaseOrdersV05' exista.`,
+        description: `No se pudo guardar en la base de datos: ${(error || v05Error)?.message}.`,
       });
     }
 
@@ -469,6 +538,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toggleFavorite,
     addSolicitud,
     ordenesCompra,
+    ordenesCompraV04: dbOrdenesV04 || [],
+    ordenesCompraV05: dbOrdenesV05 || [],
+    dbRequisicionesV04: dbRequisicionesV04 || [],
+    dbOrdenesV04: dbOrdenesV04 || [],
+    dbOrdenesV05: dbOrdenesV05 || [],
     addOrdenCompra,
     getHistoricalDataForItems,
     proveedores: proveedores || [],

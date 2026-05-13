@@ -168,6 +168,8 @@ export default function ImportarPage() {
         centrosCostos: ['name'], 
         ListaDeMateriales: ['Código', 'Descripcion del material'],
         Requisiciones: ['N° Requisición', 'Solicitante', 'Item', 'Unidades', 'Precio Unitario'],
+        OrdenesCompraV04: ['ORDEN DE COMPRA', 'FECHA', 'REF', 'UNIDADES', 'DESCRIPCION'],
+        OrdenesCompraV05: ['ORDEN DE COMPRA', 'FECHA', 'PROVEEDOR', 'UNIDADES', 'PRECIO UNITARIO'],
       };
 
       const isCostCenter = importType === 'centrosCostos';
@@ -272,7 +274,14 @@ export default function ImportarPage() {
             ...row,
           };
         }
-        return row;
+
+        // Clean up legacy/error columns 's', 's_1', 's_2'
+        const cleanedRow = { ...row };
+        delete cleanedRow['s'];
+        delete cleanedRow['s_1'];
+        delete cleanedRow['s_2'];
+        
+        return cleanedRow;
       });
 
       // Special handling for Requisiciones: group rows by N° Requisición
@@ -334,6 +343,55 @@ export default function ImportarPage() {
         });
 
         finalData = Array.from(solMap.values());
+      }
+
+      // Special handling for OrdenesCompraV05: group rows
+      if (importType === 'OrdenesCompraV05') {
+        const ocMap = new Map<string, any>();
+
+        dataToImport.forEach((row, rowIndex) => {
+          const ocId = row['ORDEN DE COMPRA'] || row['N° Orden'] || `import-oc-${rowIndex}`;
+          
+          if (!ocMap.has(ocId)) {
+            ocMap.set(ocId, {
+              "N° Orden": ocId,
+              "Fecha": row['FECHA'] || row['Fecha'] || new Date().toISOString(),
+              "Proveedor": row['PROVEEDOR'] || row['Proveedor'] || '',
+              "Moneda": row['MONEDA'] || row['Moneda'] || 'CLP',
+              "CECO": row['CECO'] || row['CENE'] || '',
+              "Ref": row['REF'] || row['Ref'] || '',
+              "Observaciones": row['OBSERVACIONES'] || row['Observaciones'] || '',
+              "Forma de Pago": row['FORMA DE PAGO'] || row['Forma de Pago'] || '',
+              "Estatus": row['ESTATUS'] || row['Estatus'] || 'completado',
+              "Items_JSON": [],
+              "Total_Neto": 0,
+              "Total_IVA": 0,
+              "Total_Global": 0,
+              "Requisición": row['REQUISICIÓN'] || row['Requisición'] || '',
+            });
+          }
+
+          const currentOc = ocMap.get(ocId);
+          const quantity = parseFloat(String(row['UNIDADES'] || row['Unidades']).replace(/,/g, '')) || 0;
+          const unitCost = parseFloat(String(row['PRECIO UNITARIO'] || row['Precio Unitario']).replace(/,/g, '')) || 0;
+          const neto = quantity * unitCost;
+          const total = parseFloat(String(row['TOTAL'] || row['Total']).replace(/,/g, '')) || neto;
+
+          currentOc.Items_JSON.push({
+            id: `item-${currentOc.Items_JSON.length}`,
+            descripcion: row['DESCRIPCION'] || row['Descripcion'] || '',
+            unidades: quantity,
+            precio_unitario: unitCost,
+            monto_neto: neto,
+            monto_total_iva: total
+          });
+
+          currentOc.Total_Neto += neto;
+          currentOc.Total_Global += total;
+          currentOc.Total_IVA = currentOc.Total_Global - currentOc.Total_Neto;
+        });
+
+        finalData = Array.from(ocMap.values());
       }
 
       await addMultipleAdminItems(importType, finalData);
@@ -553,6 +611,8 @@ export default function ImportarPage() {
                     <SelectItem value="centrosCostos">Centros de Costos</SelectItem>
                     <SelectItem value="ListaDeMateriales">Lista de Materiales</SelectItem>
                     <SelectItem value="Requisiciones">Requisiciones</SelectItem>
+                    <SelectItem value="OrdenesCompraV04">OC V04 (Plano)</SelectItem>
+                    <SelectItem value="OrdenesCompraV05">OC V05 (Estructurado)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

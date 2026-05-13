@@ -6,7 +6,10 @@ import { OrdersTable } from '@/components/app/orders-table';
 import { PageHeader } from '@/components/app/page-header';
 import { useAppContext } from '@/context/app-context';
 import { Button } from '@/components/ui/button';
-import { FileDown } from 'lucide-react';
+import { FileDown, Database, LayoutDashboard, History } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OCV04Table } from '@/components/app/oc-v04-table';
+import { OCV05Table } from '@/components/app/oc-v05-table';
 
 export default function OrdenesPage() {
     const { currentUser, ordenesCompra } = useAppContext();
@@ -53,8 +56,9 @@ export default function OrdenesPage() {
   return (
     <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
       <Header breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Órdenes' }]} />
+      
       <div className="flex items-center justify-between">
-        <PageHeader title="Historial de Órdenes de Compra" description="Consulta todas las órdenes de compra generadas."/>
+        <PageHeader title="Gestión de Órdenes de Compra" description="Consulta y administra todas las órdenes generadas en las distintas versiones del sistema."/>
         <Button 
           variant="outline" 
           size="sm" 
@@ -65,11 +69,48 @@ export default function OrdenesPage() {
           Descargar Reporte Global
         </Button>
       </div>
-      <Card>
-        <CardContent className="p-0">
-          <OrdersTable />
-        </CardContent>
-      </Card>
+
+      <Tabs defaultValue="v05" className="w-full">
+        <TabsList className="bg-slate-100/50 border border-slate-200 p-1 h-12 rounded-xl mb-4">
+          <TabsTrigger value="v05" className="rounded-lg gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary py-2 px-6">
+            <LayoutDashboard className="h-4 w-4" />
+            <div className="flex flex-col items-start leading-tight">
+              <span className="text-xs font-bold uppercase">Versión V05</span>
+              <span className="text-[9px] opacity-60">Estructurado JSON</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="standard" className="rounded-lg gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary py-2 px-6">
+            <Database className="h-4 w-4" />
+            <div className="flex flex-col items-start leading-tight">
+              <span className="text-xs font-bold uppercase">Vista Estándar</span>
+              <span className="text-[9px] opacity-60">Legacy App</span>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="v04" className="rounded-lg gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-primary py-2 px-6">
+            <History className="h-4 w-4" />
+            <div className="flex flex-col items-start leading-tight">
+              <span className="text-xs font-bold uppercase">Historial V04</span>
+              <span className="text-[9px] opacity-60">36 Columnas Sheet</span>
+            </div>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="v05" className="mt-0">
+          <OCV05Table />
+        </TabsContent>
+
+        <TabsContent value="standard" className="mt-0">
+          <Card className="border-slate-200 shadow-sm">
+            <CardContent className="p-0">
+              <OrdersTable />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="v04" className="mt-0">
+          <OCV04Table />
+        </TabsContent>
+      </Tabs>
     </main>
   );
 }

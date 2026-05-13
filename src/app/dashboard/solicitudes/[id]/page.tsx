@@ -12,7 +12,8 @@ import {
   FileText, 
   ChevronRight,
   Package,
-  AlertCircle
+  AlertCircle,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -22,6 +23,8 @@ import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
+import { RequisitionTimeline } from '@/components/app/requisition-timeline';
+
 const currencyFormatter = new Intl.NumberFormat('es-CL', {
   style: 'currency',
   currency: 'CLP',
@@ -30,11 +33,58 @@ const currencyFormatter = new Intl.NumberFormat('es-CL', {
 export default function SolicitudDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { solicitudes, updateSolicitud } = useAppContext();
+  const { solicitudes, ordenesCompra } = useAppContext();
   
   // Find the requisition
-  // Note: AppContext id is a string, params id is a string. Ensure they match.
   const solicitud = solicitudes.find(s => String(s.id).toLowerCase() === String(id).toLowerCase());
+
+  // Synthesize timeline events from existing data
+  const timelineEvents = React.useMemo(() => {
+    if (!solicitud) return [];
+    
+    const events: any[] = [];
+    
+    // 1. Creation
+    if (solicitud.createdAt) {
+      events.push({
+        id: 'evt-creation',
+        date: solicitud.createdAt,
+        event: 'Requisición Creada',
+        user: solicitud.solicitanteName || 'Solicitante',
+        description: `Ingreso inicial de la solicitud en el sistema.`,
+        type: 'creation'
+      });
+    }
+    
+    // 2. Status Change / Approval
+    const statusDate = (solicitud as any)["Fecha Estatus"] || (solicitud as any).fecha_estatus;
+    if (statusDate && solicitud.status && !['vigente', 'pendiente'].includes(solicitud.status.toLowerCase())) {
+      events.push({
+        id: 'evt-status',
+        date: statusDate,
+        event: `Solicitud ${solicitud.status}`,
+        user: (solicitud as any)["Autorizado por"] || 'Equipo de Compras',
+        description: `La solicitud fue revisada y marcada como ${solicitud.status}.`,
+        type: ['aprobada', 'procesada', 'completado'].includes(solicitud.status.toLowerCase()) ? 'approval' : 'rejection'
+      });
+    }
+    
+    // 3. PO Generation (If linked to an Order)
+    const refOc = (solicitud as any)["Ref OC"] || (solicitud as any).ref_oc;
+    if (refOc) {
+      const relatedOrder = ordenesCompra.find(oc => oc.id === refOc);
+      events.push({
+        id: 'evt-po',
+        date: relatedOrder?.createdAt || statusDate || solicitud.createdAt,
+        event: 'Orden de Compra Emitida',
+        user: 'Sistema de Compras',
+        description: `Se ha formalizado la adquisición mediante la OC ${refOc}.`,
+        type: 'po_generated'
+      });
+    }
+
+    return events;
+  }, [solicitud, ordenesCompra]);
 
   if (!solicitud) {
     return (
@@ -165,7 +215,7 @@ export default function SolicitudDetailPage() {
           )}
         </div>
 
-        {/* Right Column: Metadata */}
+        {/* Right Column: Metadata & History */}
         <div className="space-y-8">
           <Card className="border-slate-200 shadow-sm overflow-hidden border-[0.5px]">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4 px-6">
@@ -218,6 +268,18 @@ export default function SolicitudDetailPage() {
                   {currencyFormatter.format(solicitud.totalGlobal || solicitud.totalEstimatedCost || 0)}
                 </span>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Timeline Card */}
+          <Card className="border-slate-200 shadow-sm overflow-hidden border-[0.5px] bg-white">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4 px-6">
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <Clock className="h-4 w-4" /> Historial y Auditoría
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <RequisitionTimeline events={timelineEvents} />
             </CardContent>
           </Card>
         </div>

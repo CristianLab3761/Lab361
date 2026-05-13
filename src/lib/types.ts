@@ -78,6 +78,14 @@ export type Solicitud = {
   moneda?: 'CLP' | 'USD' | 'UF';
   summary?: AIAnalysis;
   isFavorite?: boolean;
+  timeline?: {
+    id: string;
+    date: string;
+    event: string;
+    user: string;
+    description: string;
+    type: 'creation' | 'update' | 'approval' | 'rejection' | 'po_generated' | 'system';
+  }[];
 };
 
 export type OrdenCompra = {
@@ -137,6 +145,65 @@ export type OrdenCompra = {
     codigoMaterial?: string;
     cuentaPresupuesto?: string;
   }[];
+};
+
+export type OrdenCompraV04 = {
+  "ORDEN DE COMPRA": string;
+  "FECHA": string;
+  "REF": string;
+  "UNIDADES": string | number;
+  "DESCRIPCION": string;
+  "TIPO": string;
+  "DESCUENTO": string | number;
+  "PRECIO UNITARIO": string | number;
+  "NETO": string | number;
+  "TOTAL": string | number;
+  "CECO": string;
+  "CENE": string;
+  "CUENTA PPTO": string;
+  "OBSERVACIONES": string;
+  "FORMA DE PAGO": string;
+  "DÍAS ENTREGA": string | number;
+  "MONEDA": string;
+  "IMPUESTO": string | number;
+  "PROVEEDOR": string;
+  "RAZON SOCIAL": string;
+  "DIRECCION": string;
+  "RUT": string;
+  "CIUDAD": string;
+  "PAÍS": string;
+  "TELEFONO": string;
+  "EMAIL": string;
+  "ESTATUS": string;
+  "MES": string;
+  "AÑO": string | number;
+  "DÍA": string | number;
+  "N MES": string | number;
+  "SEMANA": string | number;
+  "REQUISICIÓN": string;
+};
+
+export type OrdenCompraV05 = {
+  id: string;
+  "N° Orden": string;
+  "Fecha": string;
+  "Proveedor": string;
+  "Total_Neto": number;
+  "Total_IVA": number;
+  "Total_Global": number;
+  "Moneda": string;
+  "Items_JSON": any;
+  "Estatus": string;
+  "CECO"?: string;
+  "CENE"?: string;
+  "Ref"?: string;
+  "Observaciones"?: string;
+  "Forma de Pago"?: string;
+  "Días Entrega"?: number;
+  "Requisición"?: string;
+  "Año"?: number;
+  "Mes"?: string;
+  "Día"?: number;
 };
 
 export type Proveedor = {

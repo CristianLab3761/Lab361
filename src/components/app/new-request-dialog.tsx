@@ -68,15 +68,16 @@ const createFormSchema = (proveedores: any[]) => z.object({
 });
 
 type NewRequestFormValues = z.infer<ReturnType<typeof createFormSchema>>;
-
 export function NewRequestDialog() {
   const [open, setOpen] = useState(false);
-  const { addSolicitud, currentUser, proveedores, materiales, solicitudes } = useAppContext();
+  const { addSolicitud, currentUser, proveedores, materiales, solicitudes, dbRequisicionesV04, presupuestos: centrosCostos, cuentas } = useAppContext();
   const { toast } = useToast();
 
-  const formSchema = createFormSchema(proveedores);
+  const formSchema = createFormSchema(proveedores).extend({
+    centroCostos: z.string().min(1, 'El centro de costos es requerido'),
+  });
 
-  const form = useForm<NewRequestFormValues>({
+  const form = useForm<NewRequestFormValues & { centroCostos: string }>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: '',
@@ -85,6 +86,7 @@ export function NewRequestDialog() {
       solicitanteName: '',
       cargo: '',
       department: currentUser?.department || '',
+      centroCostos: '',
       proveedor: '',
       autorizadoPor: '',
       fechaEntrega: '',
@@ -104,11 +106,27 @@ export function NewRequestDialog() {
       if (currentUser.cargo) form.setValue('cargo', currentUser.cargo);
       if (currentUser.department) form.setValue('department', currentUser.department);
       
-      // Auto-generate next ID
-      const nextId = `REQ-${String(solicitudes.length + 1).padStart(4, '0')}`;
-      form.setValue('id', nextId);
+      // Auto-generate next ID considering V04 and V05 with dot cleaning
+      const allReqs = [...(dbRequisicionesV04 || []), ...(solicitudes || [])];
+      let maxNum = 100005344; // Baseline manual solicitado
+      
+      allReqs.forEach(r => {
+        // Intentar obtener el ID de varias columnas posibles
+        const idStr = String(r["N° Requisición"] || r["REQUISICIÓN"] || r.id || "");
+        // Limpiar todo lo que no sea número (puntos, guiones, letras)
+        const numericPart = idStr.replace(/\D/g, "");
+        if (numericPart) {
+          const val = parseInt(numericPart);
+          if (val > maxNum) maxNum = val;
+        }
+      });
+
+      const nextNumeric = maxNum + 1;
+      // Formatear con puntos (ej: 100.005.345)
+      const formattedId = nextNumeric.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      form.setValue('id', formattedId);
     }
-  }, [open, currentUser, form, solicitudes.length]);
+  }, [open, currentUser, form, solicitudes, dbRequisicionesV04]);
 
   const watchedProveedor = form.watch('proveedor');
 
@@ -181,9 +199,9 @@ export function NewRequestDialog() {
     });
   }, [watchedItems, materiales, form]);
 
-  const onSubmit = (data: NewRequestFormValues) => {
+  const onSubmit = (data: any) => {
     const totalEstimatedCost = data.items.reduce(
-      (acc, item) => acc + item.quantity * item.estimatedCost,
+      (acc: number, item: any) => acc + item.quantity * item.estimatedCost,
       0
     );
     
@@ -197,7 +215,7 @@ export function NewRequestDialog() {
     addSolicitud({
       ...data,
       createdAt,
-      items: data.items.map((item, index) => ({ ...item, id: `new-item-${index}` })),
+      items: data.items.map((item: any, index: number) => ({ ...item, id: `new-item-${index}` })),
       totalEstimatedCost,
     } as any);
     form.reset();
@@ -334,6 +352,21 @@ export function NewRequestDialog() {
                     <Input id="department" {...form.register('department')} className="h-7 text-[11px] rounded-sm border-slate-200" />
                   </div>
                   <div className="space-y-1">
+                    <Label htmlFor="centroCostos" className="text-[9px] uppercase text-primary font-bold tracking-tight">Centro de Costos *</Label>
+                    <Select onValueChange={(val) => form.setValue('centroCostos', val)} value={form.watch('centroCostos')}>
+                      <SelectTrigger id="centroCostos" className="h-7 text-[10px] rounded-sm border-slate-200 bg-slate-50/50">
+                        <SelectValue placeholder="Seleccionar CECO" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {centrosCostos.map((ceco: any, idx: number) => (
+                          <SelectItem key={`${ceco.code}-${ceco.area}-${idx}`} value={`${ceco.code} - ${ceco.name}`} className="text-xs">
+                            {ceco.code} - {ceco.name} ({ceco.area})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1 col-span-2">
                     <Label htmlFor="moneda" className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Moneda</Label>
                     <Select onValueChange={(val) => form.setValue('moneda', val as any)} value={form.watch('moneda')}>
                       <SelectTrigger id="moneda" className="h-7 text-[11px] rounded-sm border-slate-200">
@@ -369,7 +402,7 @@ export function NewRequestDialog() {
               </div>
 
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b pb-1 mt-2">
-                Detalle de Ítems (Item, Cód Material, Unidades, Descripción, C. Costos, Precio Unitario)
+                Detalle de Ítems (Item, Cód Material, Unidades, Descripción, Cuenta Presupuesto, Precio Unitario)
               </div>
               
               <div className="space-y-4">
@@ -417,22 +450,47 @@ export function NewRequestDialog() {
                         )}
                         readOnly={!!form.watch(`items.${index}.codigoMaterial`) && !!form.watch(`items.${index}.name`)}
                         onBlur={async (e) => {
-                          const code = e.target.value;
+                          const code = e.target.value?.trim();
                           if (!code || !materiales) return;
-                          const clean = (s: any) => String(s || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-                          const cleanCode = clean(code);
-                          let material = materiales.find((m: any) => clean(m.codigo || m.code || m['Código']) === cleanCode);
+                          
+                          const cleanStr = (s: any) => String(s || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                          const cleanCode = cleanStr(code);
+                          
+                          console.log("Buscando material con código:", code, "Limpio:", cleanCode);
+
+                          // 1. Buscar en memoria local (contexto)
+                          let material = materiales.find((m: any) => {
+                            const mCode = m.codigo || m.codigo_nuevo || m['Código'] || m.code || m.Code;
+                            return cleanStr(mCode) === cleanCode;
+                          });
+
+                          // 2. Si no está en memoria, buscar en Supabase
                           if (!material) {
-                            const { data } = await supabase
-                              .from('ListaDeMateriales')
-                              .select('*')
-                              .or(`codigo.eq.${code},codigo.eq.${cleanCode}`)
-                              .limit(1);
-                            if (data?.[0]) material = data[0];
+                            try {
+                              const { data } = await supabase
+                                .from('ListaDeMateriales')
+                                .select('*')
+                                .or(`codigo.eq."${code}",codigo.eq."${cleanCode}"`)
+                                .limit(1);
+                              if (data && data.length > 0) material = data[0];
+                            } catch (err) {
+                              console.error("Error buscando material en Supabase:", err);
+                            }
                           }
+
                           if (material) {
-                            const desc = (material as any).Material || (material as any).descripcion || (material as any).name || (material as any)['Descripcion del material'];
-                            form.setValue(`items.${index}.name`, String(desc), { shouldValidate: true });
+                            console.log("Material encontrado:", material);
+                            const m = material as any;
+                            const desc = m.descripcion || m.Material || m['Descripcion del material'] || m.name || m.Name;
+                            if (desc) {
+                              form.setValue(`items.${index}.name`, String(desc), { shouldValidate: true });
+                              toast({
+                                title: "Material Encontrado",
+                                description: `Se ha cargado la descripción: ${desc}`,
+                              });
+                            }
+                          } else {
+                            console.warn("No se encontró material con código:", code);
                           }
                         }}
                       />
@@ -449,8 +507,32 @@ export function NewRequestDialog() {
                     </div>
 
                     <div className="md:col-span-4 space-y-1">
-                      <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Centro de Costos</Label>
-                      <Input {...form.register(`items.${index}.cuentaPresupuesto`)} className="h-7 text-[11px] rounded-sm border-slate-200" />
+                      <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Cuenta Presupuesto</Label>
+                      <Select 
+                        onValueChange={(val) => form.setValue(`items.${index}.cuentaPresupuesto`, val)} 
+                        value={form.watch(`items.${index}.cuentaPresupuesto`)}
+                      >
+                        <SelectTrigger className="h-7 text-[10px] rounded-sm border-slate-200">
+                          <SelectValue placeholder="Seleccionar cuenta..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(() => {
+                            const seen = new Set();
+                            return cuentas
+                              .filter(c => {
+                                const name = (c as any)["Cuentas Presupuesto"] || (c as any).name;
+                                if (!name || seen.has(name)) return false;
+                                seen.add(name);
+                                return true;
+                              })
+                              .map((c: any, idx: number) => (
+                                <SelectItem key={`${c.id || idx}`} value={(c as any)["Cuentas Presupuesto"] || (c as any).name} className="text-xs">
+                                  {(c as any)["Cuentas Presupuesto"] || (c as any).name}
+                                </SelectItem>
+                              ));
+                          })()}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                   </div>

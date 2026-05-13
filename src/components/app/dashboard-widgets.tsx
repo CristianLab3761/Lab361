@@ -17,30 +17,35 @@ export function BudgetStatusWidget({ budgets }: { budgets: any[] }) {
   return (
     <Card className="border-slate-200 shadow-sm bg-white overflow-hidden">
       <CardHeader className="pb-3 border-b border-slate-50">
-        <CardTitle className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Estado de Presupuestos</CardTitle>
-        <CardDescription className="text-[11px] text-slate-500">Gasto vs. Presupuesto por departamento.</CardDescription>
+        <CardTitle className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Gasto por Cuenta Presupuesto</CardTitle>
+        <CardDescription className="text-[11px] text-slate-500">Top 10 cuentas con mayor uso acumulado.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
         {budgets.length > 0 ? budgets.map((b) => (
           <div key={b.id} className="space-y-3">
             <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider">
               <span className="text-slate-700">{b.name}</span>
-              <span className="text-primary">{Math.round(b.percent)}%</span>
+              {b.monto > 0 && <span className="text-primary">{Math.round(b.percent)}%</span>}
             </div>
-            <Progress 
-                value={b.percent} 
-                className="h-2 bg-slate-100" 
-                indicatorClassName={cn(
-                    "transition-all duration-700",
-                    b.percent > 90 ? "bg-red-500" : b.percent > 70 ? "bg-primary shadow-sm" : "bg-accent shadow-sm"
-                )}
-            />
+            {b.monto > 0 ? (
+              <Progress 
+                  value={b.percent} 
+                  className="h-2 bg-slate-100" 
+                  indicatorClassName={cn(
+                      "transition-all duration-700",
+                      b.percent > 90 ? "bg-red-500" : b.percent > 70 ? "bg-primary shadow-sm" : "bg-accent shadow-sm"
+                  )}
+              />
+            ) : (
+              <div className="h-0.5 bg-slate-100 w-full rounded-full" />
+            )}
             <div className="flex justify-between text-[9px] text-slate-400 font-bold uppercase tracking-tight">
-              <span>{new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(b.spent)}</span>
-              <span className="opacity-60">Meta: {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(b.monto)}</span>
+              <span className="text-slate-900">{new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(b.spent)}</span>
+              {b.monto > 0 && <span className="opacity-60">Meta: {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(b.monto)}</span>}
             </div>
           </div>
-        )) : (
+        ))
+ : (
             <div className="p-8 text-center text-slate-300 text-[10px] font-bold uppercase tracking-wider">No hay datos activos</div>
         )}
       </CardContent>

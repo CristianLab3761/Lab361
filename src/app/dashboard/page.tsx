@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useAppContext } from '@/context/app-context';
 import { Header } from '@/components/app/header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,18 +40,33 @@ export default function DashboardPage() {
   const topSuppliers = getTopSuppliers(displaySolicitudes);
   const monthlySpend = getMonthlySpendTrend(displaySolicitudes);
 
-  const MOCK_BUDGETS = [
-    { id: 'b1', name: 'Operaciones', monto: 5000000, spent: 3200000, percent: 64 },
-    { id: 'b2', name: 'Logística', monto: 2000000, spent: 1850000, percent: 92.5 },
-    { id: 'b3', name: 'Administración', monto: 1500000, spent: 450000, percent: 30 },
-  ];
+  // Aggregate spend by Budget Account (Cuenta Presupuesto)
+  const budgetByAccount = useMemo(() => {
+    const accMap: { [key: string]: number } = {};
+    
+    solicitudes.forEach((s: Solicitud) => {
+      // Items are usually in Items_JSON in V05 or items array in memory
+      const items = s.items || [];
+      items.forEach((item: any) => {
+        const account = item.cuentaPresupuesto || "Sin Clasificar";
+        const cost = (Number(item.quantity) || 0) * (Number(item.estimatedCost) || 0);
+        accMap[account] = (accMap[account] || 0) + cost;
+      });
+    });
 
-  const budgetStats = presupuestos.length > 0 ? presupuestos.map((p: Presupuesto) => {
-    const spent = solicitudes
-      .filter((s: Solicitud) => (s["Centro de Costos"] || s.centroCostos) === p.name)
-      .reduce((acc: number, s: Solicitud) => acc + (Number(s.totalGlobal) || 0), 0);
-    return { ...p, spent, percent: p.monto > 0 ? (spent / p.monto) * 100 : 0 };
-  }) : MOCK_BUDGETS;
+    return Object.entries(accMap)
+      .map(([name, spent]) => ({
+        id: name,
+        name,
+        spent,
+        monto: 0, // No limit defined in current table
+        percent: 0 // No limit means no percentage
+      }))
+      .sort((a, b) => b.spent - a.spent)
+      .slice(0, 10);
+  }, [solicitudes]);
+
+  const budgetStats = budgetByAccount;
 
   return (
     <main className="grid flex-1 items-start gap-8 p-4 sm:px-6 sm:py-6 md:gap-10 max-w-[1600px] mx-auto w-full bg-[#f8fafc]/50 min-h-screen">
