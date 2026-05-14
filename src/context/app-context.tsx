@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useSupabaseAuth, useSupabaseCollection } from '@/hooks/use-supabase';
 
-export type AdminItemType = 'Proveedores' | 'CuentasPresupuestos' | 'presupuestos' | 'CentrosDeNegocios' | 'centrosCostos' | 'ListaDeMateriales' | 'Requisiciones' | 'user_profiles' | 'Familias' | 'SubFamilias' | 'OrdenesCompraV04' | 'OrdenesCompraV05';
+export type AdminItemType = 'Proveedores' | 'CuentasPresupuestos' | 'presupuestos' | 'CentrosDeNegocios' | 'centrosCostos' | 'ListaDeMateriales' | 'Requisiciones' | 'user_profiles' | 'OrdenesCompraV04' | 'OrdenesCompraV05';
 
 interface AppContextType {
   currentUser: User | null;
@@ -39,8 +39,6 @@ interface AppContextType {
   centrosNegocios: (CentroNegocios & { id: string })[];
   centrosCostos: (CentroCostos & { id: string })[];
   materiales: (Material & { id: string })[];
-  familias: any[];
-  subfamilias: any[];
   addAdminItem: <T extends {}>(itemType: AdminItemType, newItem: T) => Promise<void>;
   updateAdminItem: (itemType: AdminItemType, itemId: string, updates: Partial<any>) => Promise<void>;
   removeAdminItem: (itemType: AdminItemType, itemId: string) => Promise<void>;
@@ -122,9 +120,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { data: dbCuentasPresupuestos } = useSupabaseCollection(isUserAuthenticated ? 'CuentasPresupuestos' : null);
   const { data: dbMateriales } = useSupabaseCollection(isUserAuthenticated ? 'ListaDeMateriales' : null);
   const { data: dbProveedores } = useSupabaseCollection(isUserAuthenticated ? 'Proveedores' : null);
-  const { data: dbOrdenes } = useSupabaseCollection(isUserAuthenticated ? 'purchaseOrders' : null);
-  const { data: dbFamilias } = useSupabaseCollection(isUserAuthenticated ? 'Familias' : null);
-  const { data: dbSubFamilias } = useSupabaseCollection(isUserAuthenticated ? 'SubFamilias' : null);
   const { data: dbCentrosCostos } = useSupabaseCollection(isUserAuthenticated ? 'centrosCostos' : null);
   const { data: dbCentrosNegocios } = useSupabaseCollection(isUserAuthenticated ? 'CentrosDeNegocios' : null);
   const { data: dbUsers } = useSupabaseCollection(isUserAuthenticated ? 'user_profiles' : null);
@@ -200,16 +195,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [dbSolicitudes]);
 
   useEffect(() => {
-    if (dbOrdenes) {
-      const normalized = dbOrdenes.map((oc: any) => ({
+    if (dbOrdenesV05) {
+      const normalized = dbOrdenesV05.map((oc: any) => ({
         ...oc,
-        status: oc.estatus || oc.status || 'generado',
-        poDescription: oc.observaciones || oc.poDescription || '',
-        totalCost: oc.totalGlobal || oc.totalCost || 0,
+        id: oc["N° Orden"] || oc.id || "",
+        solicitudId: oc["Requisición"] || oc.solicitudId || "",
+        supplierName: oc["Proveedor"] || oc.supplierName || "",
+        totalGlobal: oc["Total_Global"] || oc.totalGlobal || 0,
+        moneda: oc["Moneda"] || oc.moneda || "CLP",
+        items: typeof oc.Items_JSON === 'string' ? JSON.parse(oc.Items_JSON) : (oc.Items_JSON || []),
+        status: (oc["Estatus"] || oc.estatus || 'generado').toLowerCase(),
+        poDescription: oc["Observaciones"] || oc.poDescription || '',
+        totalCost: oc["Total_Global"] || oc.totalCost || 0,
       }));
       setOrdenesCompra(normalized);
     }
-  }, [dbOrdenes]);
+  }, [dbOrdenesV05]);
 
 
 
@@ -439,9 +440,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       issuedByUserId: currentUser?.id || ''
     };
 
-    // Save to Supabase (using standard purchaseOrders name)
-    const { error } = await supabase.from('purchaseOrders').insert([newOrden]);
-    
     // Save to V05 Improved structure (JSONB)
     const dbOrdenV05 = {
       "N° Orden": ocId,
@@ -554,8 +552,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     centrosNegocios: centrosNegocios || [],
     centrosCostos: centrosCostos || [],
     materiales: materiales || [],
-    familias: dbFamilias || [],
-    subfamilias: dbSubFamilias || [],
     addAdminItem,
     removeAdminItem,
     updateAdminItem,

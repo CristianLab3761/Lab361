@@ -1,26 +1,29 @@
-import { createClient } from '@supabase/supabase-js';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import postgres from 'postgres';
+import dotenv from 'dotenv';
+import path from 'path';
 
+// Load .env
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const sql = postgres(process.env.DATABASE_URL || '');
 
 async function listTables() {
-  const { data, error } = await supabase
-    .from('information_schema.tables')
-    .select('table_name')
-    .eq('table_schema', 'public');
+  console.log('--- Listing all tables in public schema ---');
+  try {
+    const tables = await sql`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public'
+      ORDER BY table_name
+    `;
+    console.log('Tables found:');
+    tables.forEach(t => console.log(`- ${t.table_name}`));
 
-  if (error) {
-    console.error('Error listing tables:', error);
-    return;
+  } catch (err: any) {
+    console.error('SQL Error:', err.message);
+  } finally {
+    await sql.end();
   }
-
-  console.log('Tables in public schema:');
-  data.forEach(t => console.log(`- ${t.table_name}`));
 }
 
 listTables();
