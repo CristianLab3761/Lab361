@@ -405,6 +405,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         title: "Requisición Creada",
         description: `Requisición ${reqId} ha sido enviada con éxito.`,
       });
+
+      // Enviar notificación por correo (SMTP)
+      // Lo hacemos de forma asíncrona sin bloquear la UI
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          solicitud: {
+            id: reqId,
+            solicitanteName: newSolicitudData.solicitanteName || currentUser.name,
+            proveedor: newSolicitudData.proveedor,
+            totalEstimatedCost: totalGlobal,
+            moneda: newSolicitudData.moneda || 'CLP',
+            items: newSolicitudData.items || []
+          } 
+        })
+      }).catch(err => console.error('Error al enviar notificación por correo:', err));
     }
   }, [currentUser, solicitudes.length, toast]);
 
