@@ -470,12 +470,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     const { error: v05Error } = await supabase.from('OrdenesCompraV05').insert([dbOrdenV05]);
     
-    if (error || v05Error) {
-      console.error('Error al persistir OC en Supabase:', error || v05Error);
+    if (v05Error) {
+      console.error('Error al persistir OC en Supabase:', v05Error);
       toast({
         variant: 'destructive',
         title: "Error de Persistencia",
-        description: `No se pudo guardar en la base de datos: ${(error || v05Error)?.message}.`,
+        description: `No se pudo guardar en la base de datos: ${v05Error.message}.`,
       });
     }
 
