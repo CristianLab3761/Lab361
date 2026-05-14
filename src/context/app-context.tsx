@@ -464,8 +464,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       "CENE": newOrdenData.centroNegocios || '',
       "Ref": newOrdenData.referencia || '',
       "Observaciones": newOrdenData.observaciones || '',
-      "Forma de Pago": newOrdenData.formaPago || '',
-      "Solicitante_ID": currentUser?.id || ''
+      "Forma de Pago": newOrdenData.formaPago || ''
     };
     
     const { error: v05Error } = await supabase.from('OrdenesCompraV05').insert([dbOrdenV05]);
