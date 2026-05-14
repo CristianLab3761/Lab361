@@ -10,7 +10,6 @@ const COLOR_FONDO_CABECERA: [number, number, number] = [230, 230, 230]; // Gris 
 const COLOR_TEXTO: [number, number, number] = [30, 30, 30]; // Casi negro para texto
 
 const LOGO_BASE64 = ''; // Reuse the same logo if needed, but I'll leave it empty or use the one from existing generator if I had it.
-
 export const generateOrderPDF = (order: OrdenCompra) => {
   const doc = new jsPDF('p', 'mm', 'a4');
   const PAGE_WIDTH = doc.internal.pageSize.getWidth();
@@ -20,189 +19,195 @@ export const generateOrderPDF = (order: OrdenCompra) => {
 
   const formatPDFCurrency = (amount: number) => {
     if (watchedMoneda === 'UF') {
-      return `UF ${amount.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} UF`;
+      return `UF ${amount.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
     }
     const formatter = new Intl.NumberFormat(watchedMoneda === 'CLP' ? 'es-CL' : 'en-US', {
-      style: 'currency',
-      currency: watchedMoneda === 'CLP' ? 'CLP' : 'USD',
+      style: 'decimal',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     });
-    return `${formatter.format(amount)} ${watchedMoneda}`;
+    return `$${formatter.format(amount)}`;
   };
 
   doc.setFont('helvetica');
-  doc.setFontSize(9);
-  doc.setTextColor(...COLOR_TEXTO);
 
-  // --- ENCABEZADO ---
+  // --- LOGO Y TÍTULO ---
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Botanical', 14, currentY + 5);
+  doc.text('Solutions', 14, currentY + 11);
+  
+  // Pequeño dibujo de logo (simulado)
+  doc.setDrawColor(0, 100, 200);
+  doc.setLineWidth(1);
+  doc.line(38, currentY + 2, 42, currentY + 12);
+  doc.line(42, currentY + 12, 46, currentY + 5);
+
+  doc.setFontSize(10);
+  doc.setTextColor(0);
+  doc.text('Orden de Compra', PAGE_WIDTH - 14, currentY + 10, { align: 'right' });
+  
+  currentY += 15;
+
+  // --- BARRA DE INFO SUPERIOR ---
   autoTable(doc, {
     startY: currentY,
     body: [
       [
-        {
-          content: 'ORDEN DE COMPRA',
-          styles: {
-            halign: 'center',
-            valign: 'middle',
-            fontSize: 16,
-            fontStyle: 'bold',
-            textColor: [0, 0, 0]
-          }
+        { content: 'N° OC:', styles: { fontStyle: 'bold', cellWidth: 20 } },
+        { content: order.id.toUpperCase(), styles: { fillColor: [220, 240, 220], fontStyle: 'bold', cellWidth: 40 } },
+        { content: '', styles: { cellWidth: 35 } },
+        { content: 'Estatus:', styles: { fontStyle: 'bold', cellWidth: 25 } },
+        { content: 'Vigente', styles: { halign: 'center', cellWidth: 25 } },
+        { content: 'Fecha:', styles: { fontStyle: 'bold', cellWidth: 20 } },
+        { content: format(new Date(order.createdAt), 'dd/MM/yyyy'), styles: { halign: 'center' } }
+      ]
+    ],
+    theme: 'grid',
+    styles: { fontSize: 8, cellPadding: 1, lineColor: [200, 200, 200] },
+    margin: { left: 14, right: 14 }
+  });
+
+  currentY = (doc as any).lastAutoTable.finalY;
+
+  // --- COMPRADOR Y PROVEEDOR ---
+  autoTable(doc, {
+    startY: currentY,
+    head: [[
+      { content: 'Comprador', styles: { halign: 'center', fillColor: [245, 245, 245], textColor: 0, fontStyle: 'bold' } },
+      { content: '', styles: { fillColor: [220, 220, 220], cellWidth: 60 } },
+      { content: 'Proveedor', styles: { halign: 'center', fillColor: [245, 245, 245], textColor: 0, fontStyle: 'bold' } }
+    ]],
+    body: [
+      [
+        { 
+          content: [
+            `Nombre:      Botanical Solutions SpA`,
+            `Razón Social: Botanical Solutions SpA`,
+            `Dirección:    Av Quilin 3550, Lab 300, Macul`,
+            `Rut:          76336365-1`,
+            `Ciudad:       Santiago`,
+            `País:         Chile`,
+            `Teléfono:     +56 9 6104 6024`,
+            `Email:        compras@botanicalsolutions.cl`
+          ].join('\n'),
+          styles: { fontSize: 7, cellPadding: 2 }
+        },
+        { content: '' },
+        { 
+          content: [
+            `Nombre:      ${order.supplierName}`,
+            `Razón Social: ${order.razonSocial || order.supplierName}`,
+            `Dirección:    ${order.direccion || 'N/A'}`,
+            `Rut:          ${order.rut || 'N/A'}`,
+            `Ciudad:       ${order.ciudad || 'Santiago'}`,
+            `País:         ${order.pais || 'Chile'}`,
+            `Teléfono:     ${order.telefono || 'N/A'}`,
+            `Email:        ${order.email || 'N/A'}`
+          ].join('\n'),
+          styles: { fontSize: 7, cellPadding: 2 }
         }
       ]
     ],
-    theme: 'plain',
+    theme: 'grid',
+    styles: { lineColor: [200, 200, 200], valign: 'top' },
     margin: { left: 14, right: 14 }
   });
 
-  currentY = (doc as any).lastAutoTable.finalY + 5;
+  currentY = (doc as any).lastAutoTable.finalY + 2;
 
-  // --- DATOS GENERALES ---
+  // --- DETALLES DE TRANSACCIÓN ---
   autoTable(doc, {
     startY: currentY,
-    head: [[{ content: 'INFORMACIÓN DE LA ORDEN', colSpan: 4, styles: { fillColor: COLOR_FONDO_CABECERA, textColor: [0, 0, 0], fontStyle: 'bold' } }]],
     body: [
       [
-        { content: 'NRO ORDEN:', styles: { fontStyle: 'bold', cellWidth: 35 } },
-        { content: order.id.toUpperCase(), styles: { cellWidth: 60 } },
-        { content: 'FECHA EMISIÓN:', styles: { fontStyle: 'bold', cellWidth: 35 } },
-        { content: format(new Date(order.createdAt), 'dd/MM/yyyy'), styles: { cellWidth: 60 } }
+        { content: 'Centro de Costos:', styles: { fontStyle: 'bold', cellWidth: 40 } },
+        { content: order.centroCostos || 'N/A', styles: { cellWidth: 55 } },
+        { content: 'Dias estimados de Entrega:', styles: { fontStyle: 'bold', cellWidth: 50 } },
+        { content: '2', styles: { halign: 'center' } }
       ],
       [
-        { content: 'REFERENCIA:', styles: { fontStyle: 'bold' } },
-        { content: order.referencia || 'N/A' },
-        { content: 'TIPO:', styles: { fontStyle: 'bold' } },
-        { content: order.tipo || 'Compra Directa' }
+        { content: 'Centro de Negocios:', styles: { fontStyle: 'bold' } },
+        { content: order.centroNegocios || 'N/A' },
+        { content: 'Tipo de Moneda:', styles: { fontStyle: 'bold' } },
+        { content: order.moneda || 'CLP', styles: { halign: 'center' } }
+      ],
+      [
+        { content: 'Requisición:', styles: { fontStyle: 'bold' } },
+        { content: order.solicitudId || 'N/A' },
+        { content: 'Impuesto:', styles: { fontStyle: 'bold' } },
+        { content: [
+            { content: 'IVA', styles: { cellWidth: 15 } },
+            { content: '19%', styles: { halign: 'center' } }
+          ] }
+      ],
+      [
+        { content: 'Observaciones:', styles: { fontStyle: 'bold' } },
+        { content: order.observaciones || 'N/A', colSpan: 3 }
       ]
     ],
     theme: 'grid',
-    styles: { fontSize: 8, cellPadding: 2, lineColor: COLOR_BORDE },
+    styles: { fontSize: 8, cellPadding: 1, lineColor: [220, 220, 220] },
     margin: { left: 14, right: 14 }
   });
 
-  currentY = (doc as any).lastAutoTable.finalY + 5;
+  currentY = (doc as any).lastAutoTable.finalY + 4;
 
-  // --- DATOS DEL PROVEEDOR ---
+  // --- FORMA DE PAGO ---
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Forma de Pago:', 14, currentY);
+  currentY += 2;
   autoTable(doc, {
     startY: currentY,
-    head: [[{ content: 'DATOS DEL PROVEEDOR', colSpan: 2, styles: { fillColor: COLOR_FONDO_CABECERA, textColor: [0, 0, 0], fontStyle: 'bold' } }]],
-    body: [
-      [
-        { content: 'RAZÓN SOCIAL:', styles: { fontStyle: 'bold', cellWidth: 40 } },
-        { content: order.razonSocial || order.supplierName }
-      ],
-      [
-        { content: 'RUT:', styles: { fontStyle: 'bold' } },
-        { content: order.rut || 'N/A' }
-      ],
-      [
-        { content: 'DIRECCIÓN:', styles: { fontStyle: 'bold' } },
-        { content: `${order.direccion || ''}, ${order.ciudad || ''}, ${order.pais || ''}` }
-      ],
-      [
-        { content: 'CONTACTO:', styles: { fontStyle: 'bold' } },
-        { content: `${order.email || ''} / ${order.telefono || ''}` }
-      ],
-      [
-        { content: 'FORMA DE PAGO:', styles: { fontStyle: 'bold' } },
-        { content: order.formaPago || 'N/A' }
-      ]
-    ],
+    body: [[{ content: order.formaPago || 'N/A', styles: { minHeight: 10, fontSize: 8 } }]],
     theme: 'grid',
-    styles: { fontSize: 8, cellPadding: 2, lineColor: COLOR_BORDE },
+    styles: { lineColor: [220, 220, 220] },
     margin: { left: 14, right: 14 }
   });
 
   currentY = (doc as any).lastAutoTable.finalY + 5;
 
-  // --- DETALLE DE ITEMS ---
+  // --- TABLA DE ITEMS ---
   const tableItems = order.items.map(item => {
-    const net = item.montoNeto || (item.quantity * item.unitCost) || 0;
+    const total = item.montoNeto || (item.quantity * item.unitCost) || 0;
     return [
-      item.codigoMaterial || 'N/A',
-      item.name,
+      item.codigoMaterial || order.solicitudId + '-1',
       item.quantity.toString(),
+      item.name.toUpperCase(),
+      'AFECTO',
+      '',
       formatPDFCurrency(item.unitCost || 0),
-      formatPDFCurrency(net)
+      formatPDFCurrency(total)
     ];
   });
 
   autoTable(doc, {
     startY: currentY,
-    head: [
-      [
-        { content: 'CÓDIGO', styles: { fillColor: COLOR_FONDO_CABECERA, textColor: [0, 0, 0] } },
-        { content: 'DESCRIPCIÓN', styles: { fillColor: COLOR_FONDO_CABECERA, textColor: [0, 0, 0] } },
-        { content: 'CANT.', styles: { halign: 'center', fillColor: COLOR_FONDO_CABECERA, textColor: [0, 0, 0] } },
-        { content: 'P. UNITARIO', styles: { halign: 'right', fillColor: COLOR_FONDO_CABECERA, textColor: [0, 0, 0] } },
-        { content: 'TOTAL NETO', styles: { halign: 'right', fillColor: COLOR_FONDO_CABECERA, textColor: [0, 0, 0] } }
-      ]
-    ],
+    head: [[
+      { content: 'REF', styles: { halign: 'center' } },
+      { content: 'Unidades', styles: { halign: 'center' } },
+      { content: 'Descripción', styles: { halign: 'center' } },
+      { content: 'Tipo', styles: { halign: 'center' } },
+      { content: 'Descuento', styles: { halign: 'center' } },
+      { content: 'Precio Unitario', styles: { halign: 'center' } },
+      { content: 'Total', styles: { halign: 'center' } }
+    ]],
     body: tableItems,
     theme: 'grid',
-    styles: { fontSize: 8, cellPadding: 2, lineColor: COLOR_BORDE },
+    styles: { fontSize: 7, cellPadding: 2, lineColor: [200, 200, 200] },
+    headStyles: { fillColor: [255, 255, 255], textColor: 0, fontStyle: 'bold', lineWidth: 0.1 },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
     columnStyles: {
-      2: { halign: 'center', cellWidth: 20 },
-      3: { halign: 'right', cellWidth: 35 },
-      4: { halign: 'right', cellWidth: 35 }
+      0: { cellWidth: 35 },
+      1: { cellWidth: 15, halign: 'center' },
+      3: { cellWidth: 15, halign: 'center' },
+      4: { cellWidth: 20 },
+      5: { cellWidth: 25, halign: 'right' },
+      6: { cellWidth: 25, halign: 'right', fillColor: [230, 230, 230], fontStyle: 'bold' }
     },
     margin: { left: 14, right: 14 }
   });
-
-  currentY = (doc as any).lastAutoTable.finalY + 5;
-
-  // --- TOTALES ---
-  const calculatedNeto = order.totalNeto || order.items.reduce((acc, item) => acc + (item.montoNeto || (item.quantity * item.unitCost)), 0) || 0;
-  const calculatedIva = order.totalIva !== undefined ? order.totalIva : (calculatedNeto * 0.19);
-  const calculatedGlobal = order.totalGlobal || order.totalCost || (calculatedNeto + calculatedIva);
-
-  const totalsX = PAGE_WIDTH - 84;
-  autoTable(doc, {
-    startY: currentY,
-    margin: { left: totalsX },
-    body: [
-      [
-        { content: 'TOTAL NETO:', styles: { fontStyle: 'bold', halign: 'right', cellWidth: 40 } },
-        { content: formatPDFCurrency(calculatedNeto), styles: { halign: 'right', cellWidth: 30 } }
-      ],
-      order.descuento ? [
-        { content: 'DESCUENTO:', styles: { fontStyle: 'bold', halign: 'right' } },
-        { content: formatPDFCurrency(order.descuento), styles: { halign: 'right' } }
-      ] : [],
-      [
-        { content: 'IVA (19%):', styles: { fontStyle: 'bold', halign: 'right' } },
-        { content: formatPDFCurrency(calculatedIva), styles: { halign: 'right' } }
-      ],
-      [
-        { content: 'TOTAL ORDEN:', styles: { fontStyle: 'bold', fontSize: 10, halign: 'right', fillColor: [0, 0, 0], textColor: [255, 255, 255] } },
-        { content: formatPDFCurrency(calculatedGlobal), styles: { fontSize: 10, halign: 'right', fontStyle: 'bold', fillColor: [0, 0, 0], textColor: [255, 255, 255] } }
-      ]
-    ].filter(row => row.length > 0),
-    theme: 'grid',
-    styles: { fontSize: 8, cellPadding: 2, lineColor: COLOR_BORDE }
-  });
-
-  currentY = (doc as any).lastAutoTable.finalY + 10;
-
-  // --- OBSERVACIONES ---
-  if (order.observaciones) {
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    doc.text('OBSERVACIONES:', 14, currentY);
-    currentY += 4;
-    doc.setFont('helvetica', 'normal');
-    const splitText = doc.splitTextToSize(order.observaciones, PAGE_WIDTH - 28);
-    doc.text(splitText, 14, currentY);
-    currentY += splitText.length * 4 + 10;
-  }
-
-  // --- FIRMAS ---
-  currentY = Math.max(currentY, doc.internal.pageSize.getHeight() - 40);
-  doc.line(14, currentY, 80, currentY);
-  doc.line(PAGE_WIDTH - 80, currentY, PAGE_WIDTH - 14, currentY);
-  
-  doc.setFontSize(7);
-  doc.text('FIRMA RESPONSABLE COMPRAS', 14, currentY + 4);
-  doc.text('FIRMA GERENCIA / FINANZAS', PAGE_WIDTH - 80, currentY + 4);
 
   doc.save(`${order.id.toUpperCase()}.pdf`);
 };
