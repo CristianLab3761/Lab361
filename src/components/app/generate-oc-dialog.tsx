@@ -198,10 +198,19 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
   };
 
   function formatCurrency(value: number, currency: string = 'CLP') {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: currency,
-    }).format(value);
+    try {
+      // Handle non-ISO currencies like UF
+      if (currency === 'UF') {
+        return `UF ${value.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+      }
+      
+      return new Intl.NumberFormat('es-CL', {
+        style: 'currency',
+        currency: currency && currency.length === 3 ? currency : 'CLP',
+      }).format(value);
+    } catch (e) {
+      return `${currency} ${value.toLocaleString('es-CL')}`;
+    }
   }
 
   if (!solicitud) return null;

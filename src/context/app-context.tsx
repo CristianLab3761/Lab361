@@ -561,10 +561,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     updateAdminItem,
     addMultipleAdminItems,
     logout,
-  }), [currentUser, combinedIsLoading, solicitudes, updateSolicitud, addSolicitud, ordenesCompra, addOrdenCompra, getHistoricalDataForItems, proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, materiales, addAdminItem, removeAdminItem, updateAdminItem, addMultipleAdminItems, handleSetCurrentUser, logout]);
+  }), [
+    currentUser, combinedIsLoading, dbUsers, solicitudes, updateSolicitud, toggleFavorite, 
+    addSolicitud, ordenesCompra, dbOrdenesV04, dbOrdenesV05, dbRequisicionesV04, 
+    addOrdenCompra, getHistoricalDataForItems, proveedores, cuentas, presupuestos, 
+    centrosNegocios, centrosCostos, materiales, addAdminItem, removeAdminItem, 
+    updateAdminItem, addMultipleAdminItems, handleSetCurrentUser, logout
+  ]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
+
+
 
 export function useAppContext() {
   const context = useContext(AppContext);

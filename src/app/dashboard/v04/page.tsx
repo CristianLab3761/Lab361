@@ -5,16 +5,17 @@ import { Header } from '@/components/app/header';
 import { PageHeader } from '@/components/app/page-header';
 import { V04Table } from '@/components/app/v04-table';
 import { useAppContext } from '@/context/app-context';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export default function V04HistoryPage() {
   const { currentUser } = useAppContext();
+  const router = useRouter();
 
   React.useEffect(() => {
     if (currentUser && currentUser.role !== 'compras') {
-      redirect('/dashboard');
+      router.push('/dashboard');
     }
-  }, [currentUser]);
+  }, [currentUser, router]);
 
   if (!currentUser) return null;
 
