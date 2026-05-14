@@ -144,8 +144,10 @@ export function MaterialCreateDialog() {
                   <SelectValue placeholder="Seleccionar..." />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-slate-200">
-                  {(familias || []).map(f => (
-                    <SelectItem key={f.id} value={f.prefijo}>{f.nombre} ({f.prefijo})</SelectItem>
+                  {(familias || []).map((f, index) => (
+                    <SelectItem key={f.id || `fam-${index}`} value={f.prefijo || `pref-${index}`}>
+                      {f.nombre || 'Sin nombre'} ({f.prefijo || 'S/P'})
+                    </SelectItem>
                   ))}
                   {(!familias || familias.length === 0) && (
                     <div className="p-4 text-center text-xs text-slate-500 italic">

@@ -136,10 +136,10 @@ export default function AdminCatalogPage() {
         );
       case 'materiales':
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in duration-500">
             <Tabs defaultValue="catalogo" className="w-full">
-              <div className="flex items-center justify-between mb-6">
-                <TabsList className="bg-white border border-slate-100 p-1 rounded-2xl h-12 shadow-sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                <TabsList className="bg-white border border-slate-200 p-1 rounded-2xl h-12 shadow-sm">
                   <TabsTrigger value="catalogo" className="rounded-xl px-6 data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700 font-bold uppercase text-[10px] tracking-widest">
                     <Package className="mr-2 h-4 w-4" /> Catálogo
                   </TabsTrigger>
@@ -147,13 +147,13 @@ export default function AdminCatalogPage() {
                     <FolderTree className="mr-2 h-4 w-4" /> Clasificación (Familias)
                   </TabsTrigger>
                 </TabsList>
-                
-                <TabsContent value="catalogo" className="m-0">
+
+                <TabsContent value="catalogo" className="m-0 border-0 p-0 shadow-none bg-transparent">
                   <MaterialCreateDialog />
                 </TabsContent>
               </div>
 
-              <TabsContent value="catalogo" className="mt-0">
+              <TabsContent value="catalogo" className="mt-0 border-0 p-0 shadow-none bg-transparent">
                 <AdminDataTable
                   title="Maestro de Materiales"
                   description="Lista completa de materiales registrados en el sistema."
@@ -176,7 +176,7 @@ export default function AdminCatalogPage() {
                 />
               </TabsContent>
 
-              <TabsContent value="familias" className="mt-0">
+              <TabsContent value="familias" className="mt-0 border-0 p-0 shadow-none bg-transparent">
                 <AdminDataTable
                   title="Clasificación de Materiales"
                   description="Defina las familias de productos y asigne los prefijos para la codificación automática."
@@ -187,8 +187,8 @@ export default function AdminCatalogPage() {
                     { key: 'prefijo', header: 'Prefijo (Código)' }
                   ]}
                   formFields={[
-                    { key: 'nombre', placeholder: 'Ej: Herramientas, Repuestos...' },
-                    { key: 'prefijo', header: 'Prefijo (Ej: HER, REP)', placeholder: 'PREFIJO' }
+                    { key: 'nombre', placeholder: 'Nombre de la Familia' },
+                    { key: 'prefijo', placeholder: 'Prefijo (Ej: HER, REP)' }
                   ]}
                 />
               </TabsContent>
@@ -205,7 +205,7 @@ export default function AdminCatalogPage() {
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 h-full w-full">
+    <div className="h-full w-full">
         {renderCatalog()}
     </div>
   );
