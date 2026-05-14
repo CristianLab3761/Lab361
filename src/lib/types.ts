@@ -280,3 +280,9 @@ export type Material = {
   subfamilia?: string;
   unidad_medida?: string;
 };
+
+export type FamiliaMaterial = {
+  id: string;
+  nombre: string;
+  prefijo: string;
+};

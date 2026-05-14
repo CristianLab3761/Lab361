@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useSupabaseAuth, useSupabaseCollection } from '@/hooks/use-supabase';
 
-export type AdminItemType = 'Proveedores' | 'CuentasPresupuestos' | 'presupuestos' | 'CentrosDeNegocios' | 'centrosCostos' | 'ListaDeMateriales' | 'Requisiciones' | 'user_profiles' | 'OrdenesCompraV04' | 'OrdenesCompraV05';
+export type AdminItemType = 'Proveedores' | 'CuentasPresupuestos' | 'presupuestos' | 'CentrosDeNegocios' | 'centrosCostos' | 'ListaDeMateriales' | 'familias_materiales' | 'Requisiciones' | 'user_profiles' | 'OrdenesCompraV04' | 'OrdenesCompraV05';
 
 interface AppContextType {
   currentUser: User | null;
@@ -39,6 +39,7 @@ interface AppContextType {
   centrosNegocios: (CentroNegocios & { id: string })[];
   centrosCostos: (CentroCostos & { id: string })[];
   materiales: (Material & { id: string })[];
+  familias: (FamiliaMaterial & { id: string })[];
   addAdminItem: <T extends {}>(itemType: AdminItemType, newItem: T) => Promise<void>;
   updateAdminItem: (itemType: AdminItemType, itemId: string, updates: Partial<any>) => Promise<void>;
   removeAdminItem: (itemType: AdminItemType, itemId: string) => Promise<void>;
@@ -118,7 +119,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
 
   const { data: dbCuentasPresupuestos } = useSupabaseCollection(isUserAuthenticated ? 'CuentasPresupuestos' : null);
-  const { data: dbMateriales } = useSupabaseCollection(isUserAuthenticated ? 'ListaDeMateriales' : null);
+  const { data: materiales } = useSupabaseCollection<Material & { id: string }>('ListaDeMateriales');
+  const { data: familias } = useSupabaseCollection<FamiliaMaterial & { id: string }>('familias_materiales');
   const { data: dbProveedores } = useSupabaseCollection(isUserAuthenticated ? 'Proveedores' : null);
   const { data: dbCentrosCostos } = useSupabaseCollection(isUserAuthenticated ? 'centrosCostos' : null);
   const { data: dbCentrosNegocios } = useSupabaseCollection(isUserAuthenticated ? 'CentrosDeNegocios' : null);
@@ -132,7 +134,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const presupuestos: any[] = dbCentrosCostos || [];
   const centrosNegocios: any[] = dbCentrosNegocios || [];
   const centrosCostos: any[] = dbCentrosCostos || [];
-  const materiales: any[] = dbMateriales || [];
 
   // Sync local solicitudes with DB ones
   useEffect(() => {
@@ -574,6 +575,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     centrosNegocios: centrosNegocios || [],
     centrosCostos: centrosCostos || [],
     materiales: materiales || [],
+    familias: familias || [],
     addAdminItem,
     removeAdminItem,
     updateAdminItem,

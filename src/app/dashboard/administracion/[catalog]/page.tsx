@@ -137,39 +137,62 @@ export default function AdminCatalogPage() {
       case 'materiales':
         return (
           <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                  <Package className="h-6 w-6" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Catálogo de Materiales</h2>
-                  <p className="text-sm text-slate-500">Gestión de productos con codificación por prefijos de familia.</p>
-                </div>
+            <Tabs defaultValue="catalogo" className="w-full">
+              <div className="flex items-center justify-between mb-6">
+                <TabsList className="bg-white border border-slate-100 p-1 rounded-2xl h-12 shadow-sm">
+                  <TabsTrigger value="catalogo" className="rounded-xl px-6 data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700 font-bold uppercase text-[10px] tracking-widest">
+                    <Package className="mr-2 h-4 w-4" /> Catálogo
+                  </TabsTrigger>
+                  <TabsTrigger value="familias" className="rounded-xl px-6 data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700 font-bold uppercase text-[10px] tracking-widest">
+                    <FolderTree className="mr-2 h-4 w-4" /> Clasificación (Familias)
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="catalogo" className="m-0">
+                  <MaterialCreateDialog />
+                </TabsContent>
               </div>
-              <MaterialCreateDialog />
-            </div>
 
-            <AdminDataTable
-              title="Maestro de Materiales"
-              description="Lista completa de materiales registrados en el sistema."
-              itemType="ListaDeMateriales"
-              items={materiales || []}
-              columns={[
-                { key: 'codigo', header: 'Código' },
-                { key: 'descripcion', header: 'Descripción' },
-                { key: 'familia', header: 'Familia' },
-                { key: 'subfamilia', header: 'SubFamilia' },
-                { key: 'unidad_medida', header: 'Unidad' }
-              ]}
-              formFields={[
-                { key: 'codigo', placeholder: 'Código' },
-                { key: 'descripcion', placeholder: 'Descripción Detallada' },
-                { key: 'familia', placeholder: 'Familia' },
-                { key: 'subfamilia', placeholder: 'SubFamilia' },
-                { key: 'unidad_medida', placeholder: 'Unidad (UN, KG, MT)' }
-              ]}
-            />
+              <TabsContent value="catalogo" className="mt-0">
+                <AdminDataTable
+                  title="Maestro de Materiales"
+                  description="Lista completa de materiales registrados en el sistema."
+                  itemType="ListaDeMateriales"
+                  items={materiales || []}
+                  columns={[
+                    { key: 'codigo', header: 'Código' },
+                    { key: 'descripcion', header: 'Descripción' },
+                    { key: 'familia', header: 'Familia' },
+                    { key: 'subfamilia', header: 'SubFamilia' },
+                    { key: 'unidad_medida', header: 'Unidad' }
+                  ]}
+                  formFields={[
+                    { key: 'codigo', placeholder: 'Código' },
+                    { key: 'descripcion', placeholder: 'Descripción Detallada' },
+                    { key: 'familia', placeholder: 'Familia' },
+                    { key: 'subfamilia', placeholder: 'SubFamilia' },
+                    { key: 'unidad_medida', placeholder: 'Unidad (UN, KG, MT)' }
+                  ]}
+                />
+              </TabsContent>
+
+              <TabsContent value="familias" className="mt-0">
+                <AdminDataTable
+                  title="Clasificación de Materiales"
+                  description="Defina las familias de productos y asigne los prefijos para la codificación automática."
+                  itemType="familias_materiales"
+                  items={familias || []}
+                  columns={[
+                    { key: 'nombre', header: 'Nombre de Familia' },
+                    { key: 'prefijo', header: 'Prefijo (Código)' }
+                  ]}
+                  formFields={[
+                    { key: 'nombre', placeholder: 'Ej: Herramientas, Repuestos...' },
+                    { key: 'prefijo', header: 'Prefijo (Ej: HER, REP)', placeholder: 'PREFIJO' }
+                  ]}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
         );
       default:

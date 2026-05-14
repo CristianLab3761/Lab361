@@ -25,7 +25,7 @@ import { Plus, Package, Hash, Tag, Layers } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export function MaterialCreateDialog() {
-  const { addAdminItem, materiales } = useAppContext();
+  const { addAdminItem, materiales, familias } = useAppContext();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,20 +38,12 @@ export function MaterialCreateDialog() {
     codigo: ''
   });
 
-  // Lista de familias predefinidas (Podemos mover esto a una tabla maestra después)
-  const familias = [
-    { id: 'HER', nombre: 'Herramientas', prefijo: 'HER' },
-    { id: 'MAT', nombre: 'Materiales de Construcción', prefijo: 'MAT' },
-    { id: 'EPI', nombre: 'EPP e Higiene', prefijo: 'EPI' },
-    { id: 'REP', nombre: 'Repuestos', prefijo: 'REP' },
-    { id: 'OFI', nombre: 'Oficina y Papelería', prefijo: 'OFI' },
-    { id: 'QUI', nombre: 'Químicos y Fertilizantes', prefijo: 'QUI' },
-  ];
-
   // Lógica para autogenerar el código basado en el prefijo de la familia
   useEffect(() => {
     if (formData.familia) {
-      const prefijo = formData.familia;
+      // Buscamos el prefijo en la lista dinámica de familias
+      const familiaSeleccionada = familias.find(f => f.nombre === formData.familia || f.prefijo === formData.familia);
+      const prefijo = familiaSeleccionada?.prefijo || formData.familia;
       
       // Filtrar materiales de la misma familia para encontrar el siguiente correlativo
       const correlativos = materiales
@@ -155,6 +147,11 @@ export function MaterialCreateDialog() {
                   {familias.map(f => (
                     <SelectItem key={f.id} value={f.prefijo}>{f.nombre} ({f.prefijo})</SelectItem>
                   ))}
+                  {familias.length === 0 && (
+                    <div className="p-4 text-center text-xs text-slate-500 italic">
+                      No hay familias creadas. Créelas en Administración.
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
