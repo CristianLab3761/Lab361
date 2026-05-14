@@ -69,6 +69,7 @@ import { useAppContext } from '@/context/app-context';
 import type { Solicitud } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { generateOrderPDF } from '@/lib/order-pdf-generator';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -272,11 +273,26 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
                 <>
                   <div className="flex justify-between items-start mb-4">
                     <h4 className="font-bold text-black uppercase tracking-wider text-xs">Detalles de la Requisición</h4>
-                    {solicitud["Ref OC"] && (
-                      <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200 text-[9px] font-black uppercase px-2 py-1 rounded-lg tracking-widest shadow-sm">
-                        Vinculada a {solicitud["Ref OC"]}
-                      </Badge>
-                    )}
+                    {solicitud["Ref OC"] && (() => {
+                      const linkedOC = ordenesCompra.find(o => o.id === solicitud["Ref OC"]);
+                      return (
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200 text-[9px] font-black uppercase px-2 py-1 rounded-lg tracking-widest shadow-sm">
+                            Vinculada a {solicitud["Ref OC"]}
+                          </Badge>
+                          {linkedOC && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-7 px-2 text-[9px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 gap-1.5"
+                              onClick={() => generateOrderPDF(linkedOC)}
+                            >
+                              <Printer className="h-3 w-3" /> Descargar OC
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <ul className="space-y-1 text-sm text-muted-foreground">
                     {validItems.map(item => {
