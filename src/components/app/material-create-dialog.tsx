@@ -41,12 +41,12 @@ export function MaterialCreateDialog() {
   // Lógica para autogenerar el código basado en el prefijo de la familia
   useEffect(() => {
     if (formData.familia) {
-      // Buscamos el prefijo en la lista dinámica de familias
-      const familiaSeleccionada = familias.find(f => f.nombre === formData.familia || f.prefijo === formData.familia);
+      // Buscamos el prefijo en la lista dinámica de familias (con protección de nulidad)
+      const familiaSeleccionada = (familias || []).find(f => f.nombre === formData.familia || f.prefijo === formData.familia);
       const prefijo = familiaSeleccionada?.prefijo || formData.familia;
       
       // Filtrar materiales de la misma familia para encontrar el siguiente correlativo
-      const correlativos = materiales
+      const correlativos = (materiales || [])
         .filter(m => m.codigo?.startsWith(prefijo))
         .map(m => {
           const num = parseInt(m.codigo.replace(prefijo, ''));
@@ -144,10 +144,10 @@ export function MaterialCreateDialog() {
                   <SelectValue placeholder="Seleccionar..." />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-slate-200">
-                  {familias.map(f => (
+                  {(familias || []).map(f => (
                     <SelectItem key={f.id} value={f.prefijo}>{f.nombre} ({f.prefijo})</SelectItem>
                   ))}
-                  {familias.length === 0 && (
+                  {(!familias || familias.length === 0) && (
                     <div className="p-4 text-center text-xs text-slate-500 italic">
                       No hay familias creadas. Créelas en Administración.
                     </div>

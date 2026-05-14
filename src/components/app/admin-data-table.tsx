@@ -52,11 +52,11 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
   const [searchTerm, setSearchTerm] = useState('');
 
   // --- FILTERING LOGIC ---
-  const filteredItems = items.filter(item => {
+  const filteredItems = (items || []).filter(item => {
     if (!searchTerm) return true;
     
-    return Object.values(item).some(val => 
-      String(val).toLowerCase().includes(searchTerm.toLowerCase())
+    return Object.values(item || {}).some(val => 
+      String(val || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 

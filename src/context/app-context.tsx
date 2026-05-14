@@ -119,8 +119,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
 
   const { data: dbCuentasPresupuestos } = useSupabaseCollection(isUserAuthenticated ? 'CuentasPresupuestos' : null);
-  const { data: materiales } = useSupabaseCollection<Material & { id: string }>('ListaDeMateriales');
-  const { data: familias } = useSupabaseCollection<FamiliaMaterial & { id: string }>('familias_materiales');
+  const { data: materiales } = useSupabaseCollection<Material & { id: string }>(isUserAuthenticated ? 'ListaDeMateriales' : null);
+  const { data: familias } = useSupabaseCollection<FamiliaMaterial & { id: string }>(isUserAuthenticated ? 'familias_materiales' : null);
   const { data: dbProveedores } = useSupabaseCollection(isUserAuthenticated ? 'Proveedores' : null);
   const { data: dbCentrosCostos } = useSupabaseCollection(isUserAuthenticated ? 'centrosCostos' : null);
   const { data: dbCentrosNegocios } = useSupabaseCollection(isUserAuthenticated ? 'CentrosDeNegocios' : null);
@@ -585,7 +585,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     currentUser, combinedIsLoading, dbUsers, solicitudes, updateSolicitud, toggleFavorite, 
     addSolicitud, ordenesCompra, dbOrdenesV04, dbOrdenesV05, dbRequisicionesV04, 
     addOrdenCompra, getHistoricalDataForItems, proveedores, cuentas, presupuestos, 
-    centrosNegocios, centrosCostos, materiales, addAdminItem, removeAdminItem, 
+    centrosNegocios, centrosCostos, materiales, familias, addAdminItem, removeAdminItem, 
     updateAdminItem, addMultipleAdminItems, handleSetCurrentUser, logout
   ]);
 
