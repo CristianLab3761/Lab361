@@ -37,6 +37,7 @@ interface AppContextType {
   cuentas: (Cuenta & { id: string })[];
   presupuestos: (Presupuesto & { id: string })[];
   centrosNegocios: (CentroNegocios & { id: string })[];
+  centrosCostos: (CentroCostos & { id: string })[];
   materiales: (Material & { id: string })[];
   familias: any[];
   subfamilias: any[];
@@ -434,7 +435,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       nMes: monthIndex,
       anio: year,
       semana: weekNumber,
-      estatus: 'completado'
+      estatus: 'completado',
+      issuedByUserId: currentUser?.id || ''
     };
 
     // Save to Supabase (using standard purchaseOrders name)
@@ -459,7 +461,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       "CENE": newOrdenData.centroNegocios || '',
       "Ref": newOrdenData.referencia || '',
       "Observaciones": newOrdenData.observaciones || '',
-      "Forma de Pago": newOrdenData.formaPago || ''
+      "Forma de Pago": newOrdenData.formaPago || '',
+      "Solicitante_ID": currentUser?.id || ''
     };
     
     const { error: v05Error } = await supabase.from('OrdenesCompraV05').insert([dbOrdenV05]);
@@ -475,9 +478,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setOrdenesCompra(prev => [newOrden, ...prev]);
     
-    // Actualizamos la solicitud a 'procesada' y guardamos la referencia de la OC
+    // Actualizamos la solicitud a 'oc creada' y guardamos la referencia de la OC
     await updateSolicitud(solicitudId, { 
-      status: 'procesada',
+      status: 'oc creada',
       "Ref OC": ocId 
     });
 
@@ -485,7 +488,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       title: "Orden de Compra Generada",
       description: `La OC ${ocId} ha sido creada con éxito.`,
     });
-  }, [ordenesCompra.length, updateSolicitud, toast]);
+  }, [ordenesCompra.length, updateSolicitud, toast, currentUser]);
 
   const logout = useCallback(async () => {
     try {

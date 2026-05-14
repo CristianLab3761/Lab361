@@ -79,12 +79,14 @@ const statusStyles: { [key: string]: string } = {
   rechazada: 'bg-red-50 text-red-600 border-red-100 opacity-80',
   procesada: 'bg-slate-900 text-white font-black border-slate-900',
   completado: 'bg-slate-900 text-white font-black border-slate-900',
+  'oc creada': 'bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm font-bold',
 };
 
 const getDisplayStatus = (status: string | undefined) => {
   const s = status?.toLowerCase().trim() || 'pendiente';
   if (s === 'vigente' || s === 'pendiente') return 'PENDIENTE';
   if (s === 'procesada' || s === 'completado') return 'COMPLETADO';
+  if (s === 'oc creada') return 'OC CREADA';
   return s.toUpperCase();
 };
 
@@ -224,8 +226,7 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
                 const proveedorObj = proveedores.find(p => 
                   (p.name && p.name === solicitud.proveedor) || 
                   (p["Nombre de Fantasia"] && p["Nombre de Fantasia"] === solicitud.proveedor) ||
-                  (p["RAZON SOCIAL"] && p["RAZON SOCIAL"] === solicitud.proveedor) ||
-                  (p.Nombre && p.Nombre === solicitud.proveedor)
+                  (p["RAZON SOCIAL"] && p["RAZON SOCIAL"] === solicitud.proveedor)
                 );
                 import('@/lib/pdf-generator').then(({ generateRequisitionPDF }) => {
                   generateRequisitionPDF(solicitud as any, proveedorObj as any);
@@ -269,7 +270,14 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
             <div className="p-6 border-b border-slate-100 shadow-inner">
               {validItems.length > 0 ? (
                 <>
-                  <h4 className="font-bold mb-2 text-black uppercase tracking-wider text-xs">Detalles de la Requisición</h4>
+                  <div className="flex justify-between items-start mb-4">
+                    <h4 className="font-bold text-black uppercase tracking-wider text-xs">Detalles de la Requisición</h4>
+                    {solicitud["Ref OC"] && (
+                      <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200 text-[9px] font-black uppercase px-2 py-1 rounded-lg tracking-widest shadow-sm">
+                        Vinculada a {solicitud["Ref OC"]}
+                      </Badge>
+                    )}
+                  </div>
                   <ul className="space-y-1 text-sm text-muted-foreground">
                     {validItems.map(item => {
                       const safeName = typeof item.name === 'string' ? item.name : 'Producto sin nombre';

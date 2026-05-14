@@ -8,12 +8,15 @@ export interface AIAnalysis {
 export type User = {
   id: string;
   name: string; // Corresponds to displayName
+  displayName?: string;
   email: string;
-  role: 'solicitante' | 'compras';
+  role: 'solicitante' | 'compras' | 'autorizador' | 'admin' | 'comprador';
   department?: string;
   cargo?: string;
   centroCostos?: string;
   centroNegocios?: string;
+  centro_costos?: string;
+  centro_negocios?: string;
   avatar?: string;
   createdAt?: string;
 };
@@ -145,6 +148,7 @@ export type OrdenCompra = {
     codigoMaterial?: string;
     cuentaPresupuesto?: string;
   }[];
+  issuedByUserId: string;
 };
 
 export type OrdenCompraV04 = {
@@ -271,4 +275,6 @@ export type Material = {
   descripcion: string;
   Material?: string;
   codigo_nuevo?: string;
+  familia?: string;
+  subfamilia?: string;
 };

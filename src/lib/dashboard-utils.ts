@@ -54,7 +54,7 @@ export function getMonthlySpendTrend(solicitudes: Solicitud[]) {
 }
 
 export function getCycleTimeStats(solicitudes: Solicitud[]) {
-  const processed = solicitudes.filter(s => s.status === 'procesada' && s.createdAt && s["Fecha Estatus"]);
+  const processed = solicitudes.filter(s => (s.status === 'procesada' || s.status === 'oc creada') && s.createdAt && s["Fecha Estatus"]);
   if (processed.length === 0) return 0;
 
   const totalDays = processed.reduce((acc, s) => {
