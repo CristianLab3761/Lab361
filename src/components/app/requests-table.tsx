@@ -258,7 +258,23 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
                         <FileText className="mr-3 h-4 w-4" /> Generar OC
                       </DropdownMenuItem>
                     </>
-                  )}
+                  <DropdownMenuItem 
+                    onSelect={() => {
+                      const duplicatedData = {
+                        proveedor: solicitud.proveedor,
+                        centroCostos: solicitud.centroCostos,
+                        centroNegocios: solicitud.centroNegocios,
+                        moneda: solicitud.moneda,
+                        items: solicitud.items,
+                        isAfectoIVA: solicitud.isAfectoIVA,
+                        totalEstimatedCost: solicitud.totalEstimatedCost
+                      };
+                      addSolicitud(duplicatedData);
+                    }} 
+                    className="cursor-pointer rounded-xl font-black py-3 text-[10px] uppercase tracking-widest hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                  >
+                    <Copy className="mr-3 h-4 w-4" /> Duplicar Solicitud
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
