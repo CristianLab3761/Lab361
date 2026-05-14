@@ -52,9 +52,9 @@ import {
   Download, 
   Eye,
   Filter,
-  AlertCircle,
   Heart,
-  Copy
+  Copy,
+  Printer
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { GenerateOCDialog } from '@/components/app/generate-oc-dialog';
@@ -103,7 +103,7 @@ function formatCurrency(value: number, currency: string = 'CLP') {
 
 
 function RequestRow({ solicitud }: { solicitud: Solicitud }) {
-  const { currentUser, updateSolicitud, toggleFavorite, addSolicitud, proveedores } = useAppContext();
+  const { currentUser, updateSolicitud, toggleFavorite, addSolicitud, proveedores, ordenesCompra } = useAppContext();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const router = useRouter();
   
@@ -258,6 +258,7 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
                         <FileText className="mr-3 h-4 w-4" /> Generar OC
                       </DropdownMenuItem>
                     </>
+                    )}
                   <DropdownMenuItem 
                     onSelect={() => {
                       const duplicatedData = {
