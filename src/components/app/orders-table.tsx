@@ -60,7 +60,13 @@ export function OrdersTable() {
             <TableCell className="font-black text-slate-900">{order.id.toUpperCase()}</TableCell>
             <TableCell className="font-medium text-slate-500">{order.solicitudId.toUpperCase()}</TableCell>
             <TableCell className="text-slate-600 font-medium">
-              {format(parseISO(order.createdAt), "dd MMM yyyy", { locale: es })}
+              {(() => {
+                try {
+                  return format(parseISO(order.createdAt), "dd MMM yyyy", { locale: es });
+                } catch (e) {
+                  return order.createdAt || 'Sin fecha';
+                }
+              })()}
             </TableCell>
             <TableCell className="font-bold text-slate-700">{order.supplierName}</TableCell>
             <TableCell>

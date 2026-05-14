@@ -200,6 +200,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ...oc,
         id: oc["N° Orden"] || oc.id || "",
         solicitudId: oc["Requisición"] || oc.solicitudId || "",
+        createdAt: oc["Fecha"] || oc.createdAt || new Date().toISOString(),
         supplierName: oc["Proveedor"] || oc.supplierName || "",
         totalGlobal: oc["Total_Global"] || oc.totalGlobal || 0,
         moneda: oc["Moneda"] || oc.moneda || "CLP",
