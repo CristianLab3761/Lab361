@@ -1,28 +1,28 @@
-import { createClient } from '@supabase/supabase-js';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import postgres from 'postgres';
+import dotenv from 'dotenv';
+import path from 'path';
 
+// Load .env
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const sql = postgres(process.env.DATABASE_URL || '');
 
 async function checkColumns() {
-  const { data, error } = await supabase
-    .from('ListaDeMateriales')
-    .select('*')
-    .limit(1);
+  console.log('--- Checking columns for RequisicionesV05 ---');
+  try {
+    const cols = await sql`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'RequisicionesV05'
+      ORDER BY ordinal_position
+    `;
+    console.log('Columns:');
+    cols.forEach(c => console.log(`- "${c.column_name}" (${c.data_type})`));
 
-  if (error) {
-    console.error('Error checking columns:', error);
-    return;
-  }
-
-  if (data && data.length > 0) {
-    console.log('Columns in ListaDeMateriales:', Object.keys(data[0]));
-  } else {
-    console.log('ListaDeMateriales is empty.');
+  } catch (err: any) {
+    console.error('SQL Error:', err.message);
+  } finally {
+    await sql.end();
   }
 }
 

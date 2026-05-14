@@ -291,7 +291,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       console.warn('No se encontró el UUID de la base de datos para la solicitud:', id);
     }
 
-    const { error } = await supabase.from('RequisicionesV05').update(dbUpdates).eq(dbId ? 'id' : 'N° Requisición', dbId || id);
+    // Usamos comillas dobles para el nombre de la columna con caracteres especiales si no tenemos el UUID
+    const { error } = await supabase
+      .from('RequisicionesV05')
+      .update(dbUpdates)
+      .eq(dbId ? 'id' : '"N° Requisición"', dbId || id);
+
     if (error) {
       console.error('Error updating solicitud in Supabase:', JSON.stringify(error, null, 2));
       toast({
@@ -300,13 +305,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         description: `No se pudo actualizar el estado de la requisición en la base de datos: ${error.message}`,
       });
     }
-  }, [toast]);
+  }, [toast, solicitudes]);
 
   const toggleFavorite = useCallback(async (id: string, currentStatus: boolean) => {
     const { error } = await supabase
       .from('RequisicionesV05')
       .update({ "Es_Favorita": !currentStatus })
-      .eq('N° Requisición', id);
+      .eq('"N° Requisición"', id);
 
     if (error) {
       console.error('Error toggling favorite:', error);
