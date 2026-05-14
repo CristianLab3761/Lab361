@@ -81,6 +81,7 @@ export type Solicitud = {
   moneda?: 'CLP' | 'USD' | 'UF';
   summary?: AIAnalysis;
   isFavorite?: boolean;
+  solicitudId?: string;
   timeline?: {
     id: string;
     date: string;
@@ -277,4 +278,5 @@ export type Material = {
   codigo_nuevo?: string;
   familia?: string;
   subfamilia?: string;
+  unidad_medida?: string;
 };

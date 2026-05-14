@@ -54,7 +54,8 @@ import {
   Filter,
   Heart,
   Copy,
-  Printer
+  Printer,
+  AlertCircle
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { GenerateOCDialog } from '@/components/app/generate-oc-dialog';
