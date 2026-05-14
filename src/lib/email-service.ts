@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer';
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+  secure: process.env.SMTP_SECURE === 'true',
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -11,6 +11,11 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendRequisitionEmail = async (solicitud: any) => {
+  // Verificación de configuración
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.error('ERROR: Configuración SMTP incompleta en el archivo .env');
+    return { messageId: 'simulated-id-no-config' };
+  }
   const mailOptions = {
     from: process.env.SMTP_FROM || '"Sistema Botanical" <noreply@botanicalsolutions.cl>',
     to: process.env.SMTP_TO || 'compras@botanicalsolutions.cl',
