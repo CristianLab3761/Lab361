@@ -11,9 +11,14 @@ export function useSupabaseAuth() {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         console.error('Auth session error:', error.message);
-        // If refresh token is invalid, sign out to clear local storage
-        if (error.message.includes('Refresh Token')) {
-          supabase.auth.signOut();
+        // Si el refresh token no se encuentra o es inválido, forzamos limpieza
+        if (error.message.includes('Refresh Token') || error.message.includes('not found')) {
+          supabase.auth.signOut().then(() => {
+            setUser(null);
+            setLoading(false);
+            window.location.href = '/login'; // Forzamos redirección para limpiar estado global
+          });
+          return;
         }
       }
       setUser(session?.user ?? null);
