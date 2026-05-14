@@ -230,7 +230,8 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
                   (p["RAZON SOCIAL"] && p["RAZON SOCIAL"] === solicitud.proveedor)
                 );
                 import('@/lib/pdf-generator').then(({ generateRequisitionPDF }) => {
-                  generateRequisitionPDF(solicitud as any, proveedorObj as any);
+                  const doc = generateRequisitionPDF(solicitud as any, proveedorObj as any);
+                  doc.save(`Requisicion_${solicitud.solicitudId || solicitud.id || 'NUEVA'}.pdf`);
                 });
               }}
             >
@@ -258,7 +259,7 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
                         <FileText className="mr-3 h-4 w-4" /> Generar OC
                       </DropdownMenuItem>
                     </>
-                    )}
+                  )}
                   <DropdownMenuItem 
                     onSelect={() => {
                       const duplicatedData = {

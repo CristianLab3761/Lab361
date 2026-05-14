@@ -283,7 +283,8 @@ export const generateRequisitionPDF = (solicitud: any, proveedor?: any) => {
     styles: { fontSize: 8, cellPadding: 2, lineColor: COLOR_BORDE, valign: 'top' }
   });
 
-  // --- Guardar ---
-  const fileName = `RE${solicitud.id || 'NUEVA'}.pdf`;
-  doc.save(fileName);
+  // --- FINALIZACIÓN: Retornar el documento ---
+  // En el cliente se puede llamar a doc.save() después de recibirlo
+  // En el servidor se usa doc.output()
+  return doc;
 };
