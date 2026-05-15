@@ -50,15 +50,15 @@ export default function MaterialesPage() {
               itemType="ListaDeMateriales"
               items={materiales || []}
               columns={[
-                { key: 'codigo', header: 'Código' },
-                { key: 'descripcion', header: 'Descripción' },
+                { key: 'codigo_nuevo', header: 'Código' },
+                { key: 'Material', header: 'Descripción' },
                 { key: 'familia', header: 'Familia' },
                 { key: 'subfamilia', header: 'SubFamilia' },
                 { key: 'unidad_medida', header: 'Unidad' }
               ]}
               formFields={[
-                { key: 'codigo', placeholder: 'Código' },
-                { key: 'descripcion', placeholder: 'Descripción Detallada' },
+                { key: 'codigo_nuevo', placeholder: 'Código' },
+                { key: 'Material', placeholder: 'Descripción Detallada' },
                 { key: 'familia', placeholder: 'Familia' },
                 { key: 'subfamilia', placeholder: 'SubFamilia' },
                 { key: 'unidad_medida', placeholder: 'Unidad' }

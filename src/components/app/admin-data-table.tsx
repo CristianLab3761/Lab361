@@ -351,10 +351,23 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
                                     ) : (
                                         (() => {
                                           const val = item[col.key];
-                                          if (Array.isArray(val)) {
+                                          
+                                          // Sistema de búsqueda inteligente de valores (Aliases)
+                                          let displayVal = val;
+                                          if (!displayVal || displayVal === '') {
+                                            if (col.key === 'Material' || col.key === 'descripcion') {
+                                              displayVal = item.Material || item.descripcion || item['Descripción'] || item.name;
+                                            } else if (col.key === 'codigo_nuevo' || col.key === 'codigo') {
+                                              displayVal = item.codigo_nuevo || item.codigo || item['Código'] || item.code;
+                                            } else if (col.key === 'unidad_medida') {
+                                              displayVal = item.unidad_medida || item.Unidades || item.Unidad;
+                                            }
+                                          }
+
+                                          if (Array.isArray(displayVal)) {
                                             return (
                                               <div className="flex flex-wrap gap-1">
-                                                {val.map((v: string) => (
+                                                {displayVal.map((v: string) => (
                                                   <Badge key={v} variant="secondary" className="text-[9px] font-bold px-1.5 py-0 bg-slate-100 text-slate-600 border-slate-200">
                                                     {v}
                                                   </Badge>
@@ -362,7 +375,7 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
                                               </div>
                                             );
                                           }
-                                          return <span className="text-slate-700 font-medium">{String(val || '—')}</span>;
+                                          return <span className="text-slate-700 font-medium">{String(displayVal || '—')}</span>;
                                         })()
                                     )}
                                 </TableCell>
