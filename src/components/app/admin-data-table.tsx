@@ -353,7 +353,7 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
                                           const val = item[col.key];
                                           
                                           // Sistema de búsqueda inteligente de valores (Aliases)
-                                          let displayVal = val;
+                                          let displayVal: any = val;
                                           if (!displayVal || displayVal === '') {
                                             if (col.key === 'Material' || col.key === 'descripcion') {
                                               displayVal = item.Material || item.descripcion || item['Descripción'] || item.name;
