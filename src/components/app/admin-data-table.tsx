@@ -41,7 +41,7 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
   formFields,
   onFieldChange
 }: AdminDataTableProps<T>) {
-  const { addAdminItem, removeAdminItem, updateAdminItem } = useAppContext();
+  const { addAdminItem, removeAdminItem, updateAdminItem, familias } = useAppContext();
   const [newItem, setNewItem] = useState<Partial<T>>({});
   const [isAdding, setIsAdding] = useState(false);
   
@@ -361,6 +361,14 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
                                               displayVal = item.codigo_nuevo || item.codigo || item['Código'] || item.code;
                                             } else if (col.key === 'unidad_medida') {
                                               displayVal = item.unidad_medida || item.Unidades || item.Unidad;
+                                            }
+                                          }
+
+                                          // Si es el campo familia, intentar buscar el nombre descriptivo en la lista de familias
+                                          if (col.key === 'familia' && displayVal) {
+                                            const familiaInfo = (familias || []).find(f => f.prefijo === displayVal || f.nombre === displayVal);
+                                            if (familiaInfo) {
+                                              displayVal = `${familiaInfo.nombre} (${familiaInfo.prefijo})`;
                                             }
                                           }
 
