@@ -32,25 +32,47 @@ export function ItemAutocomplete({
 }: ItemAutocompleteProps) {
   const [open, setOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState(value);
+  const deferredSearch = React.useDeferredValue(searchValue);
 
   // Update internal search value when external value changes
   React.useEffect(() => {
     setSearchValue(value || '');
   }, [value]);
 
-  const filteredMateriales = React.useMemo(() => {
-    if (!searchValue) return [];
-    return materiales.filter((m: any) => {
-      const getVal = (obj: any, keys: string[]) => {
-        for (const k of keys) if (obj[k] !== undefined && obj[k] !== null) return obj[k];
-        return '';
-      };
+  const getVal = React.useCallback((obj: any, keys: string[]) => {
+    for (const k of keys) {
+      if (obj[k] !== undefined && obj[k] !== null) {
+        return obj[k];
+      }
+    }
+    return '';
+  }, []);
+
+  const searchableMateriales = React.useMemo(() => {
+    return (materiales || []).map((material) => {
+      const m = material as any;
       const desc = String(getVal(m, ['Material', 'descripcion', 'Descripcion del material', 'Descripcion', 'name', 'Name'])).toLowerCase();
       const cod = String(getVal(m, ['codigo_nuevo', 'codigo', 'Código', 'Codigo', 'code'])).toLowerCase();
-      const search = searchValue.toLowerCase();
-      return desc.includes(search) || cod.includes(search);
-    }).slice(0, 10); // Limit to 10 suggestions for performance
-  }, [materiales, searchValue]);
+
+      return {
+        material,
+        desc,
+        cod,
+      };
+    });
+  }, [materiales, getVal]);
+
+  const filteredMateriales = React.useMemo(() => {
+    const search = deferredSearch.trim().toLowerCase();
+
+    if (!search) {
+      return [];
+    }
+
+    return searchableMateriales
+      .filter(({ desc, cod }) => desc.includes(search) || cod.includes(search))
+      .slice(0, 10);
+  }, [searchableMateriales, deferredSearch]);
 
   return (
     <div className="relative w-full">
@@ -60,11 +82,12 @@ export function ItemAutocomplete({
           const val = e.target.value;
           setSearchValue(val);
           onChange(val);
-          if (!disabled && val.length > 0) setOpen(true);
-          else setOpen(false);
+          setOpen(!disabled && val.length > 0);
         }}
         onFocus={() => {
-          if (!disabled && searchValue.length > 0) setOpen(true);
+          if (!disabled && searchValue.length > 0) {
+            setOpen(true);
+          }
         }}
         placeholder={placeholder}
         disabled={disabled}
@@ -78,20 +101,16 @@ export function ItemAutocomplete({
         <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
           <ScrollArea className={cn("max-h-[250px]", filteredMateriales.length > 5 ? "h-[250px]" : "h-auto")}>
             <div className="p-1">
-              {filteredMateriales.map((material) => (
+              {filteredMateriales.map(({ material }) => (
                 <button
                   key={material.id}
                   type="button"
                   className="w-full text-left px-2 py-1.5 text-[11px] hover:bg-slate-50 rounded flex items-center justify-between gap-3 transition-all group"
                   onClick={() => {
                     const m = material as any;
-                    const getVal = (obj: any, keys: string[]) => {
-                      for (const k of keys) if (obj[k] !== undefined && obj[k] !== null) return obj[k];
-                      return '';
-                    };
                     const desc = getVal(m, ['Material', 'descripcion', 'Descripcion del material', 'Descripcion', 'name', 'Name']);
                     const cod = getVal(m, ['codigo_nuevo', 'codigo', 'Código', 'Codigo', 'code']);
-                    
+
                     const newValue = displayField === 'descripcion' ? String(desc) : String(cod);
                     onChange(newValue, material);
                     setSearchValue(newValue);
@@ -114,10 +133,9 @@ export function ItemAutocomplete({
           </ScrollArea>
         </div>
       )}
-      {/* Backdrop to close the dropdown */}
       {open && (
-        <div 
-          className="fixed inset-0 z-40 bg-transparent" 
+        <div
+          className="fixed inset-0 z-40 bg-transparent"
           onClick={() => setOpen(false)}
         />
       )}
