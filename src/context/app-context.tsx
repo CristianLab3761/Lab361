@@ -144,6 +144,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         // En V05 los ítems están en la columna Items_JSON
         const rowItems = typeof s.Items_JSON === 'string' ? JSON.parse(s.Items_JSON) : (s.Items_JSON || []);
         
+        const parsedFechaEntrega = s["Fecha Entrega"] || s.fechaEntrega || s.fecha_entrega || rowItems[0]?.fecha_entrega || rowItems[0]?.fechaEntrega || "";
         return {
           db_id: s.id, // Store the actual Supabase UUID for updates
           id: String(s["N° Requisición"] || s.id || ""),
@@ -187,6 +188,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           "Ref OC": s["Ref OC"] || s.ref_oc || "",
           solicitanteId: s.solicitanteId || s.solicitanteid || s.requesterId || s.requesterid || "",
           moneda: s.Moneda || 'CLP',
+          "Fecha Entrega": parsedFechaEntrega,
+          fechaEntrega: parsedFechaEntrega,
         } as Solicitud;
       });
 
@@ -366,7 +369,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         unidades: item.quantity || 0,
         precio_unitario: item.estimatedCost || 0,
         monto_neto: neto,
-        monto_total_iva: isAfecto ? Math.round(neto * 1.19) : neto
+        monto_total_iva: isAfecto ? Math.round(neto * 1.19) : neto,
+        fecha_entrega: newSolicitudData.fechaEntrega || ''
       };
     });
 

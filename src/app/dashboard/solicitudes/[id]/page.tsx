@@ -234,6 +234,26 @@ export default function SolicitudDetailPage() {
                 </div>
               </div>
 
+              {solicitud.fechaEntrega && (
+                <div className="flex items-start gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-slate-50/80 flex items-center justify-center text-slate-400 border border-slate-100">
+                    <Truck className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Fecha Deseada de Entrega</p>
+                    <p className="text-sm font-bold text-slate-900 leading-tight">
+                      {(() => {
+                        try {
+                          return format(parseISO(solicitud.fechaEntrega), 'PPPP', { locale: es });
+                        } catch (e) {
+                          return solicitud.fechaEntrega;
+                        }
+                      })()}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-start gap-4">
                 <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
                   <User className="h-5 w-5" />

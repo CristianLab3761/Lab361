@@ -387,8 +387,8 @@ export function NewRequestDialog() {
                     <Input id="autorizadoPor" {...form.register('autorizadoPor')} className="h-7 text-[11px] rounded-sm border-slate-200" />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="fechaEntrega" className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Fecha Entrega</Label>
-                    <Input id="fechaEntrega" type="date" {...form.register('fechaEntrega')} readOnly className="h-7 text-[11px] rounded-sm border-slate-200 bg-slate-50/50" />
+                    <Label htmlFor="fechaEntrega" className="text-[9px] uppercase text-primary font-bold tracking-tight">Fecha Entrega</Label>
+                    <Input id="fechaEntrega" type="date" {...form.register('fechaEntrega')} className="h-7 text-[11px] rounded-sm border-slate-200" />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="fechaEstatus" className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Fecha Estatus</Label>

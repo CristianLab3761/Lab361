@@ -55,7 +55,8 @@ import {
   Heart,
   Copy,
   Printer,
-  AlertCircle
+  AlertCircle,
+  Truck
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { GenerateOCDialog } from '@/components/app/generate-oc-dialog';
@@ -335,6 +336,22 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
                     })}
                   </ul>
                   
+                  {solicitud.fechaEntrega && (
+                    <div className="mt-3 mb-2 text-xs flex items-center gap-2 text-slate-600 bg-slate-100/50 p-2 rounded-md border border-slate-200/60 w-fit">
+                      <Truck className="h-3.5 w-3.5 text-primary" />
+                      <span className="font-bold uppercase text-[9px] text-slate-400 tracking-wider">Fecha Deseada de Entrega:</span>
+                      <span className="font-semibold text-slate-700">
+                        {(() => {
+                          try {
+                            return format(parseISO(solicitud.fechaEntrega), 'dd/MM/yyyy');
+                          } catch (e) {
+                            return solicitud.fechaEntrega;
+                          }
+                        })()}
+                      </span>
+                    </div>
+                  )}
+
                   {solicitud.comments && (
                     <div className="mt-2 text-sm">
                         <h5 className="font-semibold">Comentarios del solicitante:</h5>

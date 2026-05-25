@@ -57,6 +57,7 @@ export type Solicitud = {
   "Cuenta Presupuesto"?: string;
   "Precio Unitario"?: string;
   "Fecha Entrega"?: string;
+  fechaEntrega?: string;
   "Total"?: string | number;
   "Estatus"?: string;
   "Fecha Estatus"?: string;
