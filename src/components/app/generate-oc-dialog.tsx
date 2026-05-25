@@ -36,6 +36,7 @@ import {
 import { cn } from '@/lib/utils';
 import { SupplierAutocomplete } from '@/components/app/supplier-autocomplete';
 import { ItemAutocomplete } from '@/components/app/item-autocomplete';
+import { BudgetAccountAutocomplete } from '@/components/app/budget-account-autocomplete';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 
@@ -46,7 +47,7 @@ interface GenerateOCDialogProps {
 }
 
 export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDialogProps) {
-  const { addOrdenCompra, proveedores, materiales, dbOrdenesV04, dbOrdenesV05 } = useAppContext();
+  const { addOrdenCompra, proveedores, materiales, cuentas, currentUser, dbOrdenesV04, dbOrdenesV05 } = useAppContext();
   
   // Basic Info
   const [poNumber, setPoNumber] = React.useState('');
@@ -177,6 +178,7 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
         centroCostos: solicitud.centroCostos || (solicitud as any)["Centro de Costos"],
         centroNegocios: solicitud.centroNegocios || (solicitud as any)["Centro de Negocios"],
         cuentaPresupuesto: items[0]?.cuentaPresupuesto || '',
+        issuedByUserId: currentUser?.id || '',
         items: items.map(item => ({
           id: item.id || `item-${Math.random()}`,
           name: item.name,
@@ -414,6 +416,16 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
                           value={item.estimatedCost} 
                           onChange={(e) => updateItem(index, 'estimatedCost', Number(e.target.value))}
                           className="h-7 text-[11px] rounded-sm border-slate-200 font-black text-primary text-right" 
+                        />
+                      </div>
+
+                      <div className="md:col-span-12 space-y-1 pt-2 mt-1 border-t border-slate-100">
+                        <Label className="text-[8px] uppercase text-slate-400 font-bold tracking-tight">Cuenta Presupuesto</Label>
+                        <BudgetAccountAutocomplete
+                          value={item.cuentaPresupuesto || ''}
+                          cuentas={cuentas}
+                          placeholder="Buscar cuenta..."
+                          onChange={(val) => updateItem(index, 'cuentaPresupuesto', val)}
                         />
                       </div>
                     </div>

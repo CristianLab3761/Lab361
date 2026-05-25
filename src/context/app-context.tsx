@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
-import { User, Solicitud, OrdenCompra, Item, Proveedor, Cuenta, Presupuesto, CentroNegocios, CentroCostos, Material } from '@/lib/types';
+import { User, Solicitud, OrdenCompra, Item, Proveedor, Cuenta, Presupuesto, CentroNegocios, CentroCostos, Material, FamiliaMaterial } from '@/lib/types';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -212,6 +212,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         status: (oc["Estatus"] || oc.estatus || 'generado').toLowerCase(),
         poDescription: oc["Observaciones"] || oc.poDescription || '',
         totalCost: oc["Total_Global"] || oc.totalCost || 0,
+        centroCostos: oc["CECO"] || oc.centroCostos || '',
+        centroNegocios: oc["CENE"] || oc.centroNegocios || '',
+        cuentaPresupuesto: (typeof oc.Items_JSON === 'string' ? JSON.parse(oc.Items_JSON) : (oc.Items_JSON || []))[0]?.cuentaPresupuesto || '',
       }));
       setOrdenesCompra(normalized);
     }
@@ -430,7 +433,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentUser, solicitudes.length, toast]);
 
-  const addOrdenCompra = useCallback(async (newOrdenData: Omit<OrdenCompra, 'id' | 'createdAt' | 'dia' | 'mes' | 'nMes' | 'anio' | 'semana' | 'estatus'>, solicitudId: string) => {
+  const addOrdenCompra = useCallback(async (newOrdenData: Omit<OrdenCompra, 'id' | 'createdAt' | 'dia' | 'mes' | 'nMes' | 'anio' | 'semana' | 'estatus'> & Partial<Pick<OrdenCompra, 'issuedByUserId'>>, solicitudId: string) => {
     // Calculate next correlative ID across V04 and V05
     const idsV04 = (dbOrdenesV04 || []).map((o: any) => String(o["ORDEN DE COMPRA"] || ""));
     const idsV05 = (dbOrdenesV05 || []).map((o: any) => String(o["N° Orden"] || ""));

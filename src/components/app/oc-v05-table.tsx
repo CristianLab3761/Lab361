@@ -72,13 +72,16 @@ export function OCV05Table() {
       totalIva: order["Total_IVA"] || 0,
       totalGlobal: order["Total_Global"] || 0,
       moneda: order["Moneda"] || 'CLP',
+      centroCostos: order["CECO"] || order.centroCostos || '',
+      centroNegocios: order["CENE"] || order.centroNegocios || '',
       items: items.map((it: any) => ({
         id: it.id || '',
         name: it.descripcion || it.name || '',
         quantity: parseFloat(it.unidades || it.quantity) || 0,
         unitCost: parseFloat(it.precio_unitario || it.unitCost) || 0,
-        montoNeto: parseFloat(it.monto_neto || it.totalNeto) || 0,
-        codigoMaterial: it.codigo_material || it.codigoMaterial || ''
+        montoNeto: parseFloat(it.monto_neto || it.montoNeto || ((parseFloat(it.unidades || it.quantity) || 0) * (parseFloat(it.precio_unitario || it.unitCost) || 0))) || 0,
+        codigoMaterial: it.codigo_material || it.codigoMaterial || '',
+        cuentaPresupuesto: it.cuentaPresupuesto || it.cuenta_presupuesto || it["Cuentas Presupuesto"] || ''
       })),
       observaciones: order["Observaciones"] || '',
       formaPago: order["Forma de Pago"] || '',

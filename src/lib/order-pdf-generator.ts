@@ -16,6 +16,9 @@ export const generateOrderPDF = (order: OrdenCompra) => {
   let currentY = 10;
 
   const watchedMoneda = order.moneda || 'CLP';
+  const items = order.items || [];
+  const budgetAccounts = Array.from(new Set(items.map((item) => item.cuentaPresupuesto).filter(Boolean) as string[]));
+  const budgetSummary = order.cuentaPresupuesto || (budgetAccounts.length === 1 ? budgetAccounts[0] : budgetAccounts.length > 1 ? budgetAccounts.join(', ') : 'N/A');
 
   const formatPDFCurrency = (amount: number) => {
     if (watchedMoneda === 'UF') {
@@ -133,17 +136,18 @@ export const generateOrderPDF = (order: OrdenCompra) => {
         { content: order.moneda || 'CLP', styles: { halign: 'center' } }
       ],
       [
+        { content: 'Cuenta Presupuesto:', styles: { fontStyle: 'bold' } },
+        { content: budgetSummary, colSpan: 3 }
+      ],
+      [
         { content: 'Requisición:', styles: { fontStyle: 'bold' } },
         { content: order.solicitudId || 'N/A' },
         { content: 'Impuesto:', styles: { fontStyle: 'bold' } },
-        { content: [
-            { content: 'IVA', styles: { cellWidth: 15 } },
-            { content: '19%', styles: { halign: 'center' } }
-          ] }
+        { content: 'IVA 19%', styles: { halign: 'center' } }
       ],
       [
         { content: 'Observaciones:', styles: { fontStyle: 'bold' } },
-        { content: order.observaciones || 'N/A', colSpan: 3 }
+        { content: order.poDescription || order.observaciones || 'N/A', colSpan: 3 }
       ]
     ],
     theme: 'grid',
@@ -160,7 +164,7 @@ export const generateOrderPDF = (order: OrdenCompra) => {
   currentY += 2;
   autoTable(doc, {
     startY: currentY,
-    body: [[{ content: order.formaPago || 'N/A', styles: { minHeight: 10, fontSize: 8 } }]],
+    body: [[{ content: order.formaPago || 'N/A', styles: { fontSize: 8 } }]],
     theme: 'grid',
     styles: { lineColor: [220, 220, 220] },
     margin: { left: 14, right: 14 }
@@ -169,12 +173,13 @@ export const generateOrderPDF = (order: OrdenCompra) => {
   currentY = (doc as any).lastAutoTable.finalY + 5;
 
   // --- TABLA DE ITEMS ---
-  const tableItems = order.items.map(item => {
+  const tableItems = items.map(item => {
     const total = item.montoNeto || (item.quantity * item.unitCost) || 0;
     return [
       item.codigoMaterial || order.solicitudId + '-1',
       item.quantity.toString(),
       item.name.toUpperCase(),
+      item.cuentaPresupuesto || 'N/A',
       'AFECTO',
       '',
       formatPDFCurrency(item.unitCost || 0),
@@ -188,6 +193,7 @@ export const generateOrderPDF = (order: OrdenCompra) => {
       { content: 'REF', styles: { halign: 'center' } },
       { content: 'Unidades', styles: { halign: 'center' } },
       { content: 'Descripción', styles: { halign: 'center' } },
+      { content: 'Cuenta Presupuesto', styles: { halign: 'center' } },
       { content: 'Tipo', styles: { halign: 'center' } },
       { content: 'Descuento', styles: { halign: 'center' } },
       { content: 'Precio Unitario', styles: { halign: 'center' } },
@@ -201,10 +207,11 @@ export const generateOrderPDF = (order: OrdenCompra) => {
     columnStyles: {
       0: { cellWidth: 35 },
       1: { cellWidth: 15, halign: 'center' },
-      3: { cellWidth: 15, halign: 'center' },
-      4: { cellWidth: 20 },
-      5: { cellWidth: 25, halign: 'right' },
-      6: { cellWidth: 25, halign: 'right', fillColor: [230, 230, 230], fontStyle: 'bold' }
+      3: { cellWidth: 35 },
+      4: { cellWidth: 15, halign: 'center' },
+      5: { cellWidth: 20 },
+      6: { cellWidth: 25, halign: 'right' },
+      7: { cellWidth: 25, halign: 'right', fillColor: [230, 230, 230], fontStyle: 'bold' }
     },
     margin: { left: 14, right: 14 }
   });

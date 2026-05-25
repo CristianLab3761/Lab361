@@ -11,7 +11,7 @@ import { Package, Layers, FolderTree, Search, LayoutGrid } from 'lucide-react';
 export default function AdminCatalogPage() {
   const params = useParams();
   const catalog = params.catalog as string;
-  const { proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, materiales } = useAppContext();
+  const { proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, materiales, familias } = useAppContext();
 
   // Mapping configurations
   const renderCatalog = () => {
