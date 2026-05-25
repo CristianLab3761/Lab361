@@ -1,29 +1,35 @@
-import { createClient } from '@supabase/supabase-js';
+import postgres from 'postgres';
 import dotenv from 'dotenv';
-import path from 'path';
+dotenv.config();
 
-// Load .env
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+const sql = postgres(process.env.DATABASE_URL || '');
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+async function main() {
+  try {
+    console.log('Querying table names...');
+    const tables = await sql`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public'
+    `;
+    console.log('Tables found:', tables.map(t => t.table_name));
 
-async function inspectTables() {
-  console.log('--- Inspecting CentrosDeNegocios ---');
-  const { data: bn, error: bnError } = await supabase.from('CentrosDeNegocios').select('*');
-  if (bnError) console.error('BN Error:', bnError);
-  else console.log('BN Data:', JSON.stringify(bn, null, 2));
-
-  console.log('\n--- Inspecting centrosCostos ---');
-  const { data: cc, error: ccError } = await supabase.from('centrosCostos').select('*').limit(5);
-  if (ccError) console.error('CC (centrosCostos) Error:', ccError);
-  else console.log('CC (centrosCostos) Data Sample:', JSON.stringify(cc, null, 2));
-
-  console.log('\n--- Inspecting CentrosDeCostos ---');
-  const { data: cc2, error: cc2Error } = await supabase.from('CentrosDeCostos').select('*').limit(5);
-  if (cc2Error) console.error('CC (CentrosDeCostos) Error:', cc2Error);
-  else console.log('CC (CentrosDeCostos) Data Sample:', JSON.stringify(cc2, null, 2));
+    for (const tableName of ['RequisicionesV05', 'RequisicionesV04']) {
+      console.log(`\nInspecting columns for table: ${tableName}`);
+      const columns = await sql`
+        SELECT column_name, data_type 
+        FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = ${tableName}
+      `;
+      columns.forEach(c => {
+        console.log(` - ${c.column_name}: ${c.data_type}`);
+      });
+    }
+  } catch (error) {
+    console.error('Error connecting to DB:', error);
+  } finally {
+    await sql.end();
+  }
 }
 
-inspectTables();
+main();

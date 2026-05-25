@@ -8,12 +8,12 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 async function probeColumn(colName: string) {
   const payload: any = {
-    'N° Requisición': 'PROBE-COL',
+    'REQUISICIÓN': 'PROBE-COL-V4',
     'Solicitante': 'Probe'
   };
   payload[colName] = '2026-05-25';
 
-  const { error } = await supabase.from('RequisicionesV05').insert([payload]);
+  const { error } = await supabase.from('RequisicionesV04').insert([payload]);
   
   if (error) {
     if (error.message.includes('does not exist')) {
@@ -23,8 +23,7 @@ async function probeColumn(colName: string) {
     }
   } else {
     console.log(`Column [${colName}] -> EXISTS (Success)`);
-    // Cleanup if it somehow succeeded
-    await supabase.from('RequisicionesV05').delete().eq('N° Requisición', 'PROBE-COL');
+    await supabase.from('RequisicionesV04').delete().eq('REQUISICIÓN', 'PROBE-COL-V4');
   }
 }
 
@@ -36,7 +35,7 @@ async function main() {
     'fechaEntrega',
     'entrega',
     'fecha_entrega_estimada',
-    'non_existent_column_test'
+    'Fecha de entrega'
   ];
 
   for (const col of candidates) {

@@ -8,6 +8,7 @@ import { PlusCircle, X, Calculator, Download, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ItemAutocomplete } from '@/components/app/item-autocomplete';
 import { SupplierAutocomplete } from '@/components/app/supplier-autocomplete';
+import { BudgetAccountAutocomplete } from '@/components/app/budget-account-autocomplete';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +18,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -34,6 +34,7 @@ import {
 import { useAppContext } from '@/context/app-context';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format, addBusinessDays } from 'date-fns';
+import { isValidBudgetAccount, getBudgetAccountNames } from '@/lib/budget-account-utils';
 
 const itemSchema = z.object({
   name: z.string().min(1, 'El ítem es requerido'),
@@ -42,38 +43,61 @@ const itemSchema = z.object({
   estimatedCost: z.coerce.number().min(0.01, 'El costo debe ser positivo'),
   descripcion: z.string().optional(),
   cuentaPresupuesto: z.string().optional(),
+  cuentaPresupuestoValid: z.boolean().optional(),
 });
 
-const createFormSchema = (proveedores: any[]) => z.object({
-  id: z.string().optional(),
-  fecha: z.string().optional(),
-  hora: z.string().optional(),
-  solicitanteName: z.string().optional(),
-  cargo: z.string().min(1, 'El cargo es requerido'),
-  department: z.string().optional(), 
-  proveedor: z.string()
-    .min(1, 'El proveedor es requerido')
-    .refine((val) => {
-      return proveedores.some(p => (p["RAZON SOCIAL"] || p.razonSocial || p.name) === val);
-    }, { message: 'Debe seleccionar un proveedor de la lista' }),
-  autorizadoPor: z.string().optional(),
-  fechaEntrega: z.string().optional(),
-  status: z.string().optional(),
-  fechaEstatus: z.string().optional(),
-  refOC: z.string().optional(),
-  items: z.array(itemSchema).min(1, 'Debe agregar al menos un ítem'),
-  comments: z.string().optional(),
-  isAfectoIVA: z.boolean().default(true),
-  moneda: z.enum(['CLP', 'USD', 'UF']).default('CLP'),
-});
+const createFormSchema = (proveedores: any[], cuentas: any[]) => {
+  const validBudgetAccounts = getBudgetAccountNames(cuentas);
+
+  return z.object({
+    id: z.string().optional(),
+    fecha: z.string().optional(),
+    hora: z.string().optional(),
+    solicitanteName: z.string().optional(),
+    cargo: z.string().min(1, 'El cargo es requerido'),
+    department: z.string().optional(),
+    proveedor: z.string()
+      .min(1, 'El proveedor es requerido')
+      .refine((val) => {
+        return proveedores.some((p) => (p['RAZON SOCIAL'] || p.razonSocial || p.name) === val);
+      }, { message: 'Debe seleccionar un proveedor de la lista' }),
+    autorizadoPor: z.string().optional(),
+    fechaEntrega: z.string().optional(),
+    status: z.string().optional(),
+    fechaEstatus: z.string().optional(),
+    refOC: z.string().optional(),
+    items: z.array(itemSchema)
+      .min(1, 'Debe agregar al menos un ítem')
+      .superRefine((items, ctx) => {
+        items.forEach((item, index) => {
+          if (!item.cuentaPresupuesto) {
+            return;
+          }
+
+          if (!isValidBudgetAccount(item.cuentaPresupuesto, validBudgetAccounts)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: [index, 'cuentaPresupuesto'],
+              message: 'La cuenta debe pertenecer al listado de cuentas presupuestarias',
+            });
+          }
+        });
+      }),
+    comments: z.string().optional(),
+    isAfectoIVA: z.boolean().default(true),
+    moneda: z.enum(['CLP', 'USD', 'UF']).default('CLP'),
+  });
+};
 
 type NewRequestFormValues = z.infer<ReturnType<typeof createFormSchema>>;
 export function NewRequestDialog() {
   const [open, setOpen] = useState(false);
+  // Track per-item validity of cuentaPresupuesto (true = valid or empty, false = invalid)
+  const [cuentaValidity, setCuentaValidity] = useState<Record<number, boolean>>({});
   const { addSolicitud, currentUser, proveedores, materiales, solicitudes, dbRequisicionesV04, presupuestos: centrosCostos, cuentas } = useAppContext();
   const { toast } = useToast();
 
-  const formSchema = createFormSchema(proveedores).extend({
+  const formSchema = createFormSchema(proveedores, cuentas).extend({
     centroCostos: z.string().min(1, 'El centro de costos es requerido'),
   });
 
@@ -93,7 +117,7 @@ export function NewRequestDialog() {
       status: 'vigente',
       fechaEstatus: format(new Date(), 'yyyy-MM-dd'),
       refOC: '',
-      items: [{ name: '', codigoMaterial: '', quantity: 1, estimatedCost: 0, cuentaPresupuesto: '' }],
+      items: [{ name: '', codigoMaterial: '', quantity: 1, estimatedCost: 0, cuentaPresupuesto: '', cuentaPresupuestoValid: true }],
       comments: '',
       isAfectoIVA: true,
       moneda: 'CLP',
@@ -200,6 +224,16 @@ export function NewRequestDialog() {
   }, [watchedItems, materiales, form]);
 
   const onSubmit = (data: any) => {
+    const invalidCuenta = data.items.some((_: any, idx: number) => cuentaValidity[idx] === false);
+    if (invalidCuenta) {
+      toast({
+        title: 'Cuenta Presupuesto inválida',
+        description: 'Uno o más ítems tienen una cuenta presupuesto que no pertenece al listado. Seleccione una opción válida.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const totalEstimatedCost = data.items.reduce(
       (acc: number, item: any) => acc + item.quantity * item.estimatedCost,
       0
@@ -219,6 +253,7 @@ export function NewRequestDialog() {
       totalEstimatedCost,
     } as any);
     form.reset();
+    setCuentaValidity({});
     setOpen(false);
   };
 
@@ -507,32 +542,29 @@ export function NewRequestDialog() {
                     </div>
 
                     <div className="md:col-span-4 space-y-1">
-                      <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Cuenta Presupuesto</Label>
-                      <Select 
-                        onValueChange={(val) => form.setValue(`items.${index}.cuentaPresupuesto`, val)} 
-                        value={form.watch(`items.${index}.cuentaPresupuesto`)}
-                      >
-                        <SelectTrigger className="h-7 text-[10px] rounded-sm border-slate-200">
-                          <SelectValue placeholder="Seleccionar cuenta..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(() => {
-                            const seen = new Set();
-                            return cuentas
-                              .filter(c => {
-                                const name = (c as any)["Cuentas Presupuesto"] || (c as any).name;
-                                if (!name || seen.has(name)) return false;
-                                seen.add(name);
-                                return true;
-                              })
-                              .map((c: any, idx: number) => (
-                                <SelectItem key={`${c.id || idx}`} value={(c as any)["Cuentas Presupuesto"] || (c as any).name} className="text-xs">
-                                  {(c as any)["Cuentas Presupuesto"] || (c as any).name}
-                                </SelectItem>
-                              ));
-                          })()}
-                        </SelectContent>
-                      </Select>
+                      <Label className={cn(
+                        "text-[9px] uppercase font-bold tracking-tight",
+                        cuentaValidity[index] === false ? "text-red-500" : "text-slate-400"
+                      )}>
+                        Cuenta Presupuesto
+                        {cuentaValidity[index] === false && (
+                          <span className="ml-1 font-normal normal-case">(debe ser del listado)</span>
+                        )}
+                      </Label>
+                      <BudgetAccountAutocomplete
+                        value={form.watch(`items.${index}.cuentaPresupuesto`) || ''}
+                        cuentas={cuentas}
+                        placeholder="Buscar cuenta..."
+                        hasError={cuentaValidity[index] === false}
+                        onChange={(val, isValid) => {
+                          form.setValue(`items.${index}.cuentaPresupuesto`, val);
+                          // Only mark invalid if something is typed but doesn't match
+                          setCuentaValidity(prev => ({
+                            ...prev,
+                            [index]: val === '' ? true : isValid,
+                          }));
+                        }}
+                      />
                     </div>
 
                   </div>
@@ -542,7 +574,7 @@ export function NewRequestDialog() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => append({ name: '', codigoMaterial: '', quantity: 1, estimatedCost: 0, cuentaPresupuesto: '' })}
+                onClick={() => append({ name: '', codigoMaterial: '', quantity: 1, estimatedCost: 0, cuentaPresupuesto: '', cuentaPresupuestoValid: true })}
                 className="w-full border-dashed h-8 text-[10px] mt-2 uppercase font-bold text-slate-400 hover:text-slate-600"
               >
                 <PlusCircle className="mr-2 h-3.5 w-3.5" />
