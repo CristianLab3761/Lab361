@@ -373,7 +373,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         precio_unitario: item.estimatedCost || 0,
         monto_neto: neto,
         monto_total_iva: isAfecto ? Math.round(neto * 1.19) : neto,
-        fecha_entrega: newSolicitudData.fechaEntrega || ''
+        fecha_entrega: newSolicitudData.fechaEntrega || '',
+        cuentaPresupuesto: item.cuentaPresupuesto || '',
+        cuenta_presupuesto: item.cuentaPresupuesto || ''
       };
     });
 
