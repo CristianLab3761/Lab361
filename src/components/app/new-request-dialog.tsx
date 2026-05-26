@@ -94,9 +94,10 @@ interface NewRequestDialogProps {
   solicitudToEdit?: any;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }
 
-export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpenChange }: NewRequestDialogProps = {}) {
+export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpenChange, hideTrigger }: NewRequestDialogProps = {}) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = (val: boolean) => {
@@ -153,19 +154,28 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
 
       const ceco = solicitudToEdit.centroCostos || solicitudToEdit["Centro de Costos"] || '';
 
-      form.reset({
-        id: solicitudToEdit.id || '',
-        fecha: fecha,
-        hora: hora,
-        solicitanteName: solicitudToEdit.solicitanteName || '',
-        cargo: solicitudToEdit.cargo || solicitudToEdit["Cargo"] || '',
-        department: solicitudToEdit.department || solicitudToEdit["Cargo"] || '', // Handle fallback
-        centroCostos: ceco,
-        proveedor: solicitudToEdit.proveedor || '',
-        autorizadoPor: solicitudToEdit["Autorizado por"] || '',
-        fechaEntrega: solicitudToEdit.fechaEntrega || '',
-        status: solicitudToEdit.status || 'vigente',
-        fechaEstatus: solicitudToEdit["Fecha Estatus"] || format(new Date(), 'yyyy-MM-dd'),
+        const safeDate = (dateStr: any) => {
+          if (!dateStr) return '';
+          try {
+            const d = new Date(dateStr);
+            if (!isNaN(d.getTime())) return format(d, 'yyyy-MM-dd');
+          } catch(e) {}
+          return typeof dateStr === 'string' ? dateStr.substring(0, 10) : '';
+        };
+
+        form.reset({
+          id: solicitudToEdit.id || '',
+          fecha: fecha,
+          hora: hora,
+          solicitanteName: solicitudToEdit.solicitanteName || '',
+          cargo: solicitudToEdit.cargo || solicitudToEdit["Cargo"] || '',
+          department: solicitudToEdit.department || solicitudToEdit["Cargo"] || '', // Handle fallback
+          centroCostos: ceco,
+          proveedor: solicitudToEdit.proveedor || '',
+          autorizadoPor: solicitudToEdit["Autorizado por"] || '',
+          fechaEntrega: safeDate(solicitudToEdit.fechaEntrega),
+          status: solicitudToEdit.status || 'vigente',
+          fechaEstatus: safeDate(solicitudToEdit["Fecha Estatus"]) || format(new Date(), 'yyyy-MM-dd'),
         refOC: solicitudToEdit["Ref OC"] || '',
         items: (solicitudToEdit.items || []).map((item: any) => ({
           name: item.name || '',
@@ -219,6 +229,16 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
       form.setValue('id', formattedId);
     }
   }, [open, solicitudToEdit, currentUser, form, solicitudes, dbRequisicionesV04]);
+
+  // Fallback to forcefully remove pointer-events lock from Radix UI when dialog closes
+  useEffect(() => {
+    if (!open) {
+      const timer = setTimeout(() => {
+        document.body.style.pointerEvents = '';
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   const watchedProveedor = form.watch('proveedor');
 
@@ -392,7 +412,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {!solicitudToEdit && (
+      {!solicitudToEdit && !hideTrigger && (
         <DialogTrigger asChild>
           <Button>
             <PlusCircle className="mr-2 h-4 w-4" />

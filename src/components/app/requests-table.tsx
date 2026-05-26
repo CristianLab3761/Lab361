@@ -95,7 +95,15 @@ function formatCurrency(value: number, currency: string = 'CLP') {
 
 
 
-function RequestRow({ solicitud }: { solicitud: Solicitud }) {
+function RequestRow({ 
+  solicitud, 
+  onEdit, 
+  onGenerateOC 
+}: { 
+  solicitud: Solicitud;
+  onEdit: (s: Solicitud) => void;
+  onGenerateOC: (s: Solicitud) => void;
+}) {
   const { currentUser, toggleFavorite, addSolicitud, proveedores, ordenesCompra } = useAppContext();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const router = useRouter();
@@ -107,9 +115,6 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
       item && item.name && String(item.name).trim() !== '' && String(item.name).toLowerCase() !== 'null'
     );
   }, [solicitud.items]);
-
-  const [showGenerateOC, setShowGenerateOC] = React.useState(false);
-  const [showEditDialog, setShowEditDialog] = React.useState(false);
 
   // Check if this solicitud has an OC linked
   const hasOC = !!(solicitud["Ref OC"] || solicitud.status?.toLowerCase() === 'oc creada');
@@ -223,7 +228,7 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
                 {/* Editar — solo Solicitante y si NO tiene OC */}
                 {((currentUser?.role?.toLowerCase() || '') === 'solicitante') && !hasOC && (
                   <DropdownMenuItem 
-                    onSelect={(e) => { e.preventDefault(); setTimeout(() => setShowEditDialog(true), 0); }} 
+                    onSelect={(e) => { e.preventDefault(); setTimeout(() => onEdit(solicitud), 0); }} 
                     className="cursor-pointer rounded-xl font-black py-3 text-[10px] uppercase tracking-widest hover:bg-amber-50 hover:text-amber-700 transition-colors"
                   >
                     <Pencil className="mr-3 h-4 w-4" /> Editar
@@ -232,7 +237,7 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
 
                 {/* Generar OC */}
                 <DropdownMenuItem 
-                  onSelect={(e) => { e.preventDefault(); setTimeout(() => setShowGenerateOC(true), 0); }} 
+                  onSelect={(e) => { e.preventDefault(); setTimeout(() => onGenerateOC(solicitud), 0); }} 
                   className="cursor-pointer rounded-xl font-black py-3 text-[10px] uppercase tracking-widest hover:bg-primary/5 hover:text-primary transition-colors"
                 >
                   <FileText className="mr-3 h-4 w-4" /> Generar OC
@@ -351,17 +356,6 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
           </TableCell>
         </TableRow>
       )}
-      <GenerateOCDialog 
-        solicitud={solicitud}
-        open={showGenerateOC}
-        onOpenChange={setShowGenerateOC}
-      />
-
-      <NewRequestDialog 
-        solicitudToEdit={solicitud}
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-      />
     </>
   );
 }
@@ -373,6 +367,9 @@ export function RequestsTable({ filterStatus: propStatus, solicitanteId }: { fil
   const [localFilterStatus, setLocalFilterStatus] = React.useState<string>(propStatus || 'all');
   const [currentPage, setCurrentPage] = React.useState(1);
   const pageSize = 10;
+
+  const [editingSolicitud, setEditingSolicitud] = React.useState<Solicitud | null>(null);
+  const [generatingOCFor, setGeneratingOCFor] = React.useState<Solicitud | null>(null);
 
   const filteredSolicitudes = React.useMemo(() => {
     let items = [...solicitudes];
@@ -487,7 +484,12 @@ export function RequestsTable({ filterStatus: propStatus, solicitanteId }: { fil
           <TableBody>
             {paginatedSolicitudes.length > 0 ? (
               paginatedSolicitudes.map(solicitud => (
-                <RequestRow key={solicitud.id} solicitud={solicitud} />
+                <RequestRow 
+                  key={solicitud.id} 
+                  solicitud={solicitud} 
+                  onEdit={setEditingSolicitud}
+                  onGenerateOC={setGeneratingOCFor}
+                />
               ))
             ) : (
               <TableRow>
@@ -535,6 +537,22 @@ export function RequestsTable({ filterStatus: propStatus, solicitanteId }: { fil
             </Button>
           </div>
         </div>
+      )}
+
+      {/* Modals placed outside of rows to prevent unmount issues */}
+      <NewRequestDialog 
+        solicitudToEdit={editingSolicitud}
+        open={!!editingSolicitud}
+        onOpenChange={(open) => { if (!open) setEditingSolicitud(null); }}
+        hideTrigger={true}
+      />
+      
+      {generatingOCFor && (
+        <GenerateOCDialog 
+          solicitud={generatingOCFor}
+          open={!!generatingOCFor}
+          onOpenChange={(open) => { if (!open) setGeneratingOCFor(null); }}
+        />
       )}
     </div>
   );
