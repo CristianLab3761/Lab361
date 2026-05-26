@@ -158,6 +158,12 @@ export default function SolicitudDetailPage() {
                           <span className="font-medium">{item.quantity} unidades</span>
                           <span className="text-slate-300">|</span>
                           <span className="font-medium">Unit: {currencyFormatter.format(item.estimatedCost)}</span>
+                          {item.cuentaPresupuesto && (
+                            <>
+                              <span className="text-slate-300">|</span>
+                              <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[9px] font-bold border border-indigo-200">PPTO: {item.cuentaPresupuesto}</span>
+                            </>
+                          )}
                         </div>
                       </div>
                       <div className="text-right shrink-0">

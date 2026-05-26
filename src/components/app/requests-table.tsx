@@ -18,16 +18,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+
 import {
   Dialog,
   DialogContent,
@@ -41,8 +32,6 @@ import {
   ChevronLeft, 
   ChevronRight, 
   MoreHorizontal, 
-  CheckCircle, 
-  XCircle, 
   FileCog, 
   FileText,
   Bot, 
@@ -56,10 +45,12 @@ import {
   Copy,
   Printer,
   AlertCircle,
-  Truck
+  Truck,
+  Pencil
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { GenerateOCDialog } from '@/components/app/generate-oc-dialog';
+import { NewRequestDialog } from '@/components/app/new-request-dialog';
 import { 
   Select, 
   SelectContent, 
@@ -105,7 +96,7 @@ function formatCurrency(value: number, currency: string = 'CLP') {
 
 
 function RequestRow({ solicitud }: { solicitud: Solicitud }) {
-  const { currentUser, updateSolicitud, toggleFavorite, addSolicitud, proveedores, ordenesCompra } = useAppContext();
+  const { currentUser, toggleFavorite, addSolicitud, proveedores, ordenesCompra } = useAppContext();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const router = useRouter();
   
@@ -117,19 +108,17 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
     );
   }, [solicitud.items]);
 
-  const [showConfirm, setShowConfirm] = React.useState<'aprobada' | 'rechazada' | null>(null);
   const [showGenerateOC, setShowGenerateOC] = React.useState(false);
+  const [showEditDialog, setShowEditDialog] = React.useState(false);
+
+  // Check if this solicitud has an OC linked
+  const hasOC = !!(solicitud["Ref OC"] || solicitud.status?.toLowerCase() === 'oc creada');
 
   const handleToggleExpand = () => {
     setIsExpanded(!isExpanded);
   };
 
-  const handleStatusChange = (status: 'aprobada' | 'rechazada') => {
-    if (solicitud.id) {
-      updateSolicitud(solicitud.id, { status });
-    }
-    setShowConfirm(null);
-  };
+
   
   const handleDuplicate = () => {
     // Duplicate items without their historical IDs
@@ -195,30 +184,18 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
             </Button>
             
             {((currentUser?.role?.toLowerCase() || '') === 'solicitante') && (
-              <>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className={cn(
-                    "h-10 w-10 p-0 rounded-xl border-slate-200 shadow-sm transition-all duration-300",
-                    solicitud.isFavorite ? "text-red-500 bg-red-50 border-red-200 hover:bg-red-100" : "text-slate-400 hover:text-red-500 hover:bg-red-50"
-                  )}
-                  title={solicitud.isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
-                  onClick={handleToggleFavorite}
-                >
-                  <Heart className={cn("h-4 w-4", solicitud.isFavorite && "fill-current")} />
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="h-10 w-10 p-0 rounded-xl border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-primary shadow-sm transition-all duration-300"
-                  title="Duplicar requisición"
-                  onClick={handleDuplicate}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className={cn(
+                  "h-10 w-10 p-0 rounded-xl border-slate-200 shadow-sm transition-all duration-300",
+                  solicitud.isFavorite ? "text-red-500 bg-red-50 border-red-200 hover:bg-red-100" : "text-slate-400 hover:text-red-500 hover:bg-red-50"
+                )}
+                title={solicitud.isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
+                onClick={handleToggleFavorite}
+              >
+                <Heart className={cn("h-4 w-4", solicitud.isFavorite && "fill-current")} />
+              </Button>
             )}
  
             <Button 
@@ -226,11 +203,6 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
               size="sm" 
               className="h-10 rounded-xl border-slate-200 text-slate-500 hover:bg-slate-50 font-black text-[10px] px-4 shadow-sm transition-all tracking-widest uppercase"
               onClick={() => {
-                const proveedorObj = proveedores.find(p => 
-                  (p.name && p.name === solicitud.proveedor) || 
-                  (p["Nombre de Fantasia"] && p["Nombre de Fantasia"] === solicitud.proveedor) ||
-                  (p["RAZON SOCIAL"] && p["RAZON SOCIAL"] === solicitud.proveedor)
-                );
                 import('@/lib/pdf-generator').then(({ generateRequisitionPDF }) => {
                   const doc = generateRequisitionPDF(solicitud as any);
                   doc.save(`Requisicion_${solicitud.solicitudId || solicitud.id || 'NUEVA'}.pdf`);
@@ -241,47 +213,40 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
               PDF
             </Button>
  
-            {((currentUser?.role?.toLowerCase() || '') === 'compras' || (currentUser?.role?.toLowerCase() || '') === 'comprador' || (currentUser?.role?.toLowerCase() || '') === 'admin') && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-slate-100 transition-all">
-                    <MoreHorizontal className="h-4 w-4 text-slate-400" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 border-slate-200 bg-white text-slate-900 shadow-premium p-2 rounded-2xl">
-                  {solicitud.status === 'vigente' && (
-                    <>
-                      <DropdownMenuItem onSelect={() => setShowConfirm('aprobada')} className="cursor-pointer rounded-xl font-black py-3 text-[10px] uppercase tracking-widest hover:bg-slate-50 hover:text-primary transition-colors">
-                        <CheckCircle className="mr-3 h-4 w-4 text-accent" /> Aprobar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => setShowConfirm('rechazada')} className="cursor-pointer text-red-600 focus:text-red-600 rounded-xl font-black py-3 text-[10px] uppercase tracking-widest hover:bg-red-50 transition-colors">
-                        <XCircle className="mr-3 h-4 w-4" /> Rechazar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => setShowGenerateOC(true)} className="cursor-pointer rounded-xl font-black py-3 text-[10px] uppercase tracking-widest hover:bg-primary/5 hover:text-primary transition-colors">
-                        <FileText className="mr-3 h-4 w-4" /> Generar OC
-                      </DropdownMenuItem>
-                    </>
-                  )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-slate-100 transition-all">
+                  <MoreHorizontal className="h-4 w-4 text-slate-400" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 border-slate-200 bg-white text-slate-900 shadow-premium p-2 rounded-2xl">
+                {/* Editar — solo Solicitante y si NO tiene OC */}
+                {((currentUser?.role?.toLowerCase() || '') === 'solicitante') && !hasOC && (
                   <DropdownMenuItem 
-                    onSelect={() => {
-                      const duplicatedData = {
-                        proveedor: solicitud.proveedor,
-                        centroCostos: solicitud.centroCostos,
-                        centroNegocios: solicitud.centroNegocios,
-                        moneda: solicitud.moneda,
-                        items: solicitud.items,
-                        isAfectoIVA: solicitud.isAfectoIVA,
-                        totalEstimatedCost: solicitud.totalEstimatedCost
-                      };
-                      addSolicitud(duplicatedData);
-                    }} 
-                    className="cursor-pointer rounded-xl font-black py-3 text-[10px] uppercase tracking-widest hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                    onSelect={() => setShowEditDialog(true)} 
+                    className="cursor-pointer rounded-xl font-black py-3 text-[10px] uppercase tracking-widest hover:bg-amber-50 hover:text-amber-700 transition-colors"
                   >
-                    <Copy className="mr-3 h-4 w-4" /> Duplicar Solicitud
+                    <Pencil className="mr-3 h-4 w-4" /> Editar
                   </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+                )}
+
+                {/* Generar OC */}
+                <DropdownMenuItem 
+                  onSelect={() => setShowGenerateOC(true)} 
+                  className="cursor-pointer rounded-xl font-black py-3 text-[10px] uppercase tracking-widest hover:bg-primary/5 hover:text-primary transition-colors"
+                >
+                  <FileText className="mr-3 h-4 w-4" /> Generar OC
+                </DropdownMenuItem>
+
+                {/* Duplicar Solicitud */}
+                <DropdownMenuItem 
+                  onSelect={handleDuplicate} 
+                  className="cursor-pointer rounded-xl font-black py-3 text-[10px] uppercase tracking-widest hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                >
+                  <Copy className="mr-3 h-4 w-4" /> Duplicar Solicitud
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </TableCell>
       </TableRow>
@@ -325,7 +290,15 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
                         <li key={item.id} className="flex justify-between items-center py-1">
                           <div className="flex flex-col">
                             <span>{safeQty} x {safeName}</span>
-                            {item.codigoMaterial && <span className="text-[10px] opacity-70">Código: {item.codigoMaterial}</span>}
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                              {item.codigoMaterial && <span className="text-[10px] opacity-70">Código: {item.codigoMaterial}</span>}
+                              {item.cuentaPresupuesto && (
+                                <>
+                                  {item.codigoMaterial && <span className="text-[10px] text-slate-300">|</span>}
+                                  <span className="bg-indigo-50 text-indigo-700 px-1.5 py-0.2 rounded text-[8px] font-bold border border-indigo-100">PPTO: {item.cuentaPresupuesto}</span>
+                                </>
+                              )}
+                            </div>
                           </div>
                           <div className="text-right">
                             <span className="block font-medium">{formatCurrency(item.montoTotalIva || (safeCost * safeQty * 1.19), reqCurrency)} <span className="text-[10px] text-slate-400">(IVA inc.)</span></span>
@@ -378,27 +351,16 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
           </TableCell>
         </TableRow>
       )}
-      <AlertDialog open={!!showConfirm} onOpenChange={() => setShowConfirm(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción cambiará el estado de la requisición a '{showConfirm}'. No se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleStatusChange(showConfirm!)}>
-              Confirmar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <GenerateOCDialog 
         solicitud={solicitud}
         open={showGenerateOC}
         onOpenChange={setShowGenerateOC}
+      />
+
+      <NewRequestDialog 
+        solicitudToEdit={solicitud}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
       />
     </>
   );

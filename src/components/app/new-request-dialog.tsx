@@ -90,11 +90,23 @@ const createFormSchema = (proveedores: any[], cuentas: any[]) => {
 };
 
 type NewRequestFormValues = z.infer<ReturnType<typeof createFormSchema>>;
-export function NewRequestDialog() {
-  const [open, setOpen] = useState(false);
+interface NewRequestDialogProps {
+  solicitudToEdit?: any;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpenChange }: NewRequestDialogProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = (val: boolean) => {
+    if (onOpenChange) onOpenChange(val);
+    setInternalOpen(val);
+  };
+
   // Track per-item validity of cuentaPresupuesto (true = valid or empty, false = invalid)
   const [cuentaValidity, setCuentaValidity] = useState<Record<number, boolean>>({});
-  const { addSolicitud, currentUser, proveedores, materiales, solicitudes, dbRequisicionesV04, presupuestos: centrosCostos, cuentas } = useAppContext();
+  const { addSolicitud, updateSolicitud, currentUser, proveedores, materiales, solicitudes, dbRequisicionesV04, presupuestos: centrosCostos, cuentas } = useAppContext();
   const { toast } = useToast();
 
   const formSchema = createFormSchema(proveedores, cuentas).extend({
@@ -125,19 +137,76 @@ export function NewRequestDialog() {
   });
 
   useEffect(() => {
-    if (open && currentUser) {
-      form.setValue('solicitanteName', currentUser.name);
-      if (currentUser.cargo) form.setValue('cargo', currentUser.cargo);
-      if (currentUser.department) form.setValue('department', currentUser.department);
+    if (open && solicitudToEdit) {
+      // Edit mode: populate with solicitudToEdit data
+      let fecha = format(new Date(), 'yyyy-MM-dd');
+      let hora = format(new Date(), 'HH:mm');
+      if (solicitudToEdit.createdAt) {
+        try {
+          const d = new Date(solicitudToEdit.createdAt);
+          if (!isNaN(d.getTime())) {
+            fecha = format(d, 'yyyy-MM-dd');
+            hora = format(d, 'HH:mm');
+          }
+        } catch (e) {}
+      }
+
+      const ceco = solicitudToEdit.centroCostos || solicitudToEdit["Centro de Costos"] || '';
+
+      form.reset({
+        id: solicitudToEdit.id || '',
+        fecha: fecha,
+        hora: hora,
+        solicitanteName: solicitudToEdit.solicitanteName || '',
+        cargo: solicitudToEdit.cargo || solicitudToEdit["Cargo"] || '',
+        department: solicitudToEdit.department || solicitudToEdit["Cargo"] || '', // Handle fallback
+        centroCostos: ceco,
+        proveedor: solicitudToEdit.proveedor || '',
+        autorizadoPor: solicitudToEdit["Autorizado por"] || '',
+        fechaEntrega: solicitudToEdit.fechaEntrega || '',
+        status: solicitudToEdit.status || 'vigente',
+        fechaEstatus: solicitudToEdit["Fecha Estatus"] || format(new Date(), 'yyyy-MM-dd'),
+        refOC: solicitudToEdit["Ref OC"] || '',
+        items: (solicitudToEdit.items || []).map((item: any) => ({
+          name: item.name || '',
+          codigoMaterial: item.codigoMaterial || '',
+          quantity: item.quantity || 1,
+          estimatedCost: item.estimatedCost || 0,
+          cuentaPresupuesto: item.cuentaPresupuesto || '',
+          cuentaPresupuestoValid: true,
+        })),
+        comments: solicitudToEdit.comments || '',
+        isAfectoIVA: solicitudToEdit.isAfectoIVA !== false,
+        moneda: solicitudToEdit.moneda || 'CLP',
+      });
+    } else if (open && !solicitudToEdit && currentUser) {
+      // Create mode
+      form.reset({
+        id: '',
+        fecha: format(new Date(), 'yyyy-MM-dd'),
+        hora: format(new Date(), 'HH:mm'),
+        solicitanteName: currentUser.name,
+        cargo: currentUser.cargo || '',
+        department: currentUser.department || '',
+        centroCostos: '',
+        proveedor: '',
+        autorizadoPor: '',
+        fechaEntrega: '',
+        status: 'vigente',
+        fechaEstatus: format(new Date(), 'yyyy-MM-dd'),
+        refOC: '',
+        items: [{ name: '', codigoMaterial: '', quantity: 1, estimatedCost: 0, cuentaPresupuesto: '', cuentaPresupuestoValid: true }],
+        comments: '',
+        isAfectoIVA: true,
+        moneda: 'CLP',
+      });
       
       // Auto-generate next ID considering V04 and V05 with dot cleaning
       const allReqs = [...(dbRequisicionesV04 || []), ...(solicitudes || [])];
       let maxNum = 100005344; // Baseline manual solicitado
       
       allReqs.forEach(r => {
-        // Intentar obtener el ID de varias columnas posibles
         const idStr = String(r["N° Requisición"] || r["REQUISICIÓN"] || r.id || "");
-        // Limpiar todo lo que no sea número (puntos, guiones, letras)
         const numericPart = idStr.replace(/\D/g, "");
         if (numericPart) {
           const val = parseInt(numericPart);
@@ -146,11 +215,10 @@ export function NewRequestDialog() {
       });
 
       const nextNumeric = maxNum + 1;
-      // Formatear con puntos (ej: 100.005.345)
       const formattedId = nextNumeric.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
       form.setValue('id', formattedId);
     }
-  }, [open, currentUser, form, solicitudes, dbRequisicionesV04]);
+  }, [open, solicitudToEdit, currentUser, form, solicitudes, dbRequisicionesV04]);
 
   const watchedProveedor = form.watch('proveedor');
 
@@ -246,12 +314,63 @@ export function NewRequestDialog() {
       } catch (e) {}
     }
 
-    addSolicitud({
-      ...data,
-      createdAt,
-      items: data.items.map((item: any, index: number) => ({ ...item, id: `new-item-${index}` })),
-      totalEstimatedCost,
-    } as any);
+    if (solicitudToEdit) {
+      // EDIT MODE
+      const isAfecto = data.isAfectoIVA !== false;
+      const jsonItems = data.items.map((item: any, idx: number) => {
+        const neto = (item.quantity || 0) * (item.estimatedCost || 0);
+        return {
+          nro_item: idx + 1,
+          codigo_material: item.codigoMaterial || '',
+          descripcion: item.name || '',
+          unidades: item.quantity || 0,
+          precio_unitario: item.estimatedCost || 0,
+          monto_neto: neto,
+          monto_total_iva: isAfecto ? Math.round(neto * 1.19) : neto,
+          fecha_entrega: data.fechaEntrega || '',
+          cuentaPresupuesto: item.cuentaPresupuesto || '',
+          cuenta_presupuesto: item.cuentaPresupuesto || ''
+        };
+      });
+
+      const totalNeto = jsonItems.reduce((acc: number, curr: any) => acc + curr.monto_neto, 0);
+      const totalGlobal = jsonItems.reduce((acc: number, curr: any) => acc + curr.monto_total_iva, 0);
+
+      const updates = {
+        "N° Requisición": data.id,
+        "Solicitante": data.solicitanteName,
+        "Cargo": data.cargo || '',
+        "Centro de Costos": data.centroCostos || '',
+        "Proveedor": data.proveedor || '',
+        "Estatus": data.status === 'pendiente' ? 'vigente' : (data.status || 'vigente'),
+        "Fecha Estatus": new Date().toISOString(),
+        "Total_Neto": totalNeto,
+        "Total_IVA": totalGlobal - totalNeto,
+        "Total_Global": totalGlobal,
+        "totalEstimatedCost": totalGlobal,
+        "Moneda": data.moneda || 'CLP',
+        "Items_JSON": jsonItems,
+        "comments": data.comments || '',
+        "Fecha Entrega": data.fechaEntrega || '',
+        "Ref OC": data.refOC || '',
+        "Autorizado por": data.autorizadoPor || '',
+      };
+
+      updateSolicitud(solicitudToEdit.id!, updates as any);
+      toast({
+        title: "Requisición Modificada",
+        description: `La requisición ${data.id} ha sido actualizada con éxito.`,
+      });
+    } else {
+      // CREATE MODE
+      addSolicitud({
+        ...data,
+        createdAt,
+        items: data.items.map((item: any, index: number) => ({ ...item, id: `new-item-${index}` })),
+        totalEstimatedCost,
+      } as any);
+    }
+
     form.reset();
     setCuentaValidity({});
     setOpen(false);
@@ -273,15 +392,19 @@ export function NewRequestDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Nueva Requisición
-        </Button>
-      </DialogTrigger>
+      {!solicitudToEdit && (
+        <DialogTrigger asChild>
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Nueva Requisición
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-7xl h-[94vh] w-[98vw] p-0 flex flex-col overflow-hidden">
         <DialogHeader className="px-6 pt-4 pb-2 shrink-0">
-          <DialogTitle className="text-xl font-bold tracking-tight">Crear Nueva Requisición de Compra</DialogTitle>
+          <DialogTitle className="text-xl font-bold tracking-tight">
+            {solicitudToEdit ? `Editar Requisición ${solicitudToEdit.id}` : 'Crear Nueva Requisición de Compra'}
+          </DialogTitle>
           <DialogDescription asChild>
             <div className="flex items-center justify-between mt-0.5">
               <span className="text-slate-500 text-[10px]">Complete los detalles. Todos los campos obligatorios marcados con *.</span>
@@ -466,13 +589,14 @@ export function NewRequestDialog() {
                         placeholder="Escriba descripción o código..."
                         disabled={!!form.watch(`items.${index}.codigoMaterial`) && !!form.watch(`items.${index}.name`)}
                         onChange={(name, material) => {
-                          form.setValue(`items.${index}.name`, name);
+                          form.setValue(`items.${index}.name`, name, { shouldValidate: true, shouldDirty: true });
                           if (material) {
                             const m = material as any;
-                            form.setValue(`items.${index}.codigoMaterial`, m.codigo_nuevo || m.codigo || m['Código'] || m.code || '');
+                            form.setValue(`items.${index}.codigoMaterial`, m.codigo_nuevo || m.codigo || m['Código'] || m.code || '', { shouldValidate: true, shouldDirty: true });
                           }
                         }}
                       />
+                      <input type="hidden" {...form.register(`items.${index}.name`)} />
                     </div>
                     
                     <div className="md:col-span-3 space-y-1">
@@ -518,7 +642,7 @@ export function NewRequestDialog() {
                             const m = material as any;
                             const desc = m.descripcion || m.Material || m['Descripcion del material'] || m.name || m.Name;
                             if (desc) {
-                              form.setValue(`items.${index}.name`, String(desc), { shouldValidate: true });
+                              form.setValue(`items.${index}.name`, String(desc), { shouldValidate: true, shouldDirty: true });
                               toast({
                                 title: "Material Encontrado",
                                 description: `Se ha cargado la descripción: ${desc}`,
@@ -557,7 +681,7 @@ export function NewRequestDialog() {
                         placeholder="Buscar cuenta..."
                         hasError={cuentaValidity[index] === false}
                         onChange={(val, isValid) => {
-                          form.setValue(`items.${index}.cuentaPresupuesto`, val);
+                          form.setValue(`items.${index}.cuentaPresupuesto`, val, { shouldValidate: true, shouldDirty: true });
                           // Only mark invalid if something is typed but doesn't match
                           setCuentaValidity(prev => ({
                             ...prev,
@@ -565,6 +689,7 @@ export function NewRequestDialog() {
                           }));
                         }}
                       />
+                      <input type="hidden" {...form.register(`items.${index}.cuentaPresupuesto`)} />
                     </div>
 
                   </div>
@@ -605,7 +730,7 @@ export function NewRequestDialog() {
                 type="submit"
                 className="bg-primary hover:bg-primary/90 text-white h-9 px-6 text-xs font-bold shadow-lg shadow-primary/20"
               >
-                Crear Requisición
+                {solicitudToEdit ? 'Guardar Cambios' : 'Crear Requisición'}
               </Button>
             </div>
           </div>
