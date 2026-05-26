@@ -219,7 +219,7 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden border-none shadow-2xl rounded-sm bg-white flex flex-col">
+      <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden border-none shadow-2xl rounded-sm bg-white flex flex-col" onCloseAutoFocus={(e) => e.preventDefault()}>
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
           <div className="bg-slate-50/50 p-6 border-b border-slate-100 relative shrink-0">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">

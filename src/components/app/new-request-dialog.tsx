@@ -400,7 +400,10 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-7xl h-[94vh] w-[98vw] p-0 flex flex-col overflow-hidden">
+      <DialogContent 
+        className="sm:max-w-7xl h-[94vh] w-[98vw] p-0 flex flex-col overflow-hidden"
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader className="px-6 pt-4 pb-2 shrink-0">
           <DialogTitle className="text-xl font-bold tracking-tight">
             {solicitudToEdit ? `Editar Requisición ${solicitudToEdit.id}` : 'Crear Nueva Requisición de Compra'}

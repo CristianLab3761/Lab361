@@ -98,6 +98,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setIsProfileLoading(false);
     }
 
+    // When supabaseUser changes (e.g. after login), reset loading to prevent
+    // the dashboard from redirecting to /login before the profile is fetched.
+    if (!authLoading && supabaseUser) {
+      setIsProfileLoading(true);
+    }
+
     fetchUserProfile();
   }, [supabaseUser, authLoading]);
 

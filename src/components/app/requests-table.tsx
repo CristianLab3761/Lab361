@@ -223,7 +223,7 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
                 {/* Editar — solo Solicitante y si NO tiene OC */}
                 {((currentUser?.role?.toLowerCase() || '') === 'solicitante') && !hasOC && (
                   <DropdownMenuItem 
-                    onSelect={() => setShowEditDialog(true)} 
+                    onSelect={(e) => { e.preventDefault(); setTimeout(() => setShowEditDialog(true), 0); }} 
                     className="cursor-pointer rounded-xl font-black py-3 text-[10px] uppercase tracking-widest hover:bg-amber-50 hover:text-amber-700 transition-colors"
                   >
                     <Pencil className="mr-3 h-4 w-4" /> Editar
@@ -232,7 +232,7 @@ function RequestRow({ solicitud }: { solicitud: Solicitud }) {
 
                 {/* Generar OC */}
                 <DropdownMenuItem 
-                  onSelect={() => setShowGenerateOC(true)} 
+                  onSelect={(e) => { e.preventDefault(); setTimeout(() => setShowGenerateOC(true), 0); }} 
                   className="cursor-pointer rounded-xl font-black py-3 text-[10px] uppercase tracking-widest hover:bg-primary/5 hover:text-primary transition-colors"
                 >
                   <FileText className="mr-3 h-4 w-4" /> Generar OC

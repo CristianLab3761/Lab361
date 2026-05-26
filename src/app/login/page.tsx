@@ -49,7 +49,8 @@ export default function LoginPage() {
         title: "Sesión iniciada",
         description: "Bienvenido de vuelta a Botanical.",
       });
-      router.push('/dashboard');
+      router.refresh();
+      router.replace('/dashboard');
     } catch (error: any) {
       toast({
         variant: "destructive",
