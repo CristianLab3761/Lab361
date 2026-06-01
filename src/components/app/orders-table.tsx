@@ -82,7 +82,7 @@ export function OrdersTable() {
                     variant="ghost" 
                     size="icon" 
                     className="h-8 w-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-sm"
-                    onClick={() => generateOrderPDF(order, proveedores)}
+                    onClick={() => { generateOrderPDF(order, proveedores); }}
                 >
                     <FileDown className="h-4 w-4" />
                 </Button>

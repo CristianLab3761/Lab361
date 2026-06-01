@@ -98,7 +98,7 @@ export function OCV05Table() {
       telefono: order["TELEFONO"] || ''
     };
 
-    generateOrderPDF(orderToPrint as any, proveedores);
+    await generateOrderPDF(orderToPrint as any, proveedores);
   };
 
   const fetchData = React.useCallback(async () => {

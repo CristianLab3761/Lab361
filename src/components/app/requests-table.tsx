@@ -275,7 +275,7 @@ function RequestRow({
                               variant="ghost" 
                               size="sm" 
                               className="h-7 px-2 text-[9px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 gap-1.5"
-                              onClick={() => generateOrderPDF(linkedOC, proveedores)}
+                              onClick={() => { generateOrderPDF(linkedOC, proveedores); }}
                             >
                               <Printer className="h-3 w-3" /> Descargar OC
                             </Button>
