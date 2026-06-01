@@ -107,6 +107,7 @@ export const generateOrderPDF = async (order: OrdenCompra, proveedores?: any[]) 
     pais: order.pais || 'Chile',
     telefono: order.telefono,
     email: order.email,
+    formaPago: order.formaPago || 'N/A',
   };
 
   if (proveedores) {
@@ -124,6 +125,7 @@ export const generateOrderPDF = async (order: OrdenCompra, proveedores?: any[]) 
       supplierData.pais = found['PAÌS'] || found.pais || supplierData.pais;
       supplierData.telefono = found['TELEFONO'] || found.telefono || supplierData.telefono;
       supplierData.email = found['EMAIL'] || found.email || supplierData.email;
+      supplierData.formaPago = found['Forma de Pago'] || found.formaPago || supplierData.formaPago;
     }
   }
 
@@ -219,7 +221,7 @@ export const generateOrderPDF = async (order: OrdenCompra, proveedores?: any[]) 
   currentY += 2;
   autoTable(doc, {
     startY: currentY,
-    body: [[{ content: order.formaPago || 'N/A', styles: { fontSize: 8 } }]],
+    body: [[{ content: supplierData.formaPago, styles: { fontSize: 8 } }]],
     theme: 'grid',
     styles: { lineColor: [220, 220, 220] },
     margin: { left: 14, right: 14 }
