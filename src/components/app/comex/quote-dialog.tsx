@@ -52,17 +52,14 @@ export default function QuoteDialog({
     costos.forEach(c => {
       let amount = c.monto;
       
-      // Ajustar monto según la base de cobro (Plana, Por M3, Por Kg, Por BL, % Valor)
       if (c.baseCobro === 'Por M3') amount = amount * (envio.total_volume_m3 || 1);
       if (c.baseCobro === 'Por Kg') amount = amount * (envio.chargeable_weight_kg || 1);
       if (c.baseCobro === '% Valor') amount = (amount / 100) * (envio.merchandise_value_usd || 0);
       
-      // Aplicar IVA si es necesario
       if (c.aplicaIva) {
-        amount = amount * 1.16; // O 1.19 dependiendo del país, asumiendo 16% MXN
+        amount = amount * 1.16;
       }
 
-      // Convertir a USD si está en MXN
       if (c.moneda === 'MXN') {
         amount = amount / (envio.exchange_rate || 1);
       }
@@ -96,7 +93,6 @@ export default function QuoteDialog({
       toast({ title: 'Cotización Registrada', description: 'La cotización ha sido guardada exitosamente.' });
       onSuccess();
       onOpenChange(false);
-      // Reset form
       setForwarder(''); setCostos([]); setRoute(''); setTransitTime(0);
     }
     setLoading(false);
