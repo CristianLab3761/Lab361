@@ -61,7 +61,7 @@ export function OCV05Table() {
   const [selectedOrder, setSelectedOrder] = React.useState<any | null>(null);
   const { proveedores } = useAppContext();
 
-  const handlePrint = (order: any) => {
+  const handlePrint = async (order: any) => {
     // Map to the format expected by generateOrderPDF if necessary
     const items = typeof order.Items_JSON === 'string' ? JSON.parse(order.Items_JSON) : (order.Items_JSON || []);
     
