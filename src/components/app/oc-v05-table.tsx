@@ -21,8 +21,10 @@ import {
   Building2,
   Package,
   MoreVertical,
-  Printer
+  Printer,
+  Edit
 } from 'lucide-react';
+import { EditOrderDialog } from './comex/edit-order-dialog';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
@@ -59,6 +61,7 @@ export function OCV05Table() {
   const [error, setError] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedOrder, setSelectedOrder] = React.useState<any | null>(null);
+  const [editingOrder, setEditingOrder] = React.useState<any | null>(null);
   const { proveedores } = useAppContext();
 
   const handlePrint = async (order: any) => {
@@ -204,6 +207,9 @@ export function OCV05Table() {
                     <DropdownMenuContent align="end" className="w-48">
                       <DropdownMenuItem className="gap-2" onClick={() => setSelectedOrder(item)}>
                         <FileText className="h-4 w-4" /> Ver Detalles
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="gap-2" onClick={() => setEditingOrder(item)}>
+                        <Edit className="h-4 w-4" /> Editar OC
                       </DropdownMenuItem>
                       <DropdownMenuItem className="gap-2 text-primary" onClick={() => handlePrint(item)}>
                         <Printer className="h-4 w-4" /> Imprimir OC
@@ -417,6 +423,15 @@ export function OCV05Table() {
           )}
         </DialogContent>
       </Dialog>
+
+      <EditOrderDialog 
+        open={!!editingOrder} 
+        onOpenChange={(open) => !open && setEditingOrder(null)} 
+        order={editingOrder}
+        onOrderUpdated={(updated) => {
+          fetchData();
+        }}
+      />
     </div>
   );
 }

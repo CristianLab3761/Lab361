@@ -15,12 +15,14 @@ import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 import { Button } from '@/components/ui/button';
-import { FileDown } from 'lucide-react';
+import { FileDown, Edit } from 'lucide-react';
 import { generateOrderPDF } from '@/lib/order-pdf-generator';
 import { cn } from '@/lib/utils';
+import { EditOrderDialog } from './comex/edit-order-dialog';
 
 export function OrdersTable() {
   const { ordenesCompra, currentUser, proveedores } = useAppContext();
+  const [editingOrder, setEditingOrder] = React.useState<any | null>(null);
 
   const sortedOrders = React.useMemo(() => {
     return [...ordenesCompra].sort((a, b) => parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime());
@@ -81,6 +83,7 @@ export function OrdersTable() {
   };
 
   return (
+    <>
     <Table>
       <TableHeader>
         <TableRow className="bg-slate-50/50">
@@ -117,18 +120,40 @@ export function OrdersTable() {
               {formatCurrency(order.totalGlobal || order.totalCost || 0, order.moneda)}
             </TableCell>
             <TableCell className="text-center">
+              <div className="flex items-center justify-center gap-1">
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-sm"
+                    onClick={() => setEditingOrder(order)}
+                    title="Editar Orden"
+                >
+                    <Edit className="h-4 w-4" />
+                </Button>
                 <Button 
                     variant="ghost" 
                     size="icon" 
                     className="h-8 w-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-sm"
                     onClick={() => handlePrint(order)}
+                    title="Imprimir PDF"
                 >
                     <FileDown className="h-4 w-4" />
                 </Button>
+              </div>
             </TableCell>
           </TableRow>
         ))}
       </TableBody>
     </Table>
+    
+    <EditOrderDialog 
+      open={!!editingOrder} 
+      onOpenChange={(open) => !open && setEditingOrder(null)} 
+      order={editingOrder}
+      onOrderUpdated={(updated) => {
+        // Typically handled by AppContext state updating from db
+      }}
+    />
+    </>
   );
 }
