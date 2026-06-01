@@ -29,7 +29,23 @@ export const generateOrderPDF = async (order: OrdenCompra, proveedores?: any[]) 
   let currentY = 10;
 
   const watchedMoneda = order.moneda || 'CLP';
-  const items = order.items || [];
+  let items = order.items || [];
+  if ((!items || items.length === 0) && (order as any).Items_JSON) {
+    try {
+      const rawItems = typeof (order as any).Items_JSON === 'string' ? JSON.parse((order as any).Items_JSON) : (order as any).Items_JSON;
+      items = rawItems.map((it: any) => ({
+        id: it.id || '',
+        name: it.descripcion || it.name || '',
+        quantity: parseFloat(it.unidades || it.quantity) || 0,
+        unitCost: parseFloat(it.precio_unitario || it.unitCost) || 0,
+        montoNeto: parseFloat(it.monto_neto || it.montoNeto || ((parseFloat(it.unidades || it.quantity) || 0) * (parseFloat(it.precio_unitario || it.unitCost) || 0))) || 0,
+        codigoMaterial: it.codigo_material || it.codigoMaterial || '',
+        cuentaPresupuesto: it.cuentaPresupuesto || it.cuenta_presupuesto || it["Cuentas Presupuesto"] || ''
+      }));
+    } catch (e) {
+      console.error("Error parsing Items_JSON in PDF generator", e);
+    }
+  }
 
   const formatPDFCurrency = (amount: number) => {
     if (watchedMoneda === 'UF') {

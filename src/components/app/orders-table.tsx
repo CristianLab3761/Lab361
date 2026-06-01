@@ -41,6 +41,25 @@ export function OrdersTable() {
     return 'bg-slate-500/10 text-slate-600 border-slate-200';
   };
 
+  const handlePrint = async (order: any) => {
+    // Map to the format expected by generateOrderPDF
+    const items = typeof order.Items_JSON === 'string' ? JSON.parse(order.Items_JSON) : (order.Items_JSON || []);
+    
+    const orderToPrint = {
+      ...order,
+      items: items.map((it: any) => ({
+        id: it.id || '',
+        name: it.descripcion || it.name || '',
+        quantity: parseFloat(it.unidades || it.quantity) || 0,
+        unitCost: parseFloat(it.precio_unitario || it.unitCost) || 0,
+        montoNeto: parseFloat(it.monto_neto || it.montoNeto || ((parseFloat(it.unidades || it.quantity) || 0) * (parseFloat(it.precio_unitario || it.unitCost) || 0))) || 0,
+        codigoMaterial: it.codigo_material || it.codigoMaterial || '',
+        cuentaPresupuesto: it.cuentaPresupuesto || it.cuenta_presupuesto || it["Cuentas Presupuesto"] || ''
+      }))
+    };
+    await generateOrderPDF(orderToPrint as any, proveedores);
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -82,7 +101,7 @@ export function OrdersTable() {
                     variant="ghost" 
                     size="icon" 
                     className="h-8 w-8 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-sm"
-                    onClick={() => { generateOrderPDF(order, proveedores); }}
+                    onClick={() => handlePrint(order)}
                 >
                     <FileDown className="h-4 w-4" />
                 </Button>
