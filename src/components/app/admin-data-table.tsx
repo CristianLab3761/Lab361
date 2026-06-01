@@ -77,6 +77,15 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
     }
   }, [filteredItems.length, currentPage, totalPages]);
 
+  // --- HELPER LOGIC ---
+  const getFieldValue = (obj: any, key: string) => {
+    if (!obj) return undefined;
+    if (obj[key] !== undefined) return obj[key];
+    const lowerKey = String(key).toLowerCase();
+    const actualKey = Object.keys(obj).find(k => k.toLowerCase() === lowerKey);
+    return actualKey ? obj[actualKey] : undefined;
+  };
+
   // --- ADD LOGIC ---
   const handleAddChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -446,7 +455,7 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
                             <div key={option} className="flex items-center space-x-2">
                               <Checkbox 
                                 id={`edit-${String(field.key)}-${option}`} 
-                                checked={((editData[field.key] as string[]) || []).includes(option)}
+                                checked={((getFieldValue(editData, String(field.key)) as string[]) || []).includes(option)}
                                 onCheckedChange={(checked) => handleEditCheckboxChange(field.key, option, !!checked)}
                               />
                               <Label htmlFor={`edit-${String(field.key)}-${option}`} className="text-xs cursor-pointer text-slate-700">{option}</Label>
@@ -458,7 +467,7 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
                       <select
                         id={`edit-${String(field.key)}`}
                         name={String(field.key)}
-                        value={(editData[field.key] as string) || ''}
+                        value={(getFieldValue(editData, String(field.key)) as string) || ''}
                         onChange={(e) => setEditData({ ...editData, [field.key]: e.target.value as any })}
                         className="w-full h-10 px-3 bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
                       >
@@ -473,7 +482,7 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
                         type={field.type || 'text'}
                         name={String(field.key)}
                         placeholder={`Ingrese ${field.placeholder.toLowerCase()}...`}
-                        value={(editData[field.key] as string | number) || ''}
+                        value={(getFieldValue(editData, String(field.key)) as string | number) || ''}
                         onChange={handleEditChange}
                         className="bg-white border-slate-200 focus-visible:ring-primary/20"
                       />

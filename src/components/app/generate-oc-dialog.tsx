@@ -115,15 +115,14 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
           setEmail(foundSupplier["EMAIL"] || foundSupplier.email || '');
           
           // Robust lookup for Payment Terms
-          const fs = foundSupplier as any;
-          const paymentValue = fs["Forma de pago"] ||
-                             fs["Forma de Pago"] || 
-                             fs["FORMA DE PAGO"] || 
-                             fs["Forma Pago"] || 
-                             fs["forma_pago"] || 
-                             fs.paymentTerms || '';
+          const getPaymentTerms = (obj: any) => {
+            if (!obj) return '';
+            const paymentKeys = ['forma de pago', 'forma pago', 'paymentterms', 'forma_pago'];
+            const actualKey = Object.keys(obj).find(k => paymentKeys.includes(k.toLowerCase().trim()));
+            return actualKey ? obj[actualKey] : '';
+          };
           
-          setPaymentTerms(paymentValue);
+          setPaymentTerms(getPaymentTerms(foundSupplier));
         }
       }
     }, [solicitud, proveedores, dbOrdenesV04, dbOrdenesV05]);
@@ -289,14 +288,13 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
                           setEmail(s["EMAIL"] || s.email || '');
                           
                           // Robust lookup for Payment Terms
-                          const sp = s as any;
-                          const paymentValue = sp["Forma de pago"] ||
-                                             sp["Forma de Pago"] || 
-                                             sp["FORMA DE PAGO"] || 
-                                             sp["Forma Pago"] || 
-                                             sp["forma_pago"] || 
-                                             sp.paymentTerms || '';
-                          setPaymentTerms(paymentValue);
+                          const getPaymentTermsLocal = (obj: any) => {
+                            if (!obj) return '';
+                            const paymentKeys = ['forma de pago', 'forma pago', 'paymentterms', 'forma_pago'];
+                            const actualKey = Object.keys(obj).find(k => paymentKeys.includes(k.toLowerCase().trim()));
+                            return actualKey ? obj[actualKey] : '';
+                          };
+                          setPaymentTerms(getPaymentTermsLocal(s));
                         }
                     }} suppliers={proveedores} />
                   </div>
