@@ -304,110 +304,53 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
                         <TableRow key={item.id} className="group hover:bg-slate-50/80 transition-colors">
                             {columns.map(col => (
                                 <TableCell key={String(col.key)} className="py-3">
-                                    {isEditing && formFields.some(f => f.key === col.key) ? (
-                                        (() => {
-                                          const field = formFields.find(f => f.key === col.key);
-                                          if (field?.type === 'checkbox-group') {
-                                            return (
-                                              <div className="flex flex-wrap gap-2 max-w-[300px]">
-                                                {field.options?.map(option => (
-                                                  <div key={option} className="flex items-center space-x-1">
-                                                    <Checkbox 
-                                                      id={`edit-${item.id}-${option}`} 
-                                                      checked={((editData[col.key] as string[]) || []).includes(option)}
-                                                      onCheckedChange={(checked) => handleEditCheckboxChange(col.key, option, !!checked)}
-                                                    />
-                                                    <Label htmlFor={`edit-${item.id}-${option}`} className="text-[10px] cursor-pointer">{option}</Label>
-                                                  </div>
-                                                ))}
-                                              </div>
-                                            );
-                                          }
-                                          if (field?.type === 'select') {
-                                            return (
-                                              <select
-                                                name={String(col.key)}
-                                                value={(editData[col.key] as string) || ''}
-                                                onChange={(e) => setEditData({...editData, [col.key]: e.target.value as any})}
-                                                className="h-8 w-full px-2 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/20"
-                                              >
-                                                <option value="">Seleccionar...</option>
-                                                {field.options?.map(opt => (
-                                                  <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>
-                                                ))}
-                                              </select>
-                                            );
-                                          }
-                                          return (
-                                            <Input
-                                                type={field?.type || 'text'}
-                                                name={String(col.key)}
-                                                value={(editData[col.key] as string | number) || ''}
-                                                onChange={handleEditChange}
-                                                className="h-8 text-sm"
-                                            />
-                                          );
-                                        })()
-                                    ) : (
-                                        (() => {
-                                          const val = item[col.key];
-                                          
-                                          // Sistema de búsqueda inteligente de valores (Aliases)
-                                          let displayVal: any = val;
-                                          if (!displayVal || displayVal === '') {
-                                            if (col.key === 'Material' || col.key === 'descripcion') {
-                                              displayVal = item.Material || item.descripcion || item['Descripción'] || item.name;
-                                            } else if (col.key === 'codigo_nuevo' || col.key === 'codigo') {
-                                              displayVal = item.codigo_nuevo || item.codigo || item['Código'] || item.code;
-                                            } else if (col.key === 'unidad_medida') {
-                                              displayVal = item.unidad_medida || item.Unidades || item.Unidad;
-                                            }
-                                          }
+                                    {(() => {
+                                      const val = item[col.key];
+                                      
+                                      // Sistema de búsqueda inteligente de valores (Aliases)
+                                      let displayVal: any = val;
+                                      if (!displayVal || displayVal === '') {
+                                        if (col.key === 'Material' || col.key === 'descripcion') {
+                                          displayVal = item.Material || item.descripcion || item['Descripción'] || item.name;
+                                        } else if (col.key === 'codigo_nuevo' || col.key === 'codigo') {
+                                          displayVal = item.codigo_nuevo || item.codigo || item['Código'] || item.code;
+                                        } else if (col.key === 'unidad_medida') {
+                                          displayVal = item.unidad_medida || item.Unidades || item.Unidad;
+                                        }
+                                      }
 
-                                          // Si es el campo familia, intentar buscar el nombre descriptivo en la lista de familias
-                                          if (col.key === 'familia' && displayVal) {
-                                            const familiaInfo = (familias || []).find(f => f.prefijo === displayVal || f.nombre === displayVal);
-                                            if (familiaInfo) {
-                                              displayVal = `${familiaInfo.nombre} (${familiaInfo.prefijo})`;
-                                            }
-                                          }
+                                      // Si es el campo familia, intentar buscar el nombre descriptivo en la lista de familias
+                                      if (col.key === 'familia' && displayVal) {
+                                        const familiaInfo = (familias || []).find(f => f.prefijo === displayVal || f.nombre === displayVal);
+                                        if (familiaInfo) {
+                                          displayVal = `${familiaInfo.nombre} (${familiaInfo.prefijo})`;
+                                        }
+                                      }
 
-                                          if (Array.isArray(displayVal)) {
-                                            return (
-                                              <div className="flex flex-wrap gap-1">
-                                                {displayVal.map((v: string) => (
-                                                  <Badge key={v} variant="secondary" className="text-[9px] font-bold px-1.5 py-0 bg-slate-100 text-slate-600 border-slate-200">
-                                                    {v}
-                                                  </Badge>
-                                                ))}
-                                              </div>
-                                            );
-                                          }
-                                          return <span className="text-slate-700 font-medium">{String(displayVal || '—')}</span>;
-                                        })()
-                                    )}
+                                      if (Array.isArray(displayVal)) {
+                                        return (
+                                          <div className="flex flex-wrap gap-1">
+                                            {displayVal.map((v: string) => (
+                                              <Badge key={v} variant="secondary" className="text-[9px] font-bold px-1.5 py-0 bg-slate-100 text-slate-600 border-slate-200">
+                                                {v}
+                                              </Badge>
+                                            ))}
+                                          </div>
+                                        );
+                                      }
+                                      return <span className="text-slate-700 font-medium">{String(displayVal || '—')}</span>;
+                                    })()}
                                 </TableCell>
                             ))}
                             <TableCell className="text-right py-3">
-                                {isEditing ? (
-                                    <div className="flex justify-end gap-1">
-                                        <Button variant="ghost" size="icon" onClick={() => handleSaveEdit(item.id)} disabled={isSaving} className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50">
-                                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                                        </Button>
-                                        <Button variant="ghost" size="icon" onClick={cancelEditing} disabled={isSaving} className="h-8 w-8 text-slate-400 hover:text-slate-600">
-                                            <X className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <div className="flex justify-end gap-1 transition-opacity">
-                                        <Button variant="ghost" size="icon" onClick={() => startEditing(item)} className="h-8 w-8 text-primary hover:text-primary/80 hover:bg-primary/5">
-                                            <Edit2 className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => removeAdminItem(itemType, item.id)} className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-50">
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                )}
+                                <div className="flex justify-end gap-1 transition-opacity">
+                                    <Button variant="ghost" size="icon" onClick={() => startEditing(item)} className="h-8 w-8 text-primary hover:text-primary/80 hover:bg-primary/5">
+                                        <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" onClick={() => removeAdminItem(itemType, item.id)} className="h-8 w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-50">
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </TableCell>
                         </TableRow>
                         );
@@ -474,6 +417,84 @@ export function AdminDataTable<T extends { id: string; [key: string]: any }>({
           )}
         </div>
       </CardContent>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingId} onOpenChange={(open) => { if (!open) cancelEditing(); }}>
+        <DialogContent className="sm:max-w-4xl lg:max-w-5xl max-h-[90vh] p-0 overflow-hidden border-0 shadow-2xl">
+          <DialogHeader className="p-6 bg-slate-50 border-b border-slate-100">
+            <DialogTitle className="text-xl font-bold text-slate-900">Editar {title.replace('Gestionar ', '').slice(0, -1)}</DialogTitle>
+            <DialogDescription>
+              Modifique los campos necesarios y guarde los cambios.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ScrollArea className="max-h-[65vh] p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+              {formFields.map(field => {
+                const isFullWidth = field.type === 'checkbox-group' || String(field.key).toLowerCase().includes('observaciones');
+                
+                return (
+                  <div key={String(field.key)} className={cn("space-y-2", isFullWidth && "md:col-span-2 lg:col-span-3")}>
+                    <Label htmlFor={`edit-${String(field.key)}`} className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      {field.placeholder}
+                    </Label>
+                    
+                    {field.type === 'checkbox-group' ? (
+                      <div className="p-3 border border-slate-200 rounded-lg bg-slate-50/30">
+                        <div className="flex flex-wrap gap-x-6 gap-y-3">
+                          {field.options?.map(option => (
+                            <div key={option} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`edit-${String(field.key)}-${option}`} 
+                                checked={((editData[field.key] as string[]) || []).includes(option)}
+                                onCheckedChange={(checked) => handleEditCheckboxChange(field.key, option, !!checked)}
+                              />
+                              <Label htmlFor={`edit-${String(field.key)}-${option}`} className="text-xs cursor-pointer text-slate-700">{option}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : field.type === 'select' ? (
+                      <select
+                        id={`edit-${String(field.key)}`}
+                        name={String(field.key)}
+                        value={(editData[field.key] as string) || ''}
+                        onChange={(e) => setEditData({ ...editData, [field.key]: e.target.value as any })}
+                        className="w-full h-10 px-3 bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                      >
+                        <option value="">Seleccionar {field.placeholder}...</option>
+                        {field.options?.map(opt => (
+                          <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <Input
+                        id={`edit-${String(field.key)}`}
+                        type={field.type || 'text'}
+                        name={String(field.key)}
+                        placeholder={`Ingrese ${field.placeholder.toLowerCase()}...`}
+                        value={(editData[field.key] as string | number) || ''}
+                        onChange={handleEditChange}
+                        className="bg-white border-slate-200 focus-visible:ring-primary/20"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+          
+          <DialogFooter className="p-6 bg-slate-50 border-t border-slate-100 flex gap-2">
+            <Button variant="outline" onClick={cancelEditing} disabled={isSaving}>
+              Cancelar
+            </Button>
+            <Button onClick={() => handleSaveEdit(editingId!)} disabled={isSaving} className="bg-primary hover:bg-primary/90 min-w-[120px]">
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+              Guardar Cambios
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -547,13 +547,11 @@ export function RequestsTable({ filterStatus: propStatus, solicitanteId }: { fil
         hideTrigger={true}
       />
       
-      {generatingOCFor && (
-        <GenerateOCDialog 
-          solicitud={generatingOCFor}
-          open={!!generatingOCFor}
-          onOpenChange={(open) => { if (!open) setGeneratingOCFor(null); }}
-        />
-      )}
+      <GenerateOCDialog 
+        solicitud={generatingOCFor}
+        open={!!generatingOCFor}
+        onOpenChange={(open) => { if (!open) setGeneratingOCFor(null); }}
+      />
     </div>
   );
 }

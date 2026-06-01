@@ -54,7 +54,12 @@ export default function AdminCatalogPage() {
                   options: ['Despacho Gratis', 'Descuento Adicional', 'Prioridad de Entrega', 'Soporte Premium']
                 },
                 { key: 'OBSERVACIONES', placeholder: 'Observaciones' },
-                { key: 'Forma de Pago', placeholder: 'Forma de Pago' },
+                { 
+                  key: 'Forma de Pago', 
+                  placeholder: 'Forma de Pago',
+                  type: 'select',
+                  options: ['Crédito a 60 dias', 'Crédito a 30 dias', 'Anticipo', 'Crédito a 75 dias', 'Crédito a 90 dias']
+                },
                 { key: 'Vigencia', placeholder: 'Vigencia (Vigente/Inactivo)' },
                 { key: 'COMENTARIO', placeholder: 'Comentario' }
             ]}

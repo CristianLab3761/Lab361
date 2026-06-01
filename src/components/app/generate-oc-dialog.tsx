@@ -105,122 +105,123 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
         return nameA === targetName || nameB === targetName || nameC === targetName;
       });
       
-      if (foundSupplier) {
-        setRazonSocial(foundSupplier["RAZON SOCIAL"] || foundSupplier.name || '');
-        setRut(foundSupplier["RUT"] || foundSupplier.rut || '');
-        setDireccion(foundSupplier["DIRECCION"] || foundSupplier.direccion || '');
-        setCiudad(foundSupplier["CIUDAD"] || foundSupplier.ciudad || '');
-        setPais(foundSupplier["PAÌS"] || foundSupplier.pais || '');
-        setTelefono(foundSupplier["TELEFONO"] || foundSupplier.telefono || '');
+        if (foundSupplier) {
+          setRazonSocial(foundSupplier["RAZON SOCIAL"] || foundSupplier.name || '');
+          setRut(foundSupplier["RUT"] || foundSupplier.rut || '');
+          setDireccion(foundSupplier["DIRECCION"] || foundSupplier.direccion || '');
+          setCiudad(foundSupplier["CIUDAD"] || foundSupplier.ciudad || '');
+          setPais(foundSupplier["PAÌS"] || foundSupplier.pais || '');
+          setTelefono(foundSupplier["TELEFONO"] || foundSupplier.telefono || '');
+          setEmail(foundSupplier["EMAIL"] || foundSupplier.email || '');
+          
+          // Robust lookup for Payment Terms
+          const fs = foundSupplier as any;
+          const paymentValue = fs["Forma de pago"] ||
+                             fs["Forma de Pago"] || 
+                             fs["FORMA DE PAGO"] || 
+                             fs["Forma Pago"] || 
+                             fs["forma_pago"] || 
+                             fs.paymentTerms || '';
+          
+          setPaymentTerms(paymentValue);
+        }
+      }
+    }, [solicitud, proveedores, dbOrdenesV04, dbOrdenesV05]);
+  
+    // Helpers for items
+    const updateItem = (index: number, field: string, value: any) => {
+      setItems(prev => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], [field]: value };
+        return updated;
+      });
+    };
+  
+    const removeItem = (index: number) => {
+      setItems(prev => prev.filter((_, i) => i !== index));
+    };
+  
+    const addItem = () => {
+      setItems(prev => [...prev, { name: '', quantity: 1, estimatedCost: 0, codigoMaterial: '', cuentaPresupuesto: '' }]);
+    };
+  
+    // Financial Calculations
+    const currentNeto = items.reduce((acc, item) => acc + ((Number(item.quantity) || 0) * (Number(item.estimatedCost) || 0)), 0);
+    const currentIva = solicitud?.isAfectoIVA !== false ? Math.round((currentNeto - descuento) * 0.19) : 0;
+    const currentTotal = (currentNeto - descuento) + currentIva;
+  
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!solicitud || !poNumber || !supplierName) return;
+  
+      setIsSubmitting(true);
+      try {
+        await addOrdenCompra({
+          solicitudId: solicitud.id || '',
+          referencia,
+          tipo,
+          observaciones,
+          supplierName,
+          razonSocial,
+          rut,
+          direccion,
+          ciudad,
+          pais,
+          telefono,
+          email,
+          formaPago: paymentTerms,
+          diasEntrega: 0,
+          moneda: (solicitud.moneda as any) || 'CLP',
+          descuento,
+          impuesto: currentIva,
+          totalNeto: currentNeto - descuento,
+          totalIva: currentIva,
+          totalGlobal: currentTotal,
+          centroCostos: solicitud.centroCostos || (solicitud as any)["Centro de Costos"],
+          centroNegocios: solicitud.centroNegocios || (solicitud as any)["Centro de Negocios"],
+          cuentaPresupuesto: items[0]?.cuentaPresupuesto || '',
+          issuedByUserId: currentUser?.id || '',
+          items: items.map(item => ({
+            id: item.id || `item-${Math.random()}`,
+            name: item.name,
+            quantity: item.quantity,
+            unitCost: item.estimatedCost,
+            montoNeto: (item.quantity * item.estimatedCost),
+            montoTotalIva: (item.quantity * item.estimatedCost) * (solicitud.isAfectoIVA !== false ? 1.19 : 1),
+            codigoMaterial: item.codigoMaterial,
+            cuentaPresupuesto: item.cuentaPresupuesto
+          }))
+        }, solicitud.id || '');
         
-        // Robust lookup for Payment Terms
-        const fs = foundSupplier as any;
-        const paymentValue = fs["Forma de Pago"] || 
-                           fs["FORMA DE PAGO"] || 
-                           fs["Forma Pago"] || 
-                           fs["forma_pago"] || 
-                           fs.paymentTerms || '';
+        onOpenChange(false);
+      } catch (error) {
+        console.error('Error generating OC:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+  
+    function formatCurrency(value: number, currency: string = 'CLP') {
+      try {
+        // Handle non-ISO currencies like UF
+        if (currency === 'UF') {
+          return `UF ${value.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+        }
         
-        setPaymentTerms(paymentValue);
+        return new Intl.NumberFormat('es-CL', {
+          style: 'currency',
+          currency: currency && currency.length === 3 ? currency : 'CLP',
+        }).format(value);
+      } catch (e) {
+        return `${currency} ${value.toLocaleString('es-CL')}`;
       }
     }
-  }, [solicitud, proveedores, dbOrdenesV04, dbOrdenesV05]);
-
-  // Helpers for items
-  const updateItem = (index: number, field: string, value: any) => {
-    setItems(prev => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
-      return updated;
-    });
-  };
-
-  const removeItem = (index: number) => {
-    setItems(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const addItem = () => {
-    setItems(prev => [...prev, { name: '', quantity: 1, estimatedCost: 0, codigoMaterial: '', cuentaPresupuesto: '' }]);
-  };
-
-  // Financial Calculations
-  const currentNeto = items.reduce((acc, item) => acc + ((Number(item.quantity) || 0) * (Number(item.estimatedCost) || 0)), 0);
-  const currentIva = solicitud?.isAfectoIVA !== false ? Math.round((currentNeto - descuento) * 0.19) : 0;
-  const currentTotal = (currentNeto - descuento) + currentIva;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!solicitud || !poNumber || !supplierName) return;
-
-    setIsSubmitting(true);
-    try {
-      await addOrdenCompra({
-        solicitudId: solicitud.id || '',
-        referencia,
-        tipo,
-        observaciones,
-        supplierName,
-        razonSocial,
-        rut,
-        direccion,
-        ciudad,
-        pais,
-        telefono,
-        email,
-        formaPago: paymentTerms,
-        diasEntrega: 0,
-        moneda: (solicitud.moneda as any) || 'CLP',
-        descuento,
-        impuesto: currentIva,
-        totalNeto: currentNeto - descuento,
-        totalIva: currentIva,
-        totalGlobal: currentTotal,
-        centroCostos: solicitud.centroCostos || (solicitud as any)["Centro de Costos"],
-        centroNegocios: solicitud.centroNegocios || (solicitud as any)["Centro de Negocios"],
-        cuentaPresupuesto: items[0]?.cuentaPresupuesto || '',
-        issuedByUserId: currentUser?.id || '',
-        items: items.map(item => ({
-          id: item.id || `item-${Math.random()}`,
-          name: item.name,
-          quantity: item.quantity,
-          unitCost: item.estimatedCost,
-          montoNeto: (item.quantity * item.estimatedCost),
-          montoTotalIva: (item.quantity * item.estimatedCost) * (solicitud.isAfectoIVA !== false ? 1.19 : 1),
-          codigoMaterial: item.codigoMaterial,
-          cuentaPresupuesto: item.cuentaPresupuesto
-        }))
-      }, solicitud.id || '');
-      
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error generating OC:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  function formatCurrency(value: number, currency: string = 'CLP') {
-    try {
-      // Handle non-ISO currencies like UF
-      if (currency === 'UF') {
-        return `UF ${value.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
-      }
-      
-      return new Intl.NumberFormat('es-CL', {
-        style: 'currency',
-        currency: currency && currency.length === 3 ? currency : 'CLP',
-      }).format(value);
-    } catch (e) {
-      return `${currency} ${value.toLocaleString('es-CL')}`;
-    }
-  }
-
-  if (!solicitud) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden border-none shadow-2xl rounded-sm bg-white flex flex-col" onCloseAutoFocus={(e) => e.preventDefault()}>
-        <form onSubmit={handleSubmit} className="flex flex-col h-full">
+  
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden border-none shadow-2xl rounded-sm bg-white flex flex-col" onCloseAutoFocus={(e) => e.preventDefault()}>
+          {solicitud && (
+          <form onSubmit={handleSubmit} className="flex flex-col h-full">
           <div className="bg-slate-50/50 p-6 border-b border-slate-100 relative shrink-0">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                 <FileText className="h-24 w-24" />
@@ -245,7 +246,7 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
           <ScrollArea className="flex-1 w-full">
             <div className="p-6 space-y-6 bg-white pb-10">
               {/* Bloque 1: Datos de Cabecera (Idéntico a Requisición) */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50/30 p-4 rounded-md border border-slate-100">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/30 p-4 rounded-md border border-slate-100">
                   <div className="space-y-1">
                     <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Nro OC</Label>
                     <Input value={poNumber} onChange={(e) => setPoNumber(e.target.value)} className="h-7 text-[11px] rounded-sm border-slate-200 font-bold" />
@@ -253,10 +254,6 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
                   <div className="space-y-1">
                     <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Ref Requisición</Label>
                     <Input value={referencia} readOnly className="h-7 text-[11px] rounded-sm border-slate-200 bg-slate-50 font-bold" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Tipo Operación</Label>
-                    <Input value={tipo} onChange={(e) => setTipo(e.target.value)} className="h-7 text-[11px] rounded-sm border-slate-200" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Moneda</Label>
@@ -293,7 +290,8 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
                           
                           // Robust lookup for Payment Terms
                           const sp = s as any;
-                          const paymentValue = sp["Forma de Pago"] || 
+                          const paymentValue = sp["Forma de pago"] ||
+                                             sp["Forma de Pago"] || 
                                              sp["FORMA DE PAGO"] || 
                                              sp["Forma Pago"] || 
                                              sp["forma_pago"] || 
@@ -323,23 +321,9 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
                     <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Ciudad</Label>
                     <Input value={ciudad} onChange={(e) => setCiudad(e.target.value)} className="h-7 text-[11px] rounded-sm border-slate-200" />
                   </div>
-                  <div className="md:col-span-3 space-y-1">
+                  <div className="md:col-span-6 space-y-1">
                     <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Forma de Pago</Label>
                     <Input value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} className="h-7 text-[11px] rounded-sm border-slate-200" />
-                  </div>
-                  <div className="md:col-span-3 space-y-1">
-                    <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Fecha Compromiso</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("w-full h-7 justify-start text-left text-[11px] rounded-sm border-slate-200", !deliveryDate && "text-slate-400")}>
-                          <CalendarIcon className="mr-2 h-3 w-3" />
-                          {deliveryDate ? format(deliveryDate, "dd/MM/yyyy", { locale: es }) : <span>Seleccionar...</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 rounded-md overflow-hidden border-slate-200 shadow-xl">
-                        <Calendar mode="single" selected={deliveryDate} onSelect={setDeliveryDate} initialFocus />
-                      </PopoverContent>
-                    </Popover>
                   </div>
                 </div>
               </div>
@@ -513,6 +497,7 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
             </Button>
           </DialogFooter>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );
