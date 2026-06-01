@@ -243,6 +243,10 @@ export const generateOrderPDF = async (order: OrdenCompra, proveedores?: any[]) 
     ];
   });
 
+  while (tableItems.length < 8) {
+    tableItems.push(['', '', '', '', '', '', '']);
+  }
+
   autoTable(doc, {
     startY: currentY,
     head: [[
@@ -269,6 +273,29 @@ export const generateOrderPDF = async (order: OrdenCompra, proveedores?: any[]) 
       6: { cellWidth: 25, halign: 'right', fillColor: [230, 230, 230], fontStyle: 'bold' }
     },
     margin: { left: 14, right: 14 }
+  });
+
+  currentY = (doc as any).lastAutoTable.finalY + 10;
+
+  // --- NOTAS IMPORTANTES ---
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Importante:', 14, currentY);
+  currentY += 5;
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  const importantNotes = [
+    '1) La Orden de Compras debe ser referenciada en la factura de forma obligatoria o será rechazada en el SII',
+    '2) Se debe enviar la Factura Electronica en formato PDF y XML al correo compras@botanicalsolutions.cl de forma obligatoria',
+    '3) Las facturas que NO tengan OC referenciadas y NO hayan sido enviadas a la casilla de correo correspondiente serán rechazadas en el SII',
+    '4) Las facturas que hayan sido rechazadas en el SII no seran consideradas por nuestro departamento de finanzas para gestion de pago'
+  ];
+
+  importantNotes.forEach(note => {
+    const lines = doc.splitTextToSize(note, PAGE_WIDTH - 28);
+    doc.text(lines, 14, currentY);
+    currentY += lines.length * 4;
   });
 
   doc.save(`${order.id.toUpperCase().replace('OC-', '')}.pdf`);
