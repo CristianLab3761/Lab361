@@ -421,10 +421,10 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
         </DialogTrigger>
       )}
       <DialogContent 
-        className="sm:max-w-7xl h-[94vh] w-[98vw] p-0 flex flex-col overflow-hidden"
+        className="sm:max-w-7xl h-[94vh] w-[98vw] p-0 flex flex-col overflow-hidden bg-slate-50/80"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
-        <DialogHeader className="px-6 pt-4 pb-2 shrink-0">
+        <DialogHeader className="px-6 pt-4 pb-4 shrink-0 bg-white border-b border-slate-200 shadow-sm z-10 relative">
           <DialogTitle className="text-xl font-bold tracking-tight">
             {solicitudToEdit ? `Editar Requisición ${solicitudToEdit.id}` : 'Crear Nueva Requisición de Compra'}
           </DialogTitle>
@@ -440,13 +440,47 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
-          <ScrollArea className="flex-1 w-full h-full">
-            <div className="px-6 py-2 space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} onPaste={(e) => {
+          const text = e.clipboardData.getData('text');
+          if (!text) return;
+          const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+          if (lines.length > 1) {
+            const activeEl = document.activeElement as HTMLElement;
+            // No interceptar si están pegando en un campo de texto multi-línea como comentarios (aunque aquí no hay textarea visible, por si acaso)
+            if (activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.id === 'comments' || activeEl.getAttribute('name') === 'comments')) {
+              return;
+            }
+            e.preventDefault();
+            const codes = lines.map(l => l.split('\t')[0].trim()).filter(c => c);
+            const currentItems = form.getValues('items');
+            const firstItemEmpty = currentItems.length === 1 && !currentItems[0].name && !currentItems[0].codigoMaterial;
+            
+            const newItems = codes.map(code => ({
+              name: '',
+              codigoMaterial: code,
+              quantity: 1,
+              estimatedCost: 0,
+              cuentaPresupuesto: '',
+              cuentaPresupuestoValid: true
+            }));
+
+            if (firstItemEmpty) {
+              form.setValue('items', newItems, { shouldValidate: true, shouldDirty: true });
+            } else {
+              append(newItems);
+            }
+            toast({
+              title: "Códigos detectados",
+              description: `Se detectaron y agregaron ${codes.length} códigos de material desde el portapapeles.`,
+            });
+          }
+        }} className="flex flex-col flex-1 min-h-0">
+          <ScrollArea className="flex-1 w-full h-full bg-slate-50">
+            <div className="px-6 py-4 space-y-5">
               
               {/* Bloque Superior: Datos Generales */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:col-span-4 border p-3 rounded-md bg-slate-50/30 border-slate-200">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:col-span-4 border p-4 rounded-xl bg-white shadow-sm border-slate-200 hover:shadow-md transition-shadow">
                   <div className="space-y-1">
                     <Label htmlFor="id" className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">N° Requisición</Label>
                     <Input id="id" {...form.register('id')} readOnly className="h-7 text-[11px] rounded-sm border-slate-200 bg-slate-50 font-bold text-primary" />
@@ -467,7 +501,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
 
                 {/* Proveedor y Solicitante */}
                 <div className="md:col-span-2 space-y-2">
-                  <div className="flex flex-col gap-1 px-3 py-2 border rounded-md bg-white border-slate-200 shadow-sm h-full">
+                  <div className="flex flex-col gap-2 px-4 py-3 border rounded-xl bg-white border-slate-200 shadow-sm h-full hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between mb-1">
                       <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Información de Proveedor</Label>
                       <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
@@ -519,7 +553,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
                   </div>
                 </div>
 
-                <div className="md:col-span-2 grid grid-cols-2 gap-2 border p-3 rounded-md bg-white border-slate-200 shadow-sm">
+                <div className="md:col-span-2 grid grid-cols-2 gap-3 border p-4 rounded-xl bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                   <div className="space-y-1">
                     <Label htmlFor="solicitanteName" className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Solicitante</Label>
                     <Input id="solicitanteName" {...form.register('solicitanteName')} className="h-7 text-[11px] rounded-sm border-slate-200" />
@@ -562,7 +596,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
                   </div>
                 </div>
 
-                <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-2 border p-3 rounded-md bg-slate-50/10 border-slate-200">
+                <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-3 border p-4 rounded-xl bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                   <div className="space-y-1">
                     <Label htmlFor="autorizadoPor" className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Autorizado por</Label>
                     <Input id="autorizadoPor" {...form.register('autorizadoPor')} className="h-7 text-[11px] rounded-sm border-slate-200" />
@@ -582,13 +616,17 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
                 </div>
               </div>
 
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b pb-1 mt-2">
-                Detalle de Ítems (Item, Cód Material, Unidades, Descripción, Cuenta Presupuesto, Precio Unitario)
+              <div className="flex items-center gap-2 mt-6 mb-2">
+                <div className="h-px bg-slate-200 flex-1"></div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+                  Detalle de Ítems (Item, Cód Material, Unidades, Descripción, Cuenta Presupuesto, Precio Unitario)
+                </span>
+                <div className="h-px bg-slate-200 flex-1"></div>
               </div>
               
               <div className="space-y-4">
                 {fields.map((field, index) => (
-                  <div key={field.id} className="relative grid grid-cols-1 md:grid-cols-12 gap-2 border p-3 rounded-md pt-7 bg-white shadow-sm border-slate-200">
+                  <div key={field.id} className="relative grid grid-cols-1 md:grid-cols-12 gap-3 border p-4 rounded-xl pt-8 bg-white shadow-sm hover:shadow-md transition-shadow border-slate-200">
                     <Button
                       type="button"
                       variant="ghost"
@@ -723,7 +761,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
                 type="button"
                 variant="outline"
                 onClick={() => append({ name: '', codigoMaterial: '', quantity: 1, estimatedCost: 0, cuentaPresupuesto: '', cuentaPresupuestoValid: true })}
-                className="w-full border-dashed h-8 text-[10px] mt-2 uppercase font-bold text-slate-400 hover:text-slate-600"
+                className="w-full border-dashed border-2 h-10 text-[11px] mt-4 uppercase font-bold bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 hover:border-primary/40 transition-all rounded-xl"
               >
                 <PlusCircle className="mr-2 h-3.5 w-3.5" />
                 Agregar Ítem
@@ -731,7 +769,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
             </div>
           </ScrollArea>
 
-          <div className="px-6 py-4 border-t bg-white flex items-center justify-between">
+          <div className="px-6 py-4 border-t border-slate-200 bg-white flex items-center justify-between shadow-[0_-4px_10px_-2px_rgba(0,0,0,0.05)] z-10 relative">
             <div className="flex items-center text-sm font-bold text-slate-900 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
                  <Calculator className="mr-2 h-4 w-4 text-primary" />
                  <span className="text-slate-400 font-medium mr-2">Total Estimado:</span> {formatCurrency(totalCalculated)}
