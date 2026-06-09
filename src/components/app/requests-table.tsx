@@ -391,11 +391,23 @@ export function RequestsTable({ filterStatus: propStatus, solicitanteId }: { fil
     }
 
     if (searchTerm) {
-      const lowerSearch = searchTerm.toLowerCase();
-      items = items.filter(s => 
-        (s.id?.toLowerCase().includes(lowerSearch)) || 
-        (s.solicitanteName?.toLowerCase().includes(lowerSearch))
-      );
+      const searchTerms = searchTerm.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/\s+/).filter(Boolean);
+      
+      items = items.filter(s => {
+        const normalizeStr = (str: any) => str ? String(str).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : '';
+        
+        const idStr = normalizeStr(s.id);
+        const solNameStr = normalizeStr(s.solicitanteName);
+        const provStr = normalizeStr(s.proveedor);
+        
+        const itemsText = Array.isArray(s.items) 
+          ? s.items.map(i => `${normalizeStr(i.name)} ${normalizeStr(i.codigoMaterial)}`).join(' ')
+          : '';
+
+        const fullSearchableText = `${idStr} ${solNameStr} ${provStr} ${itemsText}`;
+
+        return searchTerms.every(term => fullSearchableText.includes(term));
+      });
     }
 
     return items.sort((a, b) => {

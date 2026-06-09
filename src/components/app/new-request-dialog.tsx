@@ -278,16 +278,16 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
       if (!item?.codigoMaterial) return;
       const cleanCode = clean(item.codigoMaterial);
       let material = materiales.find((m: any) => {
-        const mCode = getVal(m, ['codigo_nuevo', 'codigo', 'Código', 'Codigo', 'code']);
+        const mCode = getVal(m, ['Código', 'codigo', 'codigo_nuevo', 'Codigo', 'code']);
         return clean(mCode) === cleanCode;
       });
 
       if (!material) {
         try {
           const { data } = await supabase
-            .from('ListaDeMateriales')
+            .from('lista_de_materiales_V04')
             .select('*')
-            .or(`codigo.eq.${item.codigoMaterial},codigo.eq.${cleanCode}`)
+            .or(`Código.eq.${item.codigoMaterial},Código.eq.${cleanCode}`)
             .limit(1);
           if (data && data.length > 0) material = data[0];
         } catch (e) {
@@ -296,7 +296,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
       }
 
       if (material) {
-        const desc = getVal(material, ['Material', 'descripcion', 'Descripcion del material', 'Descripcion', 'name', 'Name']);
+        const desc = getVal(material, ['Descripcion del material', 'descripcion', 'Material', 'Descripcion', 'name', 'Name']);
         if (desc) {
           const currentName = form.getValues(`items.${index}.name`);
           if (clean(currentName) !== clean(desc)) {
@@ -653,7 +653,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
                           form.setValue(`items.${index}.name`, name, { shouldValidate: true, shouldDirty: true });
                           if (material) {
                             const m = material as any;
-                            form.setValue(`items.${index}.codigoMaterial`, m.codigo_nuevo || m.codigo || m['Código'] || m.code || '', { shouldValidate: true, shouldDirty: true });
+                            form.setValue(`items.${index}.codigoMaterial`, m['Código'] || m.codigo || m.codigo_nuevo || m.code || '', { shouldValidate: true, shouldDirty: true });
                           }
                         }}
                       />
@@ -662,58 +662,24 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
                     
                     <div className="md:col-span-3 space-y-1">
                       <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Código Material</Label>
-                      <Input 
-                        {...form.register(`items.${index}.codigoMaterial`)} 
-                        className={cn(
-                          "h-7 text-[11px] rounded-sm border-slate-200 transition-all",
-                          (!!form.watch(`items.${index}.codigoMaterial`) && !!form.watch(`items.${index}.name`)) && "bg-slate-50/50 text-slate-500 cursor-not-allowed border-slate-100"
-                        )}
-                        readOnly={!!form.watch(`items.${index}.codigoMaterial`) && !!form.watch(`items.${index}.name`)}
-                        onBlur={async (e) => {
-                          const code = e.target.value?.trim();
-                          if (!code || !materiales) return;
-                          
-                          const cleanStr = (s: any) => String(s || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-                          const cleanCode = cleanStr(code);
-                          
-                          console.log("Buscando material con código:", code, "Limpio:", cleanCode);
-
-                          // 1. Buscar en memoria local (contexto)
-                          let material = materiales.find((m: any) => {
-                            const mCode = m.codigo || m.codigo_nuevo || m['Código'] || m.code || m.Code;
-                            return cleanStr(mCode) === cleanCode;
-                          });
-
-                          // 2. Si no está en memoria, buscar en Supabase
-                          if (!material) {
-                            try {
-                              const { data } = await supabase
-                                .from('ListaDeMateriales')
-                                .select('*')
-                                .or(`codigo.eq."${code}",codigo.eq."${cleanCode}"`)
-                                .limit(1);
-                              if (data && data.length > 0) material = data[0];
-                            } catch (err) {
-                              console.error("Error buscando material en Supabase:", err);
-                            }
-                          }
-
+                      <ItemAutocomplete 
+                        value={form.watch(`items.${index}.codigoMaterial`)}
+                        materiales={materiales}
+                        placeholder="Código..."
+                        displayField="codigo"
+                        disabled={!!form.watch(`items.${index}.codigoMaterial`) && !!form.watch(`items.${index}.name`)}
+                        onChange={(cod, material) => {
+                          form.setValue(`items.${index}.codigoMaterial`, cod, { shouldValidate: true, shouldDirty: true });
                           if (material) {
-                            console.log("Material encontrado:", material);
                             const m = material as any;
-                            const desc = m.descripcion || m.Material || m['Descripcion del material'] || m.name || m.Name;
+                            const desc = m['Descripcion del material'] || m.descripcion || m.Material || m.name || m.Name || '';
                             if (desc) {
                               form.setValue(`items.${index}.name`, String(desc), { shouldValidate: true, shouldDirty: true });
-                              toast({
-                                title: "Material Encontrado",
-                                description: `Se ha cargado la descripción: ${desc}`,
-                              });
                             }
-                          } else {
-                            console.warn("No se encontró material con código:", code);
                           }
                         }}
                       />
+                      <input type="hidden" {...form.register(`items.${index}.codigoMaterial`)} />
                     </div>
 
                     <div className="md:col-span-2 space-y-1">

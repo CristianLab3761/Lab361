@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export default function ImportarPage() {
   const { toast } = useToast();
-  const { currentUser, addMultipleAdminItems } = useAppContext();
+  const { currentUser, addMultipleAdminItems, materialesV04 } = useAppContext();
 
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<any[]>([]);
@@ -167,6 +167,7 @@ export default function ImportarPage() {
         CentrosDeNegocios: ['name'],
         centrosCostos: ['name'], 
         ListaDeMateriales: ['Código', 'Descripcion del material'],
+        lista_de_materiales_V04: ['Código', 'Descripcion del material', 'Clase de Material', 'MP/CIF'],
         Requisiciones: ['N° Requisición', 'Solicitante', 'Item', 'Unidades', 'Precio Unitario'],
         OrdenesCompraV04: ['ORDEN DE COMPRA', 'FECHA', 'REF', 'UNIDADES', 'DESCRIPCION'],
         OrdenesCompraV05: ['ORDEN DE COMPRA', 'FECHA', 'PROVEEDOR', 'UNIDADES', 'PRECIO UNITARIO'],
@@ -205,6 +206,22 @@ export default function ImportarPage() {
             variant: "destructive",
             title: "Cabeceras incorrectas",
             description: "Para lista de materiales, el archivo debe contener las columnas 'Código' y 'Descripcion del material'.",
+          });
+          return;
+        }
+      }
+
+      if (importType === 'lista_de_materiales_V04') {
+        const hasCodigo = headers.includes('Código') || headers.includes('codigo');
+        const hasDescripcion = headers.includes('Descripcion del material') || headers.includes('descripcion');
+        const hasClase = headers.includes('Clase de Material');
+        const hasMP = headers.includes('MP/CIF');
+
+        if (!hasCodigo || !hasDescripcion || !hasClase || !hasMP) {
+          toast({
+            variant: "destructive",
+            title: "Cabeceras incorrectas",
+            description: "Para lista_de_materiales_V04, el archivo debe contener 'Código', 'Descripcion del material', 'Clase de Material' y 'MP/CIF'.",
           });
           return;
         }
@@ -272,6 +289,14 @@ export default function ImportarPage() {
             codigo: row['Código'] || row['codigo'] || '',
             descripcion: row['Descripcion del material'] || row['descripcion'] || '',
             ...row,
+          };
+        }
+        if (importType === 'lista_de_materiales_V04') {
+          return {
+            "Código": row['Código'] || row['codigo'] || '',
+            "Descripcion del material": row['Descripcion del material'] || row['descripcion'] || '',
+            "Clase de Material": row['Clase de Material'] || '',
+            "MP/CIF": row['MP/CIF'] || ''
           };
         }
 
@@ -392,6 +417,28 @@ export default function ImportarPage() {
         });
 
         finalData = Array.from(ocMap.values());
+      }
+
+      if (importType === 'lista_de_materiales_V04') {
+        const existingCodes = new Set(materialesV04.map((m: any) => String(m['codigo'] || m['Código'] || '').trim().toLowerCase()));
+        
+        finalData = dataToImport.filter(row => {
+          const rowCode = String(row['codigo'] || row['Código'] || '').trim().toLowerCase();
+          if (!rowCode || existingCodes.has(rowCode)) {
+            return false; // Skip empty codes or duplicates
+          }
+          existingCodes.add(rowCode); // Avoid duplicates within the file itself
+          return true;
+        });
+
+        if (finalData.length === 0) {
+          toast({
+            title: "Importación Finalizada",
+            description: "No se importó ningún registro nuevo. Todos los códigos ya existen o son inválidos.",
+          });
+          setIsImporting(false);
+          return;
+        }
       }
 
       await addMultipleAdminItems(importType, finalData);
@@ -610,6 +657,7 @@ export default function ImportarPage() {
                     <SelectItem value="CentrosDeNegocios">Centros de Negocios</SelectItem>
                     <SelectItem value="centrosCostos">Centros de Costos</SelectItem>
                     <SelectItem value="ListaDeMateriales">Lista de Materiales</SelectItem>
+                    <SelectItem value="lista_de_materiales_V04">Lista de Materiales V04</SelectItem>
                     <SelectItem value="Requisiciones">Requisiciones</SelectItem>
                     <SelectItem value="OrdenesCompraV04">OC V04 (Plano)</SelectItem>
                     <SelectItem value="OrdenesCompraV05">OC V05 (Estructurado)</SelectItem>

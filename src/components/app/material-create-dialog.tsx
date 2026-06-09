@@ -75,14 +75,11 @@ export function MaterialCreateDialog() {
 
     setLoading(true);
     try {
-      await addAdminItem('ListaDeMateriales', {
-        descripcion: formData.nombre,
-        Material: formData.nombre,
-        codigo: formData.codigo,
-        codigo_nuevo: formData.codigo,
-        familia: formData.familia,
-        subfamilia: formData.subfamilia,
-        unidad_medida: formData.unidad,
+      await addAdminItem('lista_de_materiales_V04', {
+        "Descripcion del material": formData.nombre,
+        "Código": formData.codigo,
+        "Clase de Material": formData.familia,
+        "MP/CIF": formData.subfamilia || '',
         createdAt: new Date().toISOString()
       });
 

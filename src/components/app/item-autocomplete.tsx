@@ -51,8 +51,11 @@ export function ItemAutocomplete({
   const searchableMateriales = React.useMemo(() => {
     return (materiales || []).map((material) => {
       const m = material as any;
-      const desc = String(getVal(m, ['Material', 'descripcion', 'Descripcion del material', 'Descripcion', 'name', 'Name'])).toLowerCase();
-      const cod = String(getVal(m, ['codigo_nuevo', 'codigo', 'Código', 'Codigo', 'code'])).toLowerCase();
+      const rawDesc = String(getVal(m, ['Descripcion del material', 'descripcion', 'Material', 'Descripcion', 'name', 'Name']));
+      const rawCod = String(getVal(m, ['Código', 'codigo', 'codigo_nuevo', 'Codigo', 'code']));
+      
+      const desc = rawDesc.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const cod = rawCod.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
       return {
         material,
@@ -63,15 +66,19 @@ export function ItemAutocomplete({
   }, [materiales, getVal]);
 
   const filteredMateriales = React.useMemo(() => {
-    const search = deferredSearch.trim().toLowerCase();
+    const search = deferredSearch.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
     if (!search) {
       return [];
     }
+    
+    const searchTerms = search.split(/\s+/).filter(Boolean);
 
     return searchableMateriales
-      .filter(({ desc, cod }) => desc.includes(search) || cod.includes(search))
-      .slice(0, 10);
+      .filter(({ desc, cod }) => {
+        return searchTerms.every(term => desc.includes(term) || cod.includes(term));
+      })
+      .slice(0, 20);
   }, [searchableMateriales, deferredSearch]);
 
   return (
@@ -108,8 +115,8 @@ export function ItemAutocomplete({
                   className="w-full text-left px-2 py-1.5 text-[11px] hover:bg-slate-50 rounded flex items-center justify-between gap-3 transition-all group"
                   onClick={() => {
                     const m = material as any;
-                    const desc = getVal(m, ['Material', 'descripcion', 'Descripcion del material', 'Descripcion', 'name', 'Name']);
-                    const cod = getVal(m, ['codigo_nuevo', 'codigo', 'Código', 'Codigo', 'code']);
+                    const desc = getVal(m, ['Descripcion del material', 'descripcion', 'Material', 'Descripcion', 'name', 'Name']);
+                    const cod = getVal(m, ['Código', 'codigo', 'codigo_nuevo', 'Codigo', 'code']);
 
                     const newValue = displayField === 'descripcion' ? String(desc) : String(cod);
                     onChange(newValue, material);
@@ -119,12 +126,17 @@ export function ItemAutocomplete({
                 >
                   <div className="flex flex-col gap-0.5 overflow-hidden">
                     <span className="font-bold text-slate-800 truncate">
-                      {(material as any).Material || (material as any).descripcion || (material as any)['Descripcion del material'] || (material as any).name || 'Sin descripción'}
+                      {(material as any)['Descripcion del material'] || (material as any).Material || (material as any).descripcion || (material as any).name || 'Sin descripción'}
                     </span>
+                    {((material as any)['Clase de Material'] || (material as any)['MP/CIF']) && (
+                      <span className="text-[9px] text-slate-500 font-medium truncate">
+                        {[(material as any)['Clase de Material'], (material as any)['MP/CIF']].filter(Boolean).join(' | ')}
+                      </span>
+                    )}
                   </div>
-                  <div className="shrink-0">
+                  <div className="shrink-0 flex items-center">
                     <span className="bg-slate-100 px-1.5 py-0.5 rounded-sm text-[9px] font-black font-mono text-slate-500 border border-slate-200 group-hover:bg-slate-900 group-hover:text-white transition-colors">
-                      {(material as any).codigo_nuevo || (material as any).codigo || (material as any)['Código'] || (material as any).code || 'S/C'}
+                      {(material as any)['Código'] || (material as any).codigo_nuevo || (material as any).codigo || (material as any).code || 'S/C'}
                     </span>
                   </div>
                 </button>

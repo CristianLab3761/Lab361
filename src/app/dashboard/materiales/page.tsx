@@ -9,7 +9,7 @@ import { Package, FolderTree, LayoutGrid } from 'lucide-react';
 import { PageHeader } from '@/components/app/page-header';
 
 export default function MaterialesPage() {
-  const { materiales, familias, isLoading } = useAppContext();
+  const { materialesV04, familias, isLoading } = useAppContext();
 
   if (isLoading) {
     return (
@@ -47,21 +47,19 @@ export default function MaterialesPage() {
             <AdminDataTable
               title="Lista de Productos"
               description="Catálogo oficial de Botanical Solutions."
-              itemType="ListaDeMateriales"
-              items={materiales || []}
+              itemType="lista_de_materiales_V04"
+              items={materialesV04 || []}
               columns={[
-                { key: 'codigo_nuevo', header: 'Código' },
-                { key: 'Material', header: 'Descripción' },
-                { key: 'familia', header: 'Familia' },
-                { key: 'subfamilia', header: 'SubFamilia' },
-                { key: 'unidad_medida', header: 'Unidad' }
+                { key: 'Código', header: 'Código' },
+                { key: 'Descripcion del material', header: 'Descripción' },
+                { key: 'Clase de Material', header: 'Familia' },
+                { key: 'MP/CIF', header: 'SubFamilia' }
               ]}
               formFields={[
-                { key: 'codigo_nuevo', placeholder: 'Código' },
-                { key: 'Material', placeholder: 'Descripción Detallada' },
-                { key: 'familia', placeholder: 'Familia' },
-                { key: 'subfamilia', placeholder: 'SubFamilia' },
-                { key: 'unidad_medida', placeholder: 'Unidad' }
+                { key: 'Código', placeholder: 'Código' },
+                { key: 'Descripcion del material', placeholder: 'Descripción Detallada' },
+                { key: 'Clase de Material', placeholder: 'Familia' },
+                { key: 'MP/CIF', placeholder: 'SubFamilia' }
               ]}
             />
           </div>

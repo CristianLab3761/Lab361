@@ -11,7 +11,7 @@ import { Package, Layers, FolderTree, Search, LayoutGrid } from 'lucide-react';
 export default function AdminCatalogPage() {
   const params = useParams();
   const catalog = params.catalog as string;
-  const { proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, materiales, familias } = useAppContext();
+  const { proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, materiales, materialesV04, familias } = useAppContext();
 
   // Mapping configurations
   const renderCatalog = () => {
@@ -162,21 +162,19 @@ export default function AdminCatalogPage() {
                 <AdminDataTable
                   title="Maestro de Materiales"
                   description="Lista completa de materiales registrados en el sistema."
-                  itemType="ListaDeMateriales"
-                  items={materiales || []}
+                  itemType="lista_de_materiales_V04"
+                  items={materialesV04 || []}
                   columns={[
-                    { key: 'codigo', header: 'Código' },
-                    { key: 'descripcion', header: 'Descripción' },
-                    { key: 'familia', header: 'Familia' },
-                    { key: 'subfamilia', header: 'SubFamilia' },
-                    { key: 'unidad_medida', header: 'Unidad' }
+                    { key: 'Código', header: 'Código' },
+                    { key: 'Descripcion del material', header: 'Descripción' },
+                    { key: 'Clase de Material', header: 'Familia' },
+                    { key: 'MP/CIF', header: 'SubFamilia' }
                   ]}
                   formFields={[
-                    { key: 'codigo', placeholder: 'Código' },
-                    { key: 'descripcion', placeholder: 'Descripción Detallada' },
-                    { key: 'familia', placeholder: 'Familia' },
-                    { key: 'subfamilia', placeholder: 'SubFamilia' },
-                    { key: 'unidad_medida', placeholder: 'Unidad (UN, KG, MT)' }
+                    { key: 'Código', placeholder: 'Código' },
+                    { key: 'Descripcion del material', placeholder: 'Descripción Detallada' },
+                    { key: 'Clase de Material', placeholder: 'Familia' },
+                    { key: 'MP/CIF', placeholder: 'SubFamilia' }
                   ]}
                 />
               </TabsContent>
