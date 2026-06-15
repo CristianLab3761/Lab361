@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -110,6 +110,8 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
   const [cuentaValidity, setCuentaValidity] = useState<Record<number, boolean>>({});
   const { addSolicitud, updateSolicitud, currentUser, proveedores, materiales, solicitudes, dbRequisicionesV04, presupuestos: centrosCostos, cuentas } = useAppContext();
   const { toast } = useToast();
+  
+  const isInitializedForMode = useRef<string | null>(null);
 
   const formSchema = createFormSchema(proveedores, cuentas).extend({
     centroCostos: z.string().min(1, 'El centro de costos es requerido'),
@@ -139,6 +141,16 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
   });
 
   useEffect(() => {
+    if (!open) {
+      isInitializedForMode.current = null;
+      return;
+    }
+
+    const currentMode = solicitudToEdit ? `edit-${solicitudToEdit.id}` : 'create';
+    if (isInitializedForMode.current === currentMode) {
+      return;
+    }
+
     if (open && solicitudToEdit) {
       // Edit mode: populate with solicitudToEdit data
       let fecha = format(new Date(), 'yyyy-MM-dd');
@@ -190,6 +202,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
         isAfectoIVA: solicitudToEdit.isAfectoIVA !== false,
         moneda: solicitudToEdit.moneda || 'CLP',
       });
+      isInitializedForMode.current = currentMode;
     } else if (open && !solicitudToEdit && currentUser) {
       // Create mode
       form.reset({
@@ -228,6 +241,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
       const nextNumeric = maxNum + 1;
       const formattedId = nextNumeric.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
       form.setValue('id', formattedId);
+      isInitializedForMode.current = currentMode;
     }
   }, [open, solicitudToEdit, currentUser, form, solicitudes, dbRequisicionesV04]);
 
@@ -783,6 +797,9 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
         onPointerDownOutside={(e) => e.preventDefault()}
         onFocusOutside={(e) => e.preventDefault()}
       >
+        <DialogTitle className="sr-only">
+          {solicitudToEdit ? `Editar Requisición ${solicitudToEdit.id}` : 'Nueva Requisición'}
+        </DialogTitle>
         {formContent}
       </DialogContent>
     </Dialog>

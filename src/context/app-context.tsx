@@ -59,12 +59,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { user: supabaseUser, loading: authLoading } = useSupabaseAuth();
   const [isProfileLoading, setIsProfileLoading] = useState(true);
 
+  const supabaseUserId = supabaseUser?.id;
+
   useEffect(() => {
     async function fetchUserProfile() {
       if (authLoading) return;
       
-      if (!supabaseUser) {
+      if (!supabaseUserId) {
         setCurrentUser(null);
+        setIsProfileLoading(false);
+        return;
+      }
+
+      if (currentUser?.id === supabaseUserId) {
         setIsProfileLoading(false);
         return;
       }
@@ -73,14 +80,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const { data, error } = await supabase
           .from('user_profiles')
           .select('*')
-          .eq('id', supabaseUser.id)
+          .eq('id', supabaseUserId)
           .single();
 
         if (data && !error) {
           setCurrentUser({
-            id: supabaseUser.id,
+            id: supabaseUserId,
             name: data.displayName || data.name || 'Unknown',
-            email: data.email || supabaseUser.email || '',
+            email: data.email || supabaseUser?.email || '',
             role: data.role || 'solicitante',
             department: data.department || '',
             cargo: data.cargo || '',
@@ -89,7 +96,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             createdAt: data.createdAt,
           });
         } else {
-          console.warn('UserProfile not found in Supabase for id:', supabaseUser.id);
+          console.warn('UserProfile not found in Supabase for id:', supabaseUserId);
           setCurrentUser(null);
         }
       } catch (error) {
@@ -101,12 +108,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     // When supabaseUser changes (e.g. after login), reset loading to prevent
     // the dashboard from redirecting to /login before the profile is fetched.
-    if (!authLoading && supabaseUser) {
+    if (!authLoading && supabaseUserId && currentUser?.id !== supabaseUserId) {
       setIsProfileLoading(true);
     }
 
     fetchUserProfile();
-  }, [supabaseUser, authLoading]);
+  }, [supabaseUserId, authLoading, currentUser?.id, supabaseUser?.email]);
 
   const combinedIsLoading = authLoading || isProfileLoading;
 

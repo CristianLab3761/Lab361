@@ -39,12 +39,7 @@ export default function SolicitudesPage() {
         <PageHeader title="Mis Requisiciones" description="Revisa el estado de todas tus requisiciones de compra.">
           <div className="flex gap-2">
             {exportButton}
-            <Link href="/dashboard/solicitudes/nueva">
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Nueva Requisición
-              </Button>
-            </Link>
+            <NewRequestDialog />
           </div>
         </PageHeader>
         <Card>
