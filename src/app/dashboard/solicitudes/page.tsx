@@ -9,8 +9,9 @@ import { useAppContext } from '@/context/app-context';
 import { NewRequestDialog } from '@/components/app/new-request-dialog';
 import { PageHeader } from '@/components/app/page-header';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, PlusCircle } from 'lucide-react';
 import { exportRequisitionsToCSV } from '@/lib/export-utils';
+import Link from 'next/link';
 
 export default function SolicitudesPage() {
   const { currentUser, solicitudes } = useAppContext();
@@ -38,7 +39,12 @@ export default function SolicitudesPage() {
         <PageHeader title="Mis Requisiciones" description="Revisa el estado de todas tus requisiciones de compra.">
           <div className="flex gap-2">
             {exportButton}
-            <NewRequestDialog />
+            <Link href="/dashboard/solicitudes/nueva">
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Nueva Requisición
+              </Button>
+            </Link>
           </div>
         </PageHeader>
         <Card>

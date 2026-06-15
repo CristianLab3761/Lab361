@@ -95,9 +95,10 @@ interface NewRequestDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   hideTrigger?: boolean;
+  isStandalonePage?: boolean;
 }
 
-export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpenChange, hideTrigger }: NewRequestDialogProps = {}) {
+export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpenChange, hideTrigger, isStandalonePage }: NewRequestDialogProps = {}) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = (val: boolean) => {
@@ -410,35 +411,31 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
     return `${formatter.format(amount)} ${watchedMoneda}`;
   };
 
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      {!solicitudToEdit && !hideTrigger && (
-        <DialogTrigger asChild>
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Nueva Requisición
-          </Button>
-        </DialogTrigger>
-      )}
-      <DialogContent 
-        className="sm:max-w-7xl h-[94vh] w-[98vw] p-0 flex flex-col overflow-hidden bg-slate-50/80"
-        onCloseAutoFocus={(e) => e.preventDefault()}
-      >
-        <DialogHeader className="px-6 pt-4 pb-4 shrink-0 bg-white border-b border-slate-200 shadow-sm z-10 relative">
-          <DialogTitle className="text-xl font-bold tracking-tight">
-            {solicitudToEdit ? `Editar Requisición ${solicitudToEdit.id}` : 'Crear Nueva Requisición de Compra'}
-          </DialogTitle>
-          <DialogDescription asChild>
-            <div className="flex items-center justify-between mt-0.5">
-              <span className="text-slate-500 text-[10px]">Complete los detalles. Todos los campos obligatorios marcados con *.</span>
-              {materiales.length > 0 && (
-                <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-slate-200 text-[9px] font-bold px-2 py-0">
-                  {materiales.length} MATERIALES
-                </Badge>
-              )}
-            </div>
-          </DialogDescription>
-        </DialogHeader>
+  const handleClose = () => {
+    if (isStandalonePage && onOpenChange) {
+      onOpenChange(false);
+    } else {
+      setOpen(false);
+    }
+  };
+
+  const formContent = (
+    <div className={cn("flex flex-col flex-1 overflow-hidden", isStandalonePage ? "bg-slate-50 h-full w-full" : "")}>
+      <div className="px-6 pt-4 pb-4 shrink-0 bg-white border-b border-slate-200 shadow-sm z-10 relative">
+        <div className="text-xl font-bold tracking-tight text-slate-900">
+          {solicitudToEdit ? `Editar Requisición ${solicitudToEdit.id}` : 'Crear Nueva Requisición de Compra'}
+        </div>
+        <div>
+          <div className="flex items-center justify-between mt-0.5">
+            <span className="text-slate-500 text-[10px]">Complete los detalles. Todos los campos obligatorios marcados con *.</span>
+            {materiales.length > 0 && (
+              <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-slate-200 text-[9px] font-bold px-2 py-0">
+                {materiales.length} MATERIALES
+              </Badge>
+            )}
+          </div>
+        </div>
+      </div>
         
         <form onSubmit={form.handleSubmit(onSubmit)} onPaste={(e) => {
           const text = e.clipboardData.getData('text');
@@ -476,11 +473,11 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
           }
         }} className="flex flex-col flex-1 min-h-0">
           <ScrollArea className="flex-1 w-full h-full bg-slate-50">
-            <div className="px-6 py-4 space-y-5">
+            <div className="px-6 py-3 space-y-3 max-w-6xl mx-auto w-full">
               
               {/* Bloque Superior: Datos Generales */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:col-span-4 border p-4 rounded-xl bg-white shadow-sm border-slate-200 hover:shadow-md transition-shadow">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:col-span-4 border p-3 rounded-xl bg-white shadow-sm border-slate-200 hover:shadow-md transition-shadow">
                   <div className="space-y-1">
                     <Label htmlFor="id" className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">N° Requisición</Label>
                     <Input id="id" {...form.register('id')} readOnly className="h-7 text-[11px] rounded-sm border-slate-200 bg-slate-50 font-bold text-primary" />
@@ -501,7 +498,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
 
                 {/* Proveedor y Solicitante */}
                 <div className="md:col-span-2 space-y-2">
-                  <div className="flex flex-col gap-2 px-4 py-3 border rounded-xl bg-white border-slate-200 shadow-sm h-full hover:shadow-md transition-shadow">
+                  <div className="flex flex-col gap-1.5 px-3 py-2.5 border rounded-xl bg-white border-slate-200 shadow-sm h-full hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between mb-1">
                       <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Información de Proveedor</Label>
                       <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
@@ -553,7 +550,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
                   </div>
                 </div>
 
-                <div className="md:col-span-2 grid grid-cols-2 gap-3 border p-4 rounded-xl bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="md:col-span-2 grid grid-cols-2 gap-2 border p-3 rounded-xl bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                   <div className="space-y-1">
                     <Label htmlFor="solicitanteName" className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Solicitante</Label>
                     <Input id="solicitanteName" {...form.register('solicitanteName')} className="h-7 text-[11px] rounded-sm border-slate-200" />
@@ -596,7 +593,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
                   </div>
                 </div>
 
-                <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-3 border p-4 rounded-xl bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-2 border p-3 rounded-xl bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                   <div className="space-y-1">
                     <Label htmlFor="autorizadoPor" className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Autorizado por</Label>
                     <Input id="autorizadoPor" {...form.register('autorizadoPor')} className="h-7 text-[11px] rounded-sm border-slate-200" />
@@ -616,17 +613,17 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 mt-6 mb-2">
+              <div className="flex items-center gap-2 mt-4 mb-1">
                 <div className="h-px bg-slate-200 flex-1"></div>
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
-                  Detalle de Ítems (Item, Cód Material, Unidades, Descripción, Cuenta Presupuesto, Precio Unitario)
+                  Detalle de Ítems
                 </span>
                 <div className="h-px bg-slate-200 flex-1"></div>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {fields.map((field, index) => (
-                  <div key={field.id} className="relative grid grid-cols-1 md:grid-cols-12 gap-3 border p-4 rounded-xl pt-8 bg-white shadow-sm hover:shadow-md transition-shadow border-slate-200">
+                  <div key={field.id} className="relative grid grid-cols-1 md:grid-cols-12 gap-2 border p-3 rounded-xl pt-6 bg-white shadow-sm hover:shadow-md transition-shadow border-slate-200">
                     <Button
                       type="button"
                       variant="ghost"
@@ -746,7 +743,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
                 type="button" 
                 variant="ghost" 
                 className="text-slate-500 hover:text-slate-900 h-9 px-4 text-xs font-medium"
-                onClick={() => setOpen(false)}
+                onClick={handleClose}
               >
                 Cancelar
               </Button>
@@ -762,6 +759,31 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
             </div>
           </div>
         </form>
+    </div>
+  );
+
+  if (isStandalonePage) {
+    return formContent;
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      {!solicitudToEdit && !hideTrigger && (
+        <DialogTrigger asChild>
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Nueva Requisición
+          </Button>
+        </DialogTrigger>
+      )}
+      <DialogContent 
+        className="sm:max-w-7xl h-[94vh] w-[98vw] p-0 flex flex-col overflow-hidden bg-slate-50/80"
+        onCloseAutoFocus={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onFocusOutside={(e) => e.preventDefault()}
+      >
+        {formContent}
       </DialogContent>
     </Dialog>
   );

@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { RequestsTable } from '@/components/app/requests-table';
 import { NewRequestDialog } from '@/components/app/new-request-dialog';
 import { 
-  ShoppingCart, TrendingUp, CheckCircle2, AlertTriangle, ArrowRight 
+  ShoppingCart, TrendingUp, CheckCircle2, AlertTriangle, ArrowRight, PlusCircle
 } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { 
   getSpendByCategory, getTopSuppliers, getMonthlySpendTrend, 
@@ -83,7 +84,14 @@ export default function DashboardPage() {
            </p>
         </div>
         <div className="flex items-center gap-3">
-           {userRole === 'solicitante' && <NewRequestDialog />}
+           {userRole === 'solicitante' && (
+             <Link href="/dashboard/solicitudes/nueva">
+               <Button>
+                 <PlusCircle className="mr-2 h-4 w-4" />
+                 Nueva Requisición
+               </Button>
+             </Link>
+           )}
            {isCompras && (
                 <div className="hidden sm:flex items-center gap-2 px-6 py-2 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-black/20">
                     <TrendingUp className="h-4 w-4" /> Power User Mode
