@@ -74,13 +74,14 @@ export function useSupabaseCollection<T = any>(table: string | null) {
 
         if (fetchError) {
           setError(fetchError);
-          setData(null);
+          if (allData.length === 0) setData(null);
           setIsLoading(false);
           return;
         }
 
         if (result && result.length > 0) {
           allData = [...allData, ...result];
+          setData(allData as T[]); // Update progressively!
           if (result.length < step) {
             hasMore = false;
           } else {
@@ -91,7 +92,6 @@ export function useSupabaseCollection<T = any>(table: string | null) {
         }
       }
 
-      setData(allData as T[]);
       setError(null);
       setIsLoading(false);
     };
