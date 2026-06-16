@@ -56,11 +56,13 @@ export function ItemAutocomplete({
       
       const desc = rawDesc.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
       const cod = rawCod.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const codClean = cod.replace(/[^a-z0-9]/g, '');
 
       return {
         material,
         desc,
         cod,
+        codClean,
       };
     });
   }, [materiales, getVal]);
@@ -75,10 +77,16 @@ export function ItemAutocomplete({
     const searchTerms = search.split(/\s+/).filter(Boolean);
 
     return searchableMateriales
-      .filter(({ desc, cod }) => {
-        return searchTerms.every(term => desc.includes(term) || cod.includes(term));
+      .filter(({ desc, cod, codClean }) => {
+        return searchTerms.every(term => {
+          const termClean = term.replace(/[^a-z0-9]/g, '');
+          const matchesDesc = desc.includes(term);
+          const matchesCod = cod.includes(term);
+          const matchesCodClean = termClean.length > 0 && codClean.includes(termClean);
+          return matchesDesc || matchesCod || matchesCodClean;
+        });
       })
-      .slice(0, 20);
+      .slice(0, 50);
   }, [searchableMateriales, deferredSearch]);
 
   return (

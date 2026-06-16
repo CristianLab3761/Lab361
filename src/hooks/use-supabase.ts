@@ -61,17 +61,38 @@ export function useSupabaseCollection<T = any>(table: string | null) {
     setIsLoading(true);
 
     const fetchData = async () => {
-      const { data: result, error: fetchError } = await supabase
-        .from(table)
-        .select('*');
+      let allData: any[] = [];
+      let from = 0;
+      const step = 1000;
+      let hasMore = true;
 
-      if (fetchError) {
-        setError(fetchError);
-        setData(null);
-      } else {
-        setData(result as T[]);
-        setError(null);
+      while (hasMore) {
+        const { data: result, error: fetchError } = await supabase
+          .from(table)
+          .select('*')
+          .range(from, from + step - 1);
+
+        if (fetchError) {
+          setError(fetchError);
+          setData(null);
+          setIsLoading(false);
+          return;
+        }
+
+        if (result && result.length > 0) {
+          allData = [...allData, ...result];
+          if (result.length < step) {
+            hasMore = false;
+          } else {
+            from += step;
+          }
+        } else {
+          hasMore = false;
+        }
       }
+
+      setData(allData as T[]);
+      setError(null);
       setIsLoading(false);
     };
 
