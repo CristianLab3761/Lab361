@@ -104,7 +104,7 @@ function RequestRow({
   onEdit: (s: Solicitud) => void;
   onGenerateOC: (s: Solicitud) => void;
 }) {
-  const { currentUser, toggleFavorite, addSolicitud, proveedores, ordenesCompra } = useAppContext();
+  const { currentUser, toggleFavorite, addSolicitud, proveedores, ordenesCompra, users } = useAppContext();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const router = useRouter();
   
@@ -211,14 +211,14 @@ function RequestRow({
                 import('@/lib/pdf-generator').then(({ generateRequisitionPDF }) => {
                   const userProfile = users.find(u => u.id === solicitud.solicitanteId);
                   const firstItemPpto = Array.isArray(solicitud.items) && solicitud.items.length > 0 
-                    ? solicitud.items[0].cuentaPresupuesto || solicitud.items[0].cuenta_presupuesto
+                    ? (solicitud.items[0] as any).cuentaPresupuesto || (solicitud.items[0] as any).cuenta_presupuesto
                     : '';
                   const enrichedSolicitud = {
                     ...solicitud,
                     solicitanteEmail: userProfile?.email || '',
                     cargo: userProfile?.department || solicitud.department || solicitud.cargo || '',
-                    centroCostos: userProfile?.centro_costos || userProfile?.centroCostos || solicitud["Centro de Costos"] || solicitud.centroCostos || '',
-                    cuentaPresupuesto: firstItemPpto || solicitud.cuentaPresupuesto || ''
+                    centroCostos: userProfile?.centro_costos || userProfile?.centroCostos || (solicitud as any)["Centro de Costos"] || (solicitud as any).centroCostos || '',
+                    cuentaPresupuesto: firstItemPpto || (solicitud as any).cuentaPresupuesto || ''
                   };
                   const doc = generateRequisitionPDF(enrichedSolicitud as any);
                   doc.save(`Requisicion_${solicitud.solicitudId || solicitud.id || 'NUEVA'}.pdf`);
