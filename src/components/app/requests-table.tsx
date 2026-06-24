@@ -209,7 +209,18 @@ function RequestRow({
               className="h-10 rounded-xl border-slate-200 text-slate-500 hover:bg-slate-50 font-black text-[10px] px-4 shadow-sm transition-all tracking-widest uppercase"
               onClick={() => {
                 import('@/lib/pdf-generator').then(({ generateRequisitionPDF }) => {
-                  const doc = generateRequisitionPDF(solicitud as any);
+                  const userProfile = users.find(u => u.id === solicitud.solicitanteId);
+                  const firstItemPpto = Array.isArray(solicitud.items) && solicitud.items.length > 0 
+                    ? solicitud.items[0].cuentaPresupuesto || solicitud.items[0].cuenta_presupuesto
+                    : '';
+                  const enrichedSolicitud = {
+                    ...solicitud,
+                    solicitanteEmail: userProfile?.email || '',
+                    cargo: userProfile?.department || solicitud.department || solicitud.cargo || '',
+                    centroCostos: userProfile?.centro_costos || userProfile?.centroCostos || solicitud["Centro de Costos"] || solicitud.centroCostos || '',
+                    cuentaPresupuesto: firstItemPpto || solicitud.cuentaPresupuesto || ''
+                  };
+                  const doc = generateRequisitionPDF(enrichedSolicitud as any);
                   doc.save(`Requisicion_${solicitud.solicitudId || solicitud.id || 'NUEVA'}.pdf`);
                 });
               }}
@@ -361,7 +372,7 @@ function RequestRow({
 }
 
 export function RequestsTable({ filterStatus: propStatus, solicitanteId }: { filterStatus?: Solicitud['status']; solicitanteId?: string }) {
-  const { solicitudes, currentUser } = useAppContext();
+  const { solicitudes, currentUser, users } = useAppContext();
   
   const [searchTerm, setSearchTerm] = React.useState('');
   const [localFilterStatus, setLocalFilterStatus] = React.useState<string>(propStatus || 'all');

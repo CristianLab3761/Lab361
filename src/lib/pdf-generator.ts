@@ -102,8 +102,7 @@ export const generateRequisitionPDF = (solicitud: any) => {
           content: [
             `Nombre Completo: ${solicitud.solicitanteName || solicitud.Solicitante || solicitud.solicitante_nombre || '-'}`,
             `Cargo/Depto:     ${solicitud.cargo || solicitud.Cargo || solicitud.cargo_solicitante || '-'}`,
-            `Email:           ${solicitud.solicitanteEmail || solicitud.usuarioEmail || ''}`,
-            `Motivo:          ${solicitud.motivo || 'Operacional'}`
+            `Email:           ${solicitud.solicitanteEmail || solicitud.usuarioEmail || '-'}`
           ].join('\n'),
           styles: { fontSize: 8, cellPadding: 3 }
         },
@@ -113,8 +112,7 @@ export const generateRequisitionPDF = (solicitud: any) => {
             `Proveedor:    ${solicitud.proveedor || solicitud.Proveedor || '-'}`,
             `Centro Costo: ${solicitud.centroCostos || solicitud["Centro de Costos"] || solicitud.centro_costos || '-'}`,
             `Cuenta Presu: ${solicitud.cuentaPresupuesto || solicitud.cuentaPresupuestaria || '-'}`,
-            `Moneda:       ${watchedMoneda}`,
-            `Obra/Proy.:   ${solicitud.proyecto || solicitud.centroNegocios || 'General'}`
+            `Moneda:       ${watchedMoneda}`
           ].join('\n'),
           styles: { fontSize: 8, cellPadding: 3 }
         }

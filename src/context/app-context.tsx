@@ -450,7 +450,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ 
           solicitud: {
             id: reqId,
+            solicitanteId: currentUser.id,
             solicitanteName: newSolicitudData.solicitanteName || currentUser.name,
+            solicitanteEmail: currentUser.email || '',
+            cargo: currentUser.department || currentUser.cargo || '',
+            centroCostos: currentUser.centroCostos || currentUser.centro_costos || newSolicitudData.centroCostos || '',
+            cuentaPresupuesto: (newSolicitudData.items || [])[0]?.cuentaPresupuesto || '',
             proveedor: newSolicitudData.proveedor,
             totalEstimatedCost: totalGlobal,
             moneda: newSolicitudData.moneda || 'CLP',
