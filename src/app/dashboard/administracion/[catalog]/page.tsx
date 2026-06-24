@@ -11,7 +11,7 @@ import { Package, Layers, FolderTree, Search, LayoutGrid } from 'lucide-react';
 export default function AdminCatalogPage() {
   const params = useParams();
   const catalog = params.catalog as string;
-  const { proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, materiales, materialesV04, familias } = useAppContext();
+  const { proveedores, cuentas, presupuestos, centrosNegocios, centrosCostos, materiales, materialesV04, familias, bancos } = useAppContext();
 
   // Mapping configurations
   const renderCatalog = () => {
@@ -24,7 +24,6 @@ export default function AdminCatalogPage() {
             itemType="Proveedores"
             items={proveedores as any || []}
             columns={[
-                { key: 'Nombre de Fantasia', header: 'Nombre Fantasía' },
                 { key: 'RAZON SOCIAL', header: 'Razón Social' },
                 { key: 'RUT', header: 'RUT' },
                 { key: 'Compra Mínima', header: 'Compra Min.' },
@@ -33,7 +32,6 @@ export default function AdminCatalogPage() {
                 { key: 'EMAIL', header: 'Email' }
             ]}
             formFields={[
-                { key: 'Nombre de Fantasia', placeholder: 'Nombre Fantasía' },
                 { key: 'RAZON SOCIAL', placeholder: 'Razón Social' },
                 { key: 'DIRECCION', placeholder: 'Dirección' },
                 { key: 'RUT', placeholder: 'RUT' },
@@ -45,7 +43,12 @@ export default function AdminCatalogPage() {
                 { key: 'Codigo Proveedor', placeholder: 'Código Proveedor' },
                 { key: 'NUMERO DE CUENTA', placeholder: 'Número de Cuenta' },
                 { key: 'CODIGO DE BANCO', placeholder: 'Código de Banco' },
-                { key: 'BANCO', placeholder: 'Banco' },
+                { 
+                  key: 'BANCO', 
+                  placeholder: 'Banco',
+                  type: 'select',
+                  options: bancos?.map(b => `${b.codigo || b.Codigo || b.CODE || b.code || ''} - ${b.descripcion || b.Descripcion || b.name || b.Name || b.banco || b.Banco || ''}`.replace(/^- | -$/g, '').trim()) || []
+                },
                 { key: 'Compra Mínima', placeholder: 'Compra Mínima (Monto)', type: 'number' },
                 { 
                   key: 'Beneficios', 

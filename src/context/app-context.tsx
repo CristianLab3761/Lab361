@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useSupabaseAuth, useSupabaseCollection } from '@/hooks/use-supabase';
 
-export type AdminItemType = 'Proveedores' | 'CuentasPresupuestos' | 'presupuestos' | 'CentrosDeNegocios' | 'CECO' | 'ListaDeMateriales' | 'lista_de_materiales_V04' | 'familias_materiales' | 'Requisiciones' | 'user_profiles' | 'OrdenesCompraV04' | 'OrdenesCompraV05';
+export type AdminItemType = 'Proveedores' | 'CuentasPresupuestos' | 'presupuestos' | 'CentrosDeNegocios' | 'CECO' | 'ListaDeMateriales' | 'lista_de_materiales_V04' | 'familias_materiales' | 'Requisiciones' | 'user_profiles' | 'OrdenesCompraV04' | 'OrdenesCompraV05' | 'Bancos';
 
 interface AppContextType {
   currentUser: User | null;
@@ -41,6 +41,7 @@ interface AppContextType {
   materiales: (Material & { id: string })[];
   materialesV04: any[];
   familias: (FamiliaMaterial & { id: string })[];
+  bancos: any[];
   addAdminItem: <T extends {}>(itemType: AdminItemType, newItem: T) => Promise<void>;
   updateAdminItem: (itemType: AdminItemType, itemId: string, updates: Partial<any>) => Promise<void>;
   removeAdminItem: (itemType: AdminItemType, itemId: string) => Promise<void>;
@@ -142,6 +143,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { data: dbOrdenesV04 } = useSupabaseCollection(isUserAuthenticated ? 'OrdenesCompraV04' : null);
   const { data: dbOrdenesV05 } = useSupabaseCollection(isUserAuthenticated ? 'OrdenesCompraV05' : null);
   const { data: dbMaterialesV04 } = useSupabaseCollection(isUserAuthenticated ? 'lista_de_materiales_V04' : null);
+  const { data: dbBancos } = useSupabaseCollection(isUserAuthenticated ? 'Bancos' : null);
 
   const proveedores: any[] = dbProveedores || [];
   const cuentas: any[] = dbCuentasPresupuestos || [];
@@ -149,6 +151,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const centrosNegocios: any[] = dbCentrosNegocios || [];
   const centrosCostos: any[] = dbCentrosCostos || [];
   const materialesV04: any[] = dbMaterialesV04 || [];
+  const bancos: any[] = dbBancos || [];
 
   const materiales = useMemo(() => {
     return materialesV04.map((m: any) => ({
@@ -617,6 +620,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     materiales: materiales || [],
     materialesV04: materialesV04 || [],
     familias: familias || [],
+    bancos: bancos || [],
     addAdminItem,
     removeAdminItem,
     updateAdminItem,
@@ -626,7 +630,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     currentUser, combinedIsLoading, dbUsers, solicitudes, updateSolicitud, toggleFavorite, 
     addSolicitud, ordenesCompra, dbOrdenesV04, dbOrdenesV05, dbRequisicionesV04, 
     addOrdenCompra, getHistoricalDataForItems, proveedores, cuentas, presupuestos, 
-    centrosNegocios, centrosCostos, materiales, materialesV04, familias, addAdminItem, removeAdminItem, 
+    centrosNegocios, centrosCostos, materiales, materialesV04, familias, bancos, addAdminItem, removeAdminItem, 
     updateAdminItem, addMultipleAdminItems, handleSetCurrentUser, logout
   ]);
 
