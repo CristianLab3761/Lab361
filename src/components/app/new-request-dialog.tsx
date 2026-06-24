@@ -108,7 +108,7 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
 
   // Track per-item validity of cuentaPresupuesto (true = valid or empty, false = invalid)
   const [cuentaValidity, setCuentaValidity] = useState<Record<number, boolean>>({});
-  const { addSolicitud, updateSolicitud, currentUser, proveedores, materiales, solicitudes, dbRequisicionesV04, presupuestos: centrosCostos, cuentas } = useAppContext();
+  const { addSolicitud, updateSolicitud, currentUser, proveedores, materiales, solicitudes, dbRequisicionesV04, centrosCostos, cuentas } = useAppContext();
   const { toast } = useToast();
   
   const isInitializedForMode = useRef<string | null>(null);
@@ -584,11 +584,15 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
                         <SelectValue placeholder="Seleccionar CECO" />
                       </SelectTrigger>
                       <SelectContent>
-                        {centrosCostos.map((ceco: any, idx: number) => (
-                          <SelectItem key={`${ceco.code}-${ceco.area}-${idx}`} value={`${ceco.code} - ${ceco.name}`} className="text-xs">
-                            {ceco.code} - {ceco.name} ({ceco.area})
-                          </SelectItem>
-                        ))}
+                        {centrosCostos.map((ceco: any, idx: number) => {
+                          const value = ceco.CECO || `${ceco.code || ''} - ${ceco.name || ''}`;
+                          const display = ceco.CECO || `${ceco.code || ''} - ${ceco.name || ''} ${ceco.area ? `(${ceco.area})` : ''}`;
+                          return (
+                            <SelectItem key={ceco.id || idx} value={value} className="text-xs">
+                              {display}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </div>
@@ -713,20 +717,27 @@ export function NewRequestDialog({ solicitudToEdit, open: controlledOpen, onOpen
                           <span className="ml-1 font-normal normal-case">(debe ser del listado)</span>
                         )}
                       </Label>
-                      <BudgetAccountAutocomplete
-                        value={form.watch(`items.${index}.cuentaPresupuesto`) || ''}
-                        cuentas={cuentas}
-                        placeholder="Buscar cuenta..."
-                        hasError={cuentaValidity[index] === false}
-                        onChange={(val, isValid) => {
+                      <Select 
+                        onValueChange={(val) => {
                           form.setValue(`items.${index}.cuentaPresupuesto`, val, { shouldValidate: true, shouldDirty: true });
-                          // Only mark invalid if something is typed but doesn't match
                           setCuentaValidity(prev => ({
                             ...prev,
-                            [index]: val === '' ? true : isValid,
+                            [index]: true,
                           }));
-                        }}
-                      />
+                        }} 
+                        value={form.watch(`items.${index}.cuentaPresupuesto`) || ''}
+                      >
+                        <SelectTrigger className={cn("h-7 text-[10px] rounded-sm border-slate-200 bg-slate-50/50", cuentaValidity[index] === false ? "border-red-400 bg-red-50/30" : "")}>
+                          <SelectValue placeholder="Seleccionar cuenta..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getBudgetAccountNames(cuentas).map((accountName, idx) => (
+                            <SelectItem key={`${accountName}-${idx}`} value={accountName} className="text-xs">
+                              {accountName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <input type="hidden" {...form.register(`items.${index}.cuentaPresupuesto`)} />
                     </div>
 

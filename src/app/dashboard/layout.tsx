@@ -37,11 +37,15 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <TooltipProvider>
       <div className="flex min-h-screen w-full flex-col font-body bg-background text-foreground relative selection:bg-primary/30">
-        <aside className="fixed inset-y-0 left-0 z-20 hidden w-24 flex-col border-r border-slate-200 bg-white sm:flex shadow-brand overflow-hidden transition-all duration-500">
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+        <aside className="fixed inset-y-0 left-0 z-20 hidden w-24 flex-col border-r sm:flex overflow-hidden transition-all duration-300
+          bg-white border-slate-200 shadow-[2px_0_20px_rgba(0,0,0,0.06)]
+          dark:bg-[#0e0e0e] dark:border-[#1e1e1e] dark:shadow-[2px_0_30px_rgba(0,0,0,0.8)]">
+          <div className="absolute inset-0 pointer-events-none
+            bg-gradient-to-b from-primary/5 via-transparent to-accent/5
+            dark:from-blue-500/5 dark:via-transparent dark:to-transparent" />
           <SidebarNav />
         </aside>
-        <div className="flex flex-col sm:gap-4 sm:py-6 sm:pl-24 relative z-10 transition-all duration-500">
+        <div className="flex flex-col sm:gap-4 sm:py-6 sm:pl-24 relative z-10 transition-all duration-300">
           <main className="flex-1 px-4 sm:px-10 max-w-[1700px] mx-auto w-full animate-fade-in-up">
             {children}
           </main>

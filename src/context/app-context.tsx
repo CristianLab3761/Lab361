@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useSupabaseAuth, useSupabaseCollection } from '@/hooks/use-supabase';
 
-export type AdminItemType = 'Proveedores' | 'CuentasPresupuestos' | 'presupuestos' | 'CentrosDeNegocios' | 'centrosCostos' | 'ListaDeMateriales' | 'lista_de_materiales_V04' | 'familias_materiales' | 'Requisiciones' | 'user_profiles' | 'OrdenesCompraV04' | 'OrdenesCompraV05';
+export type AdminItemType = 'Proveedores' | 'CuentasPresupuestos' | 'presupuestos' | 'CentrosDeNegocios' | 'CECO' | 'ListaDeMateriales' | 'lista_de_materiales_V04' | 'familias_materiales' | 'Requisiciones' | 'user_profiles' | 'OrdenesCompraV04' | 'OrdenesCompraV05';
 
 interface AppContextType {
   currentUser: User | null;
@@ -135,7 +135,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { data: dbCuentasPresupuestos } = useSupabaseCollection(isUserAuthenticated ? 'CuentasPresupuestos' : null);
   const { data: familias } = useSupabaseCollection<FamiliaMaterial & { id: string }>(isUserAuthenticated ? 'familias_materiales' : null);
   const { data: dbProveedores } = useSupabaseCollection(isUserAuthenticated ? 'Proveedores' : null);
-  const { data: dbCentrosCostos } = useSupabaseCollection(isUserAuthenticated ? 'centrosCostos' : null);
+  const { data: dbCentrosCostos } = useSupabaseCollection(isUserAuthenticated ? 'CECO' : null);
   const { data: dbCentrosNegocios } = useSupabaseCollection(isUserAuthenticated ? 'CentrosDeNegocios' : null);
   const { data: dbUsers } = useSupabaseCollection(isUserAuthenticated ? 'user_profiles' : null);
   const { data: dbRequisicionesV04 } = useSupabaseCollection(isUserAuthenticated ? 'RequisicionesV04' : null);

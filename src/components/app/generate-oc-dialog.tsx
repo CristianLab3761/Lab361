@@ -73,6 +73,7 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
   const [paymentTerms, setPaymentTerms] = React.useState('Net 30');
   const [descuento, setDescuento] = React.useState(0);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [hasInitialPaymentTerms, setHasInitialPaymentTerms] = React.useState(false);
 
   // Pre-fill data when solicitud changes
   React.useEffect(() => {
@@ -122,10 +123,29 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
             return actualKey ? obj[actualKey] : '';
           };
           
-          setPaymentTerms(getPaymentTerms(foundSupplier));
+          const pt = getPaymentTerms(foundSupplier);
+          setPaymentTerms(pt);
+          setHasInitialPaymentTerms(!!pt && pt.trim() !== '');
         }
       }
     }, [solicitud, proveedores, dbOrdenesV04, dbOrdenesV05]);
+
+  // Fallback to forcefully remove pointer-events lock from Radix UI when dialog closes or unmounts
+  React.useEffect(() => {
+    if (!open) {
+      const timer = setTimeout(() => {
+        document.body.style.pointerEvents = '';
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
+  React.useEffect(() => {
+    return () => {
+      // Force unlock if component unmounts while dialog was open
+      document.body.style.pointerEvents = '';
+    };
+  }, []);
   
     // Helpers for items
     const updateItem = (index: number, field: string, value: any) => {
@@ -248,7 +268,7 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/30 p-4 rounded-md border border-slate-100">
                   <div className="space-y-1">
                     <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Nro OC</Label>
-                    <Input value={poNumber} onChange={(e) => setPoNumber(e.target.value)} className="h-7 text-[11px] rounded-sm border-slate-200 font-bold" />
+                    <Input value={poNumber} readOnly className="h-7 text-[11px] rounded-sm border-slate-200 font-bold bg-slate-50" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Ref Requisición</Label>
@@ -267,61 +287,33 @@ export function GenerateOCDialog({ solicitud, open, onOpenChange }: GenerateOCDi
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
                   <div className="md:col-span-4 space-y-1">
-                    <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Proveedor (Selección) *</Label>
-                    <SupplierAutocomplete value={supplierName} onChange={(val) => {
-                        setSupplierName(val);
-                        const targetVal = (val || '').trim().toLowerCase();
-                        const s = proveedores.find(p => {
-                          const nA = (p["RAZON SOCIAL"] || '').trim().toLowerCase();
-                          const nB = (p.name || '').trim().toLowerCase();
-                          const nC = (p["Nombre de Fantasia"] || '').trim().toLowerCase();
-                          return nA === targetVal || nB === targetVal || nC === targetVal;
-                        });
-                        
-                        if (s) {
-                          setRazonSocial(s["RAZON SOCIAL"] || s.name || '');
-                          setRut(s["RUT"] || s.rut || '');
-                          setDireccion(s["DIRECCION"] || s.direccion || '');
-                          setCiudad(s["CIUDAD"] || s.ciudad || '');
-                          setPais(s["PAÌS"] || s.pais || '');
-                          setTelefono(s["TELEFONO"] || s.telefono || '');
-                          setEmail(s["EMAIL"] || s.email || '');
-                          
-                          // Robust lookup for Payment Terms
-                          const getPaymentTermsLocal = (obj: any) => {
-                            if (!obj) return '';
-                            const paymentKeys = ['forma de pago', 'forma pago', 'paymentterms', 'forma_pago'];
-                            const actualKey = Object.keys(obj).find(k => paymentKeys.includes(k.toLowerCase().trim()));
-                            return actualKey ? obj[actualKey] : '';
-                          };
-                          setPaymentTerms(getPaymentTermsLocal(s));
-                        }
-                    }} suppliers={proveedores} />
+                    <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Proveedor</Label>
+                    <Input value={supplierName} readOnly className="h-7 text-[11px] rounded-sm border-slate-200 bg-slate-50 font-bold" />
                   </div>
                   <div className="md:col-span-2 space-y-1">
                     <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">RUT</Label>
-                    <Input value={rut} onChange={(e) => setRut(e.target.value)} className="h-7 text-[11px] rounded-sm border-slate-200" />
+                    <Input value={rut} readOnly className="h-7 text-[11px] rounded-sm border-slate-200 bg-slate-50" />
                   </div>
                   <div className="md:col-span-3 space-y-1">
                     <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Email Contacto</Label>
-                    <Input value={email} onChange={(e) => setEmail(e.target.value)} className="h-7 text-[11px] rounded-sm border-slate-200" />
+                    <Input value={email} readOnly className="h-7 text-[11px] rounded-sm border-slate-200 bg-slate-50" />
                   </div>
                   <div className="md:col-span-3 space-y-1">
                     <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Teléfono</Label>
-                    <Input value={telefono} onChange={(e) => setTelefono(e.target.value)} className="h-7 text-[11px] rounded-sm border-slate-200" />
+                    <Input value={telefono} readOnly className="h-7 text-[11px] rounded-sm border-slate-200 bg-slate-50" />
                   </div>
                   
                   <div className="md:col-span-4 space-y-1">
                     <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Dirección Comercial</Label>
-                    <Input value={direccion} onChange={(e) => setDireccion(e.target.value)} className="h-7 text-[11px] rounded-sm border-slate-200" />
+                    <Input value={direccion} readOnly className="h-7 text-[11px] rounded-sm border-slate-200 bg-slate-50" />
                   </div>
                   <div className="md:col-span-2 space-y-1">
                     <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Ciudad</Label>
-                    <Input value={ciudad} onChange={(e) => setCiudad(e.target.value)} className="h-7 text-[11px] rounded-sm border-slate-200" />
+                    <Input value={ciudad} readOnly className="h-7 text-[11px] rounded-sm border-slate-200 bg-slate-50" />
                   </div>
                   <div className="md:col-span-6 space-y-1">
                     <Label className="text-[9px] uppercase text-slate-400 font-bold tracking-tight">Forma de Pago</Label>
-                    <Input value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} className="h-7 text-[11px] rounded-sm border-slate-200" />
+                    <Input value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} readOnly={hasInitialPaymentTerms} className={cn("h-7 text-[11px] rounded-sm border-slate-200", hasInitialPaymentTerms && "bg-slate-50")} />
                   </div>
                 </div>
               </div>

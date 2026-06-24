@@ -264,12 +264,13 @@ export type CentroNegocios = {
   Name?: string;
 };
 
-export type CentroCostos = {
-  id: string;
-  name: string;
-  code: string;
-  area?: string;
+export type CECO = {
+  id: number;
+  created_at: string;
+  CECO: string;
 };
+
+export type CentroCostos = CECO; // Alias for backward compatibility
 
 export type Material = {
   id: string;

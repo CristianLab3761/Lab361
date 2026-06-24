@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { ShoppingCart, LogIn, ArrowRight, Loader2, Mail, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +15,11 @@ import { Badge } from '@/components/ui/badge';
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { setTheme } = useTheme();
+
+  useEffect(() => {
+    setTheme('light');
+  }, [setTheme]);
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({

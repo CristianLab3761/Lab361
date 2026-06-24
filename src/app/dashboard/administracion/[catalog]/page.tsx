@@ -103,10 +103,10 @@ export default function AdminCatalogPage() {
           <AdminDataTable
             title="Centros de Costos"
             description="Divisiones o departamentos dentro de la empresa para asignación financiera."
-            itemType="centrosCostos"
+            itemType="CECO"
             items={centrosCostos || []}
-            columns={[{ key: 'code', header: 'Código CC' }, { key: 'name', header: 'Nombre del Centro' }]}
-            formFields={[{ key: 'name', placeholder: 'Nombre Centro' }, { key: 'code', placeholder: 'Código' }]}
+            columns={[{ key: 'CECO', header: 'CECO' }]}
+            formFields={[{ key: 'CECO', placeholder: 'Centro de Costo' }]}
           />
         );
       case 'usuarios':

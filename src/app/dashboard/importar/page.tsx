@@ -165,7 +165,7 @@ export default function ImportarPage() {
         CuentasPresupuestos: ['name', 'code'], 
         presupuestos: ['name', 'monto'],
         CentrosDeNegocios: ['name'],
-        centrosCostos: ['name'], 
+        CECO: ['CECO'], 
         ListaDeMateriales: ['Código', 'Descripcion del material'],
         lista_de_materiales_V04: ['Código', 'Descripcion del material', 'Clase de Material', 'MP/CIF'],
         Requisiciones: ['N° Requisición', 'Solicitante', 'Item', 'Unidades', 'Precio Unitario'],
@@ -173,14 +173,14 @@ export default function ImportarPage() {
         OrdenesCompraV05: ['ORDEN DE COMPRA', 'FECHA', 'PROVEEDOR', 'UNIDADES', 'PRECIO UNITARIO'],
       };
 
-      const isCostCenter = importType === 'centrosCostos';
-      const hasValidCostCenterHeader = headers.includes('name') || headers.includes('Centros de Costo');
+      const isCostCenter = importType === 'CECO';
+      const hasValidCostCenterHeader = headers.includes('CECO') || headers.includes('Centros de Costo') || headers.includes('name');
 
       if (isCostCenter && !hasValidCostCenterHeader) {
         toast({
           variant: "destructive",
           title: "Cabeceras incorrectas",
-          description: "Para centros de costos, el archivo debe contener una columna llamada 'name' o 'Centros de Costo'.",
+          description: "Para centros de costos, el archivo debe contener una columna llamada 'CECO', 'Centros de Costo' o 'name'.",
         });
         return;
       }
@@ -271,10 +271,9 @@ export default function ImportarPage() {
             ...row,
           };
         }
-        if (importType === 'centrosCostos') {
+        if (importType === 'CECO') {
           return {
-            name: row['Centros de Costo'] || row['name'] || 'Sin Nombre',
-            code: row['code'] || '',
+            CECO: row['CECO'] || row['Centros de Costo'] || row['name'] || 'Sin Nombre',
             ...row,
           };
         }
@@ -655,7 +654,7 @@ export default function ImportarPage() {
                     <SelectItem value="CuentasPresupuestos">Cuentas Presupuesto</SelectItem>
                     <SelectItem value="presupuestos">Presupuestos</SelectItem>
                     <SelectItem value="CentrosDeNegocios">Centros de Negocios</SelectItem>
-                    <SelectItem value="centrosCostos">Centros de Costos</SelectItem>
+                    <SelectItem value="CECO">Centros de Costos</SelectItem>
                     <SelectItem value="ListaDeMateriales">Lista de Materiales</SelectItem>
                     <SelectItem value="lista_de_materiales_V04">Lista de Materiales V04</SelectItem>
                     <SelectItem value="Requisiciones">Requisiciones</SelectItem>
