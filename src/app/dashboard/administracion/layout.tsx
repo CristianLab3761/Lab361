@@ -63,30 +63,28 @@ export default function AdministracionLayout({ children }: { children: React.Rea
       <Header breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Administración' }]} />
       <PageHeader title="Configuración" description="Gestiona los datos maestros y catálogos del sistema." />
       
-      <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0 pb-16">
-        <aside className="lg:w-1/4">
-          <nav className="flex space-x-2 lg:flex-col lg:space-x-0 lg:space-y-1 overflow-x-auto pb-2 lg:pb-0 scrollbar-none">
-            {adminNavItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all",
-                    isActive 
-                       ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20" 
-                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  )}
-                >
-                  <item.icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-slate-400")} />
-                  {item.title}
-                </Link>
-              );
-            })}
-          </nav>
-        </aside>
-        <div className="flex-1 lg:max-w-4xl">
+      <div className="flex flex-col space-y-8 pb-16">
+        <nav className="flex flex-wrap gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-200/60 pb-4">
+          {adminNavItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all",
+                  isActive 
+                     ? "bg-primary text-white shadow-md ring-1 ring-primary/20" 
+                     : "bg-white/50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/60"
+                )}
+              >
+                <item.icon className={cn("h-4 w-4", isActive ? "text-white" : "text-slate-400")} />
+                {item.title}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="flex-1 w-full">
            <div className="bg-white/60 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-sm p-1">
              {children}
            </div>

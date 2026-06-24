@@ -30,7 +30,6 @@ export function SidebarNav() {
     { href: '/dashboard/materiales', label: 'Materiales', icon: Package, role: 'compras' },
     { href: '/dashboard/administracion/usuarios', label: 'Usuarios', icon: Users, role: 'compras' },
     { href: '/dashboard/importar', label: 'Importar', icon: UploadCloud, role: 'compras' },
-    { href: '/dashboard/administracion/proveedores', label: 'Proveedores', icon: Users, role: 'compras' },
     { href: '/dashboard/administracion', label: 'Administración', icon: Settings, role: 'compras' },
     { href: '/dashboard/v04', label: 'Historial V04', icon: FileText, role: 'compras' },
   ];
