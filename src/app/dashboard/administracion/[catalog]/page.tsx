@@ -47,7 +47,7 @@ export default function AdminCatalogPage() {
                   key: 'BANCO', 
                   placeholder: 'Banco',
                   type: 'select',
-                  options: bancos?.map(b => `${b.codigo || b.Codigo || b.CODE || b.code || ''} - ${b.descripcion || b.Descripcion || b.name || b.Name || b.banco || b.Banco || ''}`.replace(/^- | -$/g, '').trim()) || []
+                  options: bancos?.map(b => `${b['Código'] || b.Codigo || b.codigo || ''} - ${b['Descripción'] || b.Descripcion || b.descripcion || ''}`.replace(/^- | -$/g, '').trim()) || []
                 },
                 { key: 'Compra Mínima', placeholder: 'Compra Mínima (Monto)', type: 'number' },
                 { 
