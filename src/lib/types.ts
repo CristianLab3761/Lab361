@@ -288,3 +288,28 @@ export type FamiliaMaterial = {
   nombre: string;
   prefijo: string;
 };
+
+export type Recepcion = {
+  id: number;
+  timestamp: string;
+  orden_compra: string;
+  proveedor?: string;
+  documento_recepcion?: string;
+  numero_documento?: string;
+  id_factura_gd?: string;
+};
+
+export type ConciliacionRow = {
+  id: string;
+  ordenCompra: string;
+  proveedor: string;
+  fechaOC: string | null;
+  fechaRecepcion: string | null;
+  diasEntrega: number | null;
+  diasRetraso: number | null;
+  documentoRecepcion: string | null;
+  numeroDocumento: string | null;
+  estado: 'Recibido' | 'Pendiente' | 'Sin OC Registrada';
+  recepcionesCount?: number;
+};
+

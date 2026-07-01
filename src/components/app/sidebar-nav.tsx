@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, FileText, Package, UploadCloud, Settings, Users, Globe, Moon, Sun, type LucideIcon } from 'lucide-react';
+import { Home, FileText, Package, UploadCloud, Settings, Users, Globe, Moon, Sun, GitCompare, type LucideIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '@/context/app-context';
@@ -31,6 +31,7 @@ export function SidebarNav() {
     { href: '/dashboard/administracion/usuarios', label: 'Usuarios', icon: Users, role: 'compras' },
     { href: '/dashboard/importar', label: 'Importar', icon: UploadCloud, role: 'compras' },
     { href: '/dashboard/administracion', label: 'Administración', icon: Settings, role: 'compras' },
+    { href: '/dashboard/conciliacion', label: 'Conciliación', icon: GitCompare, role: 'compras' },
     { href: '/dashboard/v04', label: 'Historial V04', icon: FileText, role: 'compras' },
   ];
 
